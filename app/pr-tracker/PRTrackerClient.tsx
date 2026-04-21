@@ -349,9 +349,6 @@ export default function PRTrackerClient() {
         className="sticky top-0 z-10 border-b px-4 py-3 flex items-center gap-3"
         style={{ background: "#f9f4eef0", borderColor: "#e8e0d8", backdropFilter: "blur(8px)" }}
       >
-        <a href="/" className="text-sm font-medium" style={{ color: "#7a6e65" }}>
-          ← read_slides
-        </a>
         <h1 className="text-base font-bold flex-1" style={{ color: "#2a231c" }}>
           PR Tracker
         </h1>

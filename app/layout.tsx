@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "GeLee-Q · read_slides",
-  description: "Reading notes and PR tracker for RL training frameworks",
+  title: "PR Tracker — slime × miles",
+  description: "Daily-updated PR analysis for RL training frameworks",
 };
 
 export default function RootLayout({
