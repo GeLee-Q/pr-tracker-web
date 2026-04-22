@@ -21,7 +21,47 @@ const ALL_SUBSYSTEMS = [
   "checkpoint", "parallel", "memory", "infra", "multimodal", "logging", "ci",
 ];
 
-// ── helpers ───────────────────────────────────────────────────────────────────
+// ── slime mascot SVG ──────────────────────────────────────────────────────────
+
+function SlimeSVG({ size = 48 }: { size?: number }) {
+  const s = size / 182; // scale factor (viewBox is 0 0 200 182)
+  return (
+    <svg
+      width={size}
+      height={Math.round(size * 182 / 200)}
+      viewBox="0 0 200 182"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ overflow: "visible" }}
+    >
+      {/* body */}
+      <path
+        d="M 100 18 C 48 18, 18 68, 18 128 C 18 152, 28 164, 100 164 C 172 164, 182 152, 182 128 C 182 68, 152 18, 100 18 Z"
+        fill="#8fd0e8" stroke="#2a231c" strokeWidth="6" strokeLinejoin="round"
+      />
+      {/* highlight */}
+      <ellipse cx="70" cy="55" rx="14" ry="22" fill="#cae8f3" transform="rotate(-20 70 55)" />
+      {/* bottom shade */}
+      <path
+        d="M 32 132 C 50 148, 150 148, 168 132 C 165 155, 150 164, 100 164 C 50 164, 35 155, 32 132 Z"
+        fill="#4fb3d1"
+      />
+      {/* blush cheeks */}
+      <ellipse cx="50" cy="100" rx="11" ry="6" fill="#f6a8bd" />
+      <ellipse cx="150" cy="100" rx="11" ry="6" fill="#f6a8bd" />
+      {/* left eye */}
+      <path d="M 62 82 Q 74 70, 86 82" fill="none" stroke="#2a231c" strokeWidth="5.5" strokeLinecap="round" />
+      {/* right eye */}
+      <path d="M 114 82 Q 126 70, 138 82" fill="none" stroke="#2a231c" strokeWidth="5.5" strokeLinecap="round" />
+      {/* mouth */}
+      <path
+        d="M 82 100 Q 100 120, 118 100 Q 118 106, 115 108 Q 100 114, 85 108 Q 82 106, 82 100 Z"
+        fill="#2a231c"
+      />
+    </svg>
+  );
+}
+
+// ── value bar ─────────────────────────────────────────────────────────────────
 
 function ValueBar({ value }: { value: number }) {
   return (
@@ -35,6 +75,8 @@ function ValueBar({ value }: { value: number }) {
     </span>
   );
 }
+
+// ── PR card ───────────────────────────────────────────────────────────────────
 
 function PRCard({ pr }: { pr: PR }) {
   const catColor = CAT_COLORS[pr.category] || "#998a78";
@@ -217,13 +259,16 @@ export default function PRTrackerClient() {
   }
 
   if (loading) return (
-    <div className="stage" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", minHeight: "100vh", gap: 20 }}>
+      <div style={{ animation: "float-up 2s ease-in-out infinite" }}>
+        <SlimeSVG size={72} />
+      </div>
       <span style={{ fontFamily: "var(--mono)", color: "var(--ink-mute)", fontSize: 13 }}>Loading…</span>
     </div>
   );
 
   if (error || !data) return (
-    <div className="stage" style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
+    <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh" }}>
       <span style={{ fontFamily: "var(--mono)", color: "var(--terracotta)", fontSize: 13 }}>Error: {error}</span>
     </div>
   );
@@ -234,9 +279,13 @@ export default function PRTrackerClient() {
       <nav className="nav">
         <div className="nav-inner">
           <div className="brand">
-            <b>PR Tracker</b>
-            <span className="sep">/</span>
-            <span>slime × miles</span>
+            <div className="brand-slime">
+              <SlimeSVG size={36} />
+            </div>
+            <div className="brand-text">
+              <span className="brand-title">PR tracker.</span>
+              <span className="brand-sub">slime × miles</span>
+            </div>
           </div>
           <div className="nav-right">
             <span><b>{filtered.length}</b> / {data.prs.length} PRs</span>
@@ -265,116 +314,118 @@ export default function PRTrackerClient() {
             </div>
           )}
 
-          <div className="filters">
-            {/* search */}
-            <div>
-              <input
-                className="search-box"
-                placeholder="搜索标题 / 摘要 / 作者…"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-            </div>
-
-            {/* repo */}
-            <div>
-              <div className="filter-label">仓库</div>
-              <div className="chips">
-                <Chip label="全部" active={repoFilter === "all"} onClick={() => setRepoFilter("all")} />
-                {repos.map(r => (
-                  <Chip key={r} label={r.split("/")[1]} active={repoFilter === r} onClick={() => setRepoFilter(r)} />
-                ))}
+          {/* filters card */}
+          <div className="filter-section">
+            <div className="filters">
+              {/* search */}
+              <div>
+                <input
+                  className="search-box"
+                  placeholder="搜索标题 / 摘要 / 作者…"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
               </div>
-            </div>
 
-            {/* scope */}
-            <div>
-              <div className="filter-label">范围</div>
-              <div className="chips">
-                <Chip label="全部" active={scopeFilter === "all"} onClick={() => setScopeFilter("all")} />
-                <Chip label="universal" active={scopeFilter === "universal"} onClick={() => setScopeFilter(scopeFilter === "universal" ? "all" : "universal")} />
-                <Chip label="repo-specific" active={scopeFilter === "repo-specific"} onClick={() => setScopeFilter(scopeFilter === "repo-specific" ? "all" : "repo-specific")} />
+              {/* repo */}
+              <div>
+                <div className="filter-label">仓库</div>
+                <div className="chips">
+                  <Chip label="全部" active={repoFilter === "all"} onClick={() => setRepoFilter("all")} />
+                  {repos.map(r => (
+                    <Chip key={r} label={r.split("/")[1]} active={repoFilter === r} onClick={() => setRepoFilter(r)} />
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* category */}
-            <div>
-              <div className="filter-label">类别</div>
-              <div className="chips">
-                {ALL_CATEGORIES.map(cat => (
-                  <Chip
-                    key={cat} label={cat} dot
-                    color={CAT_COLORS[cat]}
-                    active={catFilter.has(cat)}
-                    onClick={() => setCatFilter(toggle(catFilter, cat))}
-                  />
-                ))}
+              {/* scope */}
+              <div>
+                <div className="filter-label">范围</div>
+                <div className="chips">
+                  <Chip label="全部" active={scopeFilter === "all"} onClick={() => setScopeFilter("all")} />
+                  <Chip label="universal" active={scopeFilter === "universal"} onClick={() => setScopeFilter(scopeFilter === "universal" ? "all" : "universal")} />
+                  <Chip label="repo-specific" active={scopeFilter === "repo-specific"} onClick={() => setScopeFilter(scopeFilter === "repo-specific" ? "all" : "repo-specific")} />
+                </div>
               </div>
-            </div>
 
-            {/* subsystems */}
-            <div>
-              <div className="filter-label">子系统</div>
-              <div className="chips">
-                {ALL_SUBSYSTEMS.map(s => (
-                  <Chip
-                    key={s} label={s}
-                    active={subsysFilter.has(s)}
-                    onClick={() => setSubsysFilter(toggle(subsysFilter, s))}
-                  />
-                ))}
+              {/* category */}
+              <div>
+                <div className="filter-label">类别</div>
+                <div className="chips">
+                  {ALL_CATEGORIES.map(cat => (
+                    <Chip
+                      key={cat} label={cat} dot
+                      color={CAT_COLORS[cat]}
+                      active={catFilter.has(cat)}
+                      onClick={() => setCatFilter(toggle(catFilter, cat))}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* min value */}
-            <div>
-              <div className="filter-label">最低价值 {minValue}/5</div>
-              <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
-                {[1,2,3,4,5].map(v => (
-                  <button
-                    key={v}
-                    onClick={() => setMinValue(v)}
-                    style={{
-                      display: "flex", flexDirection: "column", gap: 2,
-                      cursor: "pointer", background: "none", border: "none", padding: 4,
-                      opacity: v >= minValue ? 1 : 0.3,
-                    }}
-                  >
-                    {[1,2,3,4,5].map(i => (
-                      <span
-                        key={i}
-                        style={{
-                          width: 5, height: 12, borderRadius: 1,
-                          background: i <= v ? "var(--terracotta)" : "var(--rule-soft)",
-                          border: `1px solid ${i <= v ? "var(--rule)" : "var(--rule-mid)"}`,
-                          display: "block",
-                        }}
-                      />
-                    ))}
-                  </button>
-                ))}
+              {/* subsystems */}
+              <div>
+                <div className="filter-label">子系统</div>
+                <div className="chips">
+                  {ALL_SUBSYSTEMS.map(s => (
+                    <Chip
+                      key={s} label={s}
+                      active={subsysFilter.has(s)}
+                      onClick={() => setSubsysFilter(toggle(subsysFilter, s))}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
 
-            {/* reset */}
-            <button
-              onClick={resetFilters}
-              className="chip"
-              style={{ alignSelf: "flex-start", marginTop: 4 }}
-            >
-              重置筛选
-            </button>
+              {/* min value */}
+              <div>
+                <div className="filter-label">最低价值 {minValue}/5</div>
+                <div style={{ display: "flex", gap: 6, marginTop: 4 }}>
+                  {[1,2,3,4,5].map(v => (
+                    <button
+                      key={v}
+                      onClick={() => setMinValue(v)}
+                      style={{
+                        display: "flex", flexDirection: "column", gap: 2,
+                        cursor: "pointer", background: "none", border: "none", padding: 4,
+                        opacity: v >= minValue ? 1 : 0.3,
+                        transition: "opacity .15s",
+                      }}
+                    >
+                      {[1,2,3,4,5].map(i => (
+                        <span
+                          key={i}
+                          style={{
+                            width: 5, height: 12, borderRadius: 2,
+                            background: i <= v ? "var(--slime-deep)" : "var(--rule-soft)",
+                            border: `1px solid ${i <= v ? "var(--slime)" : "var(--rule-mid)"}`,
+                            display: "block",
+                          }}
+                        />
+                      ))}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* reset */}
+              <button
+                onClick={resetFilters}
+                className="chip"
+                style={{ alignSelf: "flex-start", marginTop: 4 }}
+              >
+                重置筛选
+              </button>
+            </div>
           </div>
         </aside>
 
         {/* main */}
         <main className="main-content">
           {filtered.length === 0 ? (
-            <div style={{
-              textAlign: "center", paddingTop: 80,
-              fontFamily: "var(--mono)", color: "var(--ink-mute)", fontSize: 13,
-            }}>
-              没有匹配的 PR
+            <div className="empty-state">
+              <SlimeSVG size={56} />
+              <span>没有匹配的 PR</span>
             </div>
           ) : (
             filtered.map(pr => <PRCard key={pr.id} pr={pr} />)
