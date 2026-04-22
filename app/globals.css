@@ -502,10 +502,11 @@ a { color: inherit; text-decoration: none; }
   border-radius: 12px;
   box-shadow: 2px 2px 0 var(--rule);
   transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s;
-  overflow: hidden;
+  overflow: visible;
   color: inherit;
   margin-bottom: 10px;
 }
+.card-inner { overflow: hidden; border-radius: 10px; }
 .card:hover {
   transform: translate(-1px, -2px);
   box-shadow: 4px 5px 0 var(--rule);
@@ -516,9 +517,24 @@ a { color: inherit; text-decoration: none; }
   position: absolute; left: 0; top: 12px; bottom: 12px;
   width: 4px; border-radius: 0 3px 3px 0;
   background: var(--strip, var(--rule-mid));
+  z-index: 1;
 }
 .card[data-scope="universal"]     { --strip: var(--indigo); }
 .card[data-scope="repo-specific"] { --strip: var(--terracotta); }
+/* category color tab at top-right */
+.card::after {
+  content: "";
+  position: absolute;
+  top: -8px; right: 18px;
+  width: 38px; height: 16px;
+  background: var(--col-color, var(--ink-mute));
+  border: 1.5px solid var(--rule);
+  border-radius: 4px;
+  transform: rotate(3deg);
+  transition: transform .2s;
+  z-index: 2;
+}
+.card:hover::after { transform: rotate(-3deg) translateY(-1px); }
 
 /* card top row */
 .card-top {
@@ -547,9 +563,9 @@ a { color: inherit; text-decoration: none; }
 .feat-chip {
   font-family: var(--mono); font-size: 9.5px; font-weight: 700;
   letter-spacing: 0.06em;
-  padding: 2px 7px; border-radius: 3px;
-  background: color-mix(in oklab, var(--terracotta) 15%, var(--paper-2));
-  color: var(--terracotta); border: 1px solid var(--terracotta);
+  padding: 2px 8px; border-radius: 3px;
+  background: color-mix(in oklab, var(--terracotta) 18%, var(--paper-2));
+  color: var(--terracotta); border: 1px solid color-mix(in oklab, var(--terracotta) 50%, var(--rule-soft));
 }
 .state {
   margin-left: auto;
@@ -575,6 +591,7 @@ a { color: inherit; text-decoration: none; }
   transition: color .15s;
 }
 .card:hover .card-title { color: var(--indigo); }
+.card:hover .card-title::after { content: " →"; color: var(--indigo); }
 
 .card-summary {
   font-size: 12.5px; color: var(--ink-dim); line-height: 1.65; margin: 0 0 8px;
@@ -582,19 +599,18 @@ a { color: inherit; text-decoration: none; }
 
 /* scope reason hover */
 .scope-reason {
-  font-family: var(--mono); font-size: 10.5px; color: var(--ink-mute);
-  padding: 0 10px;
-  background: var(--paper-2); border-left: 2px solid var(--indigo);
-  border-radius: 0 4px 4px 0;
+  font-family: var(--mono); font-size: 10.5px;
+  color: #c8c0b4;
+  padding: 0 12px;
+  background: #2a231c; border-radius: 4px;
   max-height: 0; overflow: hidden; opacity: 0;
-  transition: max-height .2s, opacity .2s, padding .2s;
+  transition: max-height .22s, opacity .18s, padding .2s, margin .2s;
 }
-.card[data-scope="repo-specific"] .scope-reason { border-left-color: var(--terracotta); }
 .card:hover .scope-reason {
-  max-height: 100px; opacity: 1;
-  padding-top: 6px; padding-bottom: 6px; margin-bottom: 8px;
+  max-height: 80px; opacity: 1;
+  padding-top: 7px; padding-bottom: 7px; margin-bottom: 8px;
 }
-.scope-reason::before { content: "reason: "; color: var(--ink); font-weight: 700; }
+.scope-reason::before { content: "reason: "; color: #e8dbc5; font-weight: 700; }
 
 /* pill row */
 .pill-row { display: flex; flex-wrap: wrap; gap: 5px; margin: 6px 0; }

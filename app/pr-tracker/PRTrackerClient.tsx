@@ -35,14 +35,6 @@ function weeklyBars(prs: PR[], n = 8): number[] {
   });
 }
 
-function computeMood(prs: PR[]): { mood: string; days: number | null } {
-  const merged = prs.filter(p => p.merged_at).sort(
-    (a, b) => +new Date(b.merged_at!) - +new Date(a.merged_at!)
-  );
-  if (!merged.length) return { mood: "DORMANT", days: null };
-  const days = Math.floor((Date.now() - +new Date(merged[0].merged_at!)) / 86400_000);
-  return { mood: days === 0 ? "ACTIVE" : days <= 2 ? "RESTING" : "SLEEPING", days };
-}
 
 function isoWeekRange(label: string): string {
   const m = label.match(/W(\d+)/i);
@@ -124,7 +116,8 @@ function PRCard({ pr }: { pr: PR }) {
 
   return (
     <a href={pr.url} target="_blank" rel="noopener noreferrer"
-      className="card" data-scope={pr.scope} data-featured={pr.value >= 4 ? "true" : "false"}>
+      className="card" data-scope={pr.scope} data-featured={pr.value >= 4 ? "true" : "false"}
+      style={{ "--col-color": catColor } as React.CSSProperties}>
 
       {/* top row */}
       <div className="card-top">
@@ -133,7 +126,7 @@ function PRCard({ pr }: { pr: PR }) {
           {pr.repo.replace("/", " / ")}<span className="num"> #{pr.pr_number}</span>
         </span>
         {pr.scope === "universal" && <span className="univ-chip">UNIVERSAL</span>}
-        {pr.value >= 4 && <span className="feat-chip">✦ FEATURED</span>}
+        {pr.value >= 4 && <span className="feat-chip">+ FEATURED</span>}
         <span className="state" data-s={stateStr}>{stateStr.toUpperCase()}</span>
       </div>
 
@@ -274,7 +267,6 @@ export default function PRTrackerClient() {
     };
   }), [repos, timePRs]);
 
-  const mood = useMemo(() => computeMood(data?.prs ?? []), [data]);
 
   // stats
   const univPRs  = filtered.filter(p => p.scope === "universal");
@@ -399,14 +391,7 @@ export default function PRTrackerClient() {
               <button className={`slime-btn${poked ? " poked" : ""}`} onClick={doPokeSlime}>
                 <Slime size={72} />
               </button>
-              <div>
-                <div className="poke-hint">← 戳我一下</div>
-                <div className="mood-tag">
-                  <span className="mood-dot" data-mood={mood.mood} />
-                  MOOD: <b>{mood.mood}</b>
-                  {mood.days !== null && ` (${mood.days} 天没 MERGE)`}
-                </div>
-              </div>
+              <span className="poke-hint">← 戳我一下</span>
             </div>
           </div>
         </section>
