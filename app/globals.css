@@ -501,15 +501,22 @@ a { color: inherit; text-decoration: none; }
   border: 1.5px solid var(--rule);
   border-radius: 12px;
   box-shadow: 2px 2px 0 var(--rule);
-  transition: transform .2s cubic-bezier(.34,1.56,.64,1), box-shadow .2s;
+  transition: transform .18s cubic-bezier(.34,1.56,.64,1), box-shadow .18s, background .15s;
   overflow: visible;
   color: inherit;
   margin-bottom: 10px;
+  cursor: pointer;
+  user-select: none;
 }
-.card-inner { overflow: hidden; border-radius: 10px; }
 .card:hover {
   transform: translate(-1px, -2px);
   box-shadow: 4px 5px 0 var(--rule);
+  background: color-mix(in oklab, var(--paper-1) 96%, var(--ink));
+}
+.card.expanded {
+  transform: translate(-2px, -3px);
+  box-shadow: 6px 7px 0 var(--rule);
+  border-color: var(--ink);
 }
 /* left scope strip */
 .card::before {
@@ -589,26 +596,24 @@ a { color: inherit; text-decoration: none; }
   color: var(--ink); letter-spacing: -0.01em;
   margin-bottom: 6px;
   transition: color .15s;
+  text-decoration: none;
 }
-.card:hover .card-title { color: var(--indigo); }
-.card:hover .card-title::after { content: " →"; color: var(--indigo); }
+.card-title:hover { color: var(--indigo); }
+.card-title:hover::after { content: " →"; color: var(--indigo); }
+.card.expanded .card-title { color: var(--indigo); }
 
 .card-summary {
   font-size: 12.5px; color: var(--ink-dim); line-height: 1.65; margin: 0 0 8px;
 }
 
-/* scope reason hover */
+/* scope reason — shown when expanded (controlled by React state) */
 .scope-reason {
   font-family: var(--mono); font-size: 10.5px;
   color: #c8c0b4;
-  padding: 0 12px;
+  padding: 7px 12px;
   background: #2a231c; border-radius: 4px;
-  max-height: 0; overflow: hidden; opacity: 0;
-  transition: max-height .22s, opacity .18s, padding .2s, margin .2s;
-}
-.card:hover .scope-reason {
-  max-height: 80px; opacity: 1;
-  padding-top: 7px; padding-bottom: 7px; margin-bottom: 8px;
+  margin-bottom: 8px;
+  line-height: 1.5;
 }
 .scope-reason::before { content: "reason: "; color: #e8dbc5; font-weight: 700; }
 
@@ -632,15 +637,12 @@ a { color: inherit; text-decoration: none; }
   background: var(--paper-2); border: 1px solid var(--rule-soft); color: var(--ink-mute);
 }
 
-/* diff peek */
+/* diff peek — shown when expanded (controlled by React state) */
 .diff-peek {
   margin-top: 8px;
   border: 1px solid var(--rule-mid); border-radius: 6px;
   background: var(--paper-2); overflow: hidden;
-  max-height: 0; opacity: 0;
-  transition: max-height .28s ease, opacity .2s;
 }
-.card:hover .diff-peek { max-height: 280px; opacity: 1; }
 .diff-peek .dh {
   display: flex; justify-content: space-between;
   padding: 4px 10px; background: var(--paper-3);
