@@ -109,19 +109,20 @@ function ValueBar({ value }: { value: number }) {
 // ── PR card ───────────────────────────────────────────────────────────────────
 
 function PRCard({ pr }: { pr: PR }) {
-  const [expanded, setExpanded] = useState(false);
   const catColor = CAT_COLORS[pr.category] ?? "#998a78";
   const stateStr = pr.merged_at ? "merged" : pr.state;
   const hasDiff = (pr.diff_preview?.hunks?.length ?? 0) > 0 ||
     (pr.diff_preview?.additions ?? 0) + (pr.diff_preview?.deletions ?? 0) > 0;
 
   return (
-    <div
-      className={`card${expanded ? " expanded" : ""}`}
+    <a
+      href={pr.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="card"
       data-scope={pr.scope}
       data-featured={pr.value >= 4 ? "true" : "false"}
       style={{ "--col-color": catColor } as React.CSSProperties}
-      onClick={() => setExpanded(e => !e)}
     >
       {/* top row */}
       <div className="card-top">
@@ -134,21 +135,11 @@ function PRCard({ pr }: { pr: PR }) {
         <span className="state" data-s={stateStr}>{stateStr.toUpperCase()}</span>
       </div>
 
-      {/* title — clicking opens GitHub, stops card toggle */}
-      <a
-        href={pr.url}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="card-title"
-        onClick={e => e.stopPropagation()}
-      >
-        {pr.title}
-      </a>
+      {/* title */}
+      <span className="card-title">{pr.title}</span>
 
-      {/* scope reason — shown when expanded */}
-      {pr.reason && expanded && (
-        <div className="scope-reason">{pr.reason}</div>
-      )}
+      {/* scope reason — revealed on hover via CSS */}
+      {pr.reason && <div className="scope-reason">{pr.reason}</div>}
 
       {/* summary */}
       {pr.summary && pr.summary !== pr.title && (
@@ -166,8 +157,8 @@ function PRCard({ pr }: { pr: PR }) {
         </div>
       )}
 
-      {/* diff — shown when expanded */}
-      {hasDiff && expanded && (
+      {/* diff — revealed on hover via CSS */}
+      {hasDiff && (
         <div className="diff-peek">
           <div className="dh">
             <span>{pr.diff_preview.hunks[0]?.file ?? ""}</span>
@@ -198,11 +189,8 @@ function PRCard({ pr }: { pr: PR }) {
         <span>{fmtDate(pr.created_at)}</span>
         <span className="sep">·</span>
         <ValueBar value={pr.value ?? 3} />
-        <span className="sep" style={{ marginLeft: "auto" }}>
-          {expanded ? "▲ 收起" : "▼ 展开"}
-        </span>
       </div>
-    </div>
+    </a>
   );
 }
 
