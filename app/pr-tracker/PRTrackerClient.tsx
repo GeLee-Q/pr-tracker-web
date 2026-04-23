@@ -204,7 +204,7 @@ export default function PRTrackerClient() {
   const [repoFilter,  setRepoFilter]  = useState("all");
   const [catFilter,   setCatFilter]   = useState<Set<string>>(new Set());
   const [valFilter,   setValFilter]   = useState<"all" | "featured">("all");
-  const [timeRange,   setTimeRange]   = useState<number | null>(30);
+  const [timeRange,   setTimeRange]   = useState<number | null>(null);
   const [search,      setSearch]      = useState("");
   const [view,        setView]        = useState<"list" | "by-author">("list");
   const [poked,       setPoked]       = useState(false);
@@ -220,11 +220,14 @@ export default function PRTrackerClient() {
     data ? [...new Set(data.prs.map(p => p.repo))] : [], [data]);
 
   // time-filtered (used for repo card stats)
+  // open PRs are always included regardless of created_at (they're still active)
   const timePRs = useMemo(() => {
     if (!data) return [];
     if (timeRange === null) return data.prs;
     const cut = Date.now() - timeRange * 86400_000;
-    return data.prs.filter(p => +new Date(p.created_at) >= cut);
+    return data.prs.filter(p =>
+      p.state === "open" || +new Date(p.created_at) >= cut
+    );
   }, [data, timeRange]);
 
   // fully filtered
