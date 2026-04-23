@@ -468,7 +468,7 @@ a { color: inherit; text-decoration: none; }
   gap: 0;
   margin-top: 0;
 }
-.pr-col { padding: 16px 24px 24px; }
+.pr-col { padding: 16px 24px 24px; min-width: 0; overflow: hidden; }
 .pr-col:first-child {
   border-right: 1px solid var(--rule-soft);
 }
@@ -518,6 +518,7 @@ a { color: inherit; text-decoration: none; }
   overflow: visible;
   color: inherit;
   margin-bottom: 10px;
+  min-width: 0; width: 100%;
 }
 .card:hover {
   transform: translate(-1px, -2px);
@@ -603,6 +604,7 @@ a { color: inherit; text-decoration: none; }
   margin-bottom: 6px;
   transition: color .15s;
   text-decoration: none;
+  word-break: break-word;
 }
 .card:hover .card-title { color: var(--indigo); }
 .card:hover .card-title::after { content: " →"; color: var(--indigo); }

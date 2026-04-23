@@ -283,9 +283,9 @@ export default function PRTrackerClient() {
   const univPct  = filtered.length ? Math.round(univPRs.length / filtered.length * 100) : 0;
   const repoPct  = filtered.length ? Math.round(repoPRs.length / filtered.length * 100) : 0;
 
-  // split by state — "closed, not merged" goes to merged column (done)
-  const mergedPRs = filtered.filter(p => !!p.merged_at || p.state === "closed");
-  const openPRs   = filtered.filter(p => !p.merged_at && p.state === "open");
+  // split by state
+  const mergedPRs = filtered.filter(p => p.state === "closed");
+  const openPRs   = filtered.filter(p => p.state === "open");
 
   // by-author
   const authorGroups = useMemo(() => {
