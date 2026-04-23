@@ -526,56 +526,58 @@ export default function PRTrackerClient() {
         </section>
 
         {/* ── on the wire ── */}
-        <div className="wire-header">
-          <div className="wire-title">✳ on the wire</div>
-          <div className="wire-controls">
-            <input className="wire-search" placeholder="search title / author"
-              value={search} onChange={e => setSearch(e.target.value)} />
-            <div className="view-toggle">
-              <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}>list</button>
-              <button className={view === "by-author" ? "active" : ""} onClick={() => setView("by-author")}>by author</button>
+        <div className="pr-section">
+          <div className="wire-header">
+            <div className="wire-title">✳ on the wire</div>
+            <div className="wire-controls">
+              <input className="wire-search" placeholder="search title / author"
+                value={search} onChange={e => setSearch(e.target.value)} />
+              <div className="view-toggle">
+                <button className={view === "list" ? "active" : ""} onClick={() => setView("list")}>list</button>
+                <button className={view === "by-author" ? "active" : ""} onClick={() => setView("by-author")}>by author</button>
+              </div>
+              <span className="result-count">{filtered.length} results</span>
             </div>
-            <span className="result-count">{filtered.length} results</span>
           </div>
-        </div>
 
-        {/* ── PR display ── */}
-        {view === "list" ? (
-          <div className="pr-grid">
-            <div className="pr-col">
-              <div className="pr-col-header">
-                <span className="col-dot merged" />
-                <em>merged</em>
-                <span className="col-count">{mergedPRs.length} landed</span>
-              </div>
-              {mergedPRs.length === 0
-                ? <div className="col-empty">no merged PRs</div>
-                : mergedPRs.map(pr => <PRCard key={pr.id} pr={pr} />)}
-            </div>
-            <div className="pr-col">
-              <div className="pr-col-header">
-                <span className="col-dot open" />
-                <em>open</em>
-                <span className="col-count">{openPRs.length} in flight</span>
-              </div>
-              {openPRs.length === 0
-                ? <div className="col-empty">no open PRs</div>
-                : openPRs.map(pr => <PRCard key={pr.id} pr={pr} />)}
-            </div>
-          </div>
-        ) : (
-          <div className="author-groups">
-            {authorGroups.map(([author, prs]) => (
-              <div key={author} className="author-group">
-                <div className="author-group-header">
-                  <span>@{author}</span>
-                  <span className="author-count">{prs.length} PRs</span>
+          {/* ── PR display ── */}
+          {view === "list" ? (
+            <div className="pr-grid">
+              <div className="pr-col">
+                <div className="pr-col-header">
+                  <span className="col-dot merged" />
+                  <em>merged</em>
+                  <span className="col-count">{mergedPRs.length} landed</span>
                 </div>
-                {prs.map(pr => <PRCard key={pr.id} pr={pr} />)}
+                {mergedPRs.length === 0
+                  ? <div className="col-empty">no merged PRs</div>
+                  : mergedPRs.map(pr => <PRCard key={pr.id} pr={pr} />)}
               </div>
-            ))}
-          </div>
-        )}
+              <div className="pr-col">
+                <div className="pr-col-header">
+                  <span className="col-dot open" />
+                  <em>open</em>
+                  <span className="col-count">{openPRs.length} in flight</span>
+                </div>
+                {openPRs.length === 0
+                  ? <div className="col-empty">no open PRs</div>
+                  : openPRs.map(pr => <PRCard key={pr.id} pr={pr} />)}
+              </div>
+            </div>
+          ) : (
+            <div className="author-groups" style={{ padding: "16px 24px 24px" }}>
+              {authorGroups.map(([author, prs]) => (
+                <div key={author} className="author-group">
+                  <div className="author-group-header">
+                    <span>@{author}</span>
+                    <span className="author-count">{prs.length} PRs</span>
+                  </div>
+                  {prs.map(pr => <PRCard key={pr.id} pr={pr} />)}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
       </div>
     </div>
