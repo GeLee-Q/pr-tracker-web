@@ -13423,7 +13423,7 @@
     "THUDM/slime#1769",
     "THUDM/slime#1768"
   ],
-  "weekly_note": "<b>#miles#1032</b> 与 <b>#slime#1842</b> 领衔，本周聚焦<em>数值正确性</em>与<em>并发稳定性</em>——从 <em>Ulysses CP logprob 膨胀</em>、<em>FP16 梯度双重缩放</em>到异步 <em>event loop 绑定</em>与软死锁，多框架同步补齐训练管道的隐患。",
+  "weekly_note": "<b>#radixark/miles#1045</b><b>#radixark/miles#1044</b> 本周头条：<em>DeepSeek V4</em> 正式发布，miles 率先完成 RL 训练全链路支持——涵盖 <em>Megatron 后端适配</em>、<em>FP8 量化</em>、SGLang 推理集成及 Attention + MoE 权重桥接。",
   "weekly_note_week": "2026-W17",
   "last_updated": "2026-04-24T13:56:54.886464+00:00"
 }
