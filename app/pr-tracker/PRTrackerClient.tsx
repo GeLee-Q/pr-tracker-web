@@ -203,6 +203,7 @@ export default function PRTrackerClient() {
 
   const [repoFilter,  setRepoFilter]  = useState("all");
   const [catFilter,   setCatFilter]   = useState<Set<string>>(new Set());
+  const [scopeFilter, setScopeFilter] = useState<"all" | "universal" | "repo-specific">("all");
   const [valFilter,   setValFilter]   = useState<"all" | "featured">("all");
   const [timeRange,   setTimeRange]   = useState<number | null>(null);
   const [search,      setSearch]      = useState("");
@@ -234,6 +235,7 @@ export default function PRTrackerClient() {
   const filtered = useMemo(() => timePRs.filter(pr => {
     if (repoFilter !== "all" && pr.repo !== repoFilter) return false;
     if (catFilter.size > 0 && !catFilter.has(pr.category)) return false;
+    if (scopeFilter !== "all" && pr.scope !== scopeFilter) return false;
     if (valFilter === "featured" && pr.value < 4) return false;
     if (search) {
       const q = search.toLowerCase();
@@ -242,7 +244,7 @@ export default function PRTrackerClient() {
           !pr.author.toLowerCase().includes(q)) return false;
     }
     return true;
-  }), [timePRs, repoFilter, catFilter, valFilter, search]);
+  }), [timePRs, repoFilter, catFilter, scopeFilter, valFilter, search]);
 
   // counts for chips
   const repoCounts = useMemo(() => {
@@ -431,7 +433,12 @@ export default function PRTrackerClient() {
         {/* ── stats ── */}
         <section className="stats-section">
           <div className="stats-cols">
-            <div className="stat-col">
+            <div
+              className={`stat-col stat-col-btn${scopeFilter === "universal" ? " stat-col-active" : ""}`}
+              onClick={() => setScopeFilter(scopeFilter === "universal" ? "all" : "universal")}
+              role="button" tabIndex={0}
+              onKeyDown={e => e.key === "Enter" && setScopeFilter(scopeFilter === "universal" ? "all" : "universal")}
+            >
               <div className="stat-header">
                 <span className="stat-square" style={{ background: "var(--indigo)" }} />
                 <span className="stat-icon">🌐</span>
@@ -444,7 +451,12 @@ export default function PRTrackerClient() {
 
             <div className="stat-divider" />
 
-            <div className="stat-col">
+            <div
+              className={`stat-col stat-col-btn${scopeFilter === "repo-specific" ? " stat-col-active" : ""}`}
+              onClick={() => setScopeFilter(scopeFilter === "repo-specific" ? "all" : "repo-specific")}
+              role="button" tabIndex={0}
+              onKeyDown={e => e.key === "Enter" && setScopeFilter(scopeFilter === "repo-specific" ? "all" : "repo-specific")}
+            >
               <div className="stat-header">
                 <span className="stat-square" style={{ background: "var(--terracotta)" }} />
                 <span className="stat-icon">🔒</span>
@@ -523,6 +535,24 @@ export default function PRTrackerClient() {
               <button className={`fchip${valFilter === "featured" ? " active" : ""}`}
                 onClick={() => setValFilter(valFilter === "featured" ? "all" : "featured")}>
                 ★ ★ 精选 (value ≥ 4) {featCount}
+              </button>
+            </div>
+          </div>
+
+          <div className="filter-row">
+            <span className="filter-row-label">// SCOPE</span>
+            <div className="filter-chips">
+              <button className={`fchip${scopeFilter === "all" ? " active" : ""}`}
+                onClick={() => setScopeFilter("all")}>
+                全部 {filtered.length}
+              </button>
+              <button className={`fchip${scopeFilter === "universal" ? " active" : ""}`}
+                onClick={() => setScopeFilter(scopeFilter === "universal" ? "all" : "universal")}>
+                🌐 universal {scopeFilter === "all" ? univPRs.length : filtered.filter(p => p.scope === "universal").length}
+              </button>
+              <button className={`fchip${scopeFilter === "repo-specific" ? " active" : ""}`}
+                onClick={() => setScopeFilter(scopeFilter === "repo-specific" ? "all" : "repo-specific")}>
+                🔒 repo-specific {scopeFilter === "all" ? repoPRs.length : filtered.filter(p => p.scope === "repo-specific").length}
               </button>
             </div>
           </div>
