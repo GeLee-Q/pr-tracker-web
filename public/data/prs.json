@@ -22438,8 +22438,7 @@
     "radixark/miles#1006",
     "radixark/miles#1020"
   ],
-  "weekly_note": "<b>#radixark/miles#1045</b><b>#radixark/miles#1044</b> 本周头条：<em>DeepSeek V4</em> 正式发布，miles 率先完成 RL 训练全链路支持——涵盖 <em>Megatron 后端适配</em>、<em>FP8 量化</em>、SGLang 推理集成及 Attention + MoE 权重桥接。",
-  "weekly_note_week": "2026-W17",
-  "weekly_note_pinned": true,
+  "weekly_note": "本周：<em>slime</em> 大力推进 <em>Agent RL</em> 基础设施，新增 coding_agent_rl 沙箱闭环 <b>#slime#1923</b>；<em>miles</em> 集中落地 <em>Kimi K2.5</em> 全参+LoRA 与 <em>Qwen3 MoE</em> true-on-policy 训练。",
+  "weekly_note_week": "2026-W22",
   "last_updated": "2026-05-27T14:19:36.259259+00:00"
 }
