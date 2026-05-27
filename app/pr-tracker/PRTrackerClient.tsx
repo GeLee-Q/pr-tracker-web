@@ -488,7 +488,7 @@ export default function PRTrackerClient() {
         </section>
 
         {/* ── filter rows ── */}
-        <section className="filter-rows">
+        <section className="filter-panel"><div className="filter-rows">
           <div className="filter-row">
             <span className="filter-row-label">// REPO</span>
             <div className="filter-chips">
@@ -556,7 +556,7 @@ export default function PRTrackerClient() {
               </button>
             </div>
           </div>
-        </section>
+        </div></section>
 
         {/* ── on the wire ── */}
         <div className="pr-section">
