@@ -1,6 +1,336 @@
 {
   "prs": [
     {
+      "id": "radixark/miles#1747",
+      "repo": "radixark/miles",
+      "pr_number": 1747,
+      "title": "[6/7][multi-lora]: async batch collection and data conversion - per-adapter buffers, round robin collection, batch metadata",
+      "state": "closed",
+      "author": "mathewjhan",
+      "created_at": "2026-07-21T15:25:30Z",
+      "merged_at": "2026-07-21T21:35:10Z",
+      "url": "https://github.com/radixark/miles/pull/1747",
+      "category": "feature",
+      "scope": "universal",
+      "summary": "为 multi-LoRA 场景实现异步批次收集与数据转换，引入 per-adapter 缓冲区、round-robin 收集策略及批次元数据管理",
+      "reason": "multi-LoRA 的异步 rollout 收集、per-adapter 缓冲区设计和 round-robin 调度是通用的 RL 训练基础设施模式，任何支持多 LoRA 并行训练的框架（slime、verl 等）都面临相同的工程问题",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "infra",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "LoRA",
+        "rollout",
+        "async",
+        "PPO",
+        "GRPO"
+      ],
+      "files": [],
+      "diff_preview": {
+        "additions": 0,
+        "deletions": 0,
+        "hunks": []
+      },
+      "analyzed_at": "2026-07-26T06:57:19.695108+00:00"
+    },
+    {
+      "id": "radixark/miles#1748",
+      "repo": "radixark/miles",
+      "pr_number": 1748,
+      "title": "[7/7][multi-lora]: driver and example - fully async driver, typer launcher, adapter configs, service smoke client",
+      "state": "closed",
+      "author": "mathewjhan",
+      "created_at": "2026-07-21T15:26:37Z",
+      "merged_at": "2026-07-21T21:35:40Z",
+      "url": "https://github.com/radixark/miles/pull/1748",
+      "category": "feature",
+      "scope": "universal",
+      "summary": "实现完全异步的 multi-LoRA 驱动层，包含 typer 启动器、适配器配置管理和服务冒烟测试客户端，完成 multi-LoRA 系列 PR 的最后一环",
+      "reason": "LoRA 多适配器的异步驱动架构、适配器配置管理和服务接口设计是 RL 训练框架中通用的基础设施模式，其他使用 LoRA 进行 rollout 或微调的框架（如 slime 等）同样需要类似的异步调度与适配器管理机制，具有较强的跨框架参考价值",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "infra",
+        "parallel"
+      ],
+      "rl_concepts": [
+        "LoRA",
+        "rollout",
+        "async",
+        "adapter"
+      ],
+      "files": [],
+      "diff_preview": {
+        "additions": 0,
+        "deletions": 0,
+        "hunks": []
+      },
+      "analyzed_at": "2026-07-26T06:57:09.812558+00:00"
+    },
+    {
+      "id": "radixark/miles#1750",
+      "repo": "radixark/miles",
+      "pr_number": 1750,
+      "title": "[Fix] retract-mode flush_cache no-op crash",
+      "state": "closed",
+      "author": "Zhichenzzz",
+      "created_at": "2026-07-21T18:03:10Z",
+      "merged_at": "2026-07-23T05:11:46Z",
+      "url": "https://github.com/radixark/miles/pull/1750",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 retract 模式下 flush_cache 因等待队列非空导致永远无法成功的问题，并在收到 400 响应时正确退避重试",
+      "reason": "sglang rollout 引擎的 flush_cache 重试逻辑缺陷（400 响应未触发 sleep 导致 60 次重试瞬间耗尽）以及 pause_generation retract 模式与 flush 的竞态问题，是所有基于 sglang 作为 rollout 引擎的 RL 训练框架都会遇到的通用 bug，与仓库特有逻辑无关",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "infra",
+        "weight-sync"
+      ],
+      "rl_concepts": [
+        "rollout",
+        "reward-model",
+        "PPO",
+        "GRPO"
+      ],
+      "files": [],
+      "diff_preview": {
+        "additions": 0,
+        "deletions": 0,
+        "hunks": []
+      },
+      "analyzed_at": "2026-07-26T06:57:00.281375+00:00"
+    },
+    {
+      "id": "radixark/miles#1751",
+      "repo": "radixark/miles",
+      "pr_number": 1751,
+      "title": "refactor(tito): rename render_messages to apply_chat_template",
+      "state": "closed",
+      "author": "guapisolo",
+      "created_at": "2026-07-21T18:22:11Z",
+      "merged_at": "2026-07-23T17:36:20Z",
+      "url": "https://github.com/radixark/miles/pull/1751",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将 TITOTokenizer 的 render_messages 方法重命名为 apply_chat_template，与模块级函数及 HuggingFace 约定保持一致",
+      "reason": "TITO（TITOTokenizer）是该仓库特有的组件，此重命名仅在该仓库的命名体系下有意义，其他框架不存在同名类或同样的方法拆分问题",
+      "value": 1,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [],
+      "diff_preview": {
+        "additions": 0,
+        "deletions": 0,
+        "hunks": []
+      },
+      "analyzed_at": "2026-07-26T06:56:50.340355+00:00"
+    },
+    {
+      "id": "radixark/miles#1752",
+      "repo": "radixark/miles",
+      "pr_number": 1752,
+      "title": "fix: preserve BSHD layout in PPO CP advantages",
+      "state": "open",
+      "author": "guapisolo",
+      "created_at": "2026-07-21T18:30:57Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1752",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 PPO 在 Context Parallelism（CP>1）下 BSHD 布局未正确传播导致 advantage 计算使用错误的 THD token 顺序的问题",
+      "reason": "PPO advantage 计算与 Context Parallelism 的交互 bug，涉及通用的 GAE 实现和 CP gather/re-slice 逻辑，任何使用 Megatron CP + BSHD 布局的 RL 训练框架都会遇到相同问题",
+      "value": 4,
+      "subsystems": [
+        "algo",
+        "parallel",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "PPO",
+        "advantage",
+        "Context Parallelism",
+        "Megatron",
+        "GAE"
+      ],
+      "files": [],
+      "diff_preview": {
+        "additions": 0,
+        "deletions": 0,
+        "hunks": []
+      },
+      "analyzed_at": "2026-07-26T06:56:41.885476+00:00"
+    },
+    {
+      "id": "radixark/miles#1753",
+      "repo": "radixark/miles",
+      "pr_number": 1753,
+      "title": "fix(megatron): serialize Hugging Face metadata loads per node",
+      "state": "open",
+      "author": "kevinamzn",
+      "created_at": "2026-07-21T19:41:07Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1753",
+      "category": "infra",
+      "scope": "universal",
+      "summary": "将 Megatron 训练时 Hugging Face 配置/tokenizer 的元数据加载从按全局 rank 串行改为按节点内 GPU 位置串行，使不同节点的相同 GPU 位置可并发加载，显著降低启动时间",
+      "reason": "Hugging Face 元数据加载的串行化瓶颈是所有使用 Megatron 多节点训练的框架（如 veRL、OpenRLHF 等）都会遇到的通用问题，优化策略（按 local rank 分波而非 global rank）具有普遍适用性",
+      "value": 4,
+      "subsystems": [
+        "trainer",
+        "parallel",
+        "infra"
+      ],
+      "rl_concepts": [
+        "Megatron"
+      ],
+      "files": [],
+      "diff_preview": {
+        "additions": 0,
+        "deletions": 0,
+        "hunks": []
+      },
+      "analyzed_at": "2026-07-26T06:56:32.971842+00:00"
+    },
+    {
+      "id": "radixark/miles#1754",
+      "repo": "radixark/miles",
+      "pr_number": 1754,
+      "title": "fix(opd): align response signals with context parallelism",
+      "state": "closed",
+      "author": "guapisolo",
+      "created_at": "2026-07-21T20:16:06Z",
+      "merged_at": "2026-07-23T05:58:06Z",
+      "url": "https://github.com/radixark/miles/pull/1754",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 context parallelism 下 OPD 信号（rollout_log_probs、teacher_log_probs、opd_reverse_kl）未按 CP ownership 切片导致与训练张量形状不匹配的问题",
+      "reason": "context parallelism 与 rollout 数据对齐是所有使用 Megatron/序列并行的 RL 训练框架都会遇到的通用问题，KL 散度信号的 CP 切片逻辑与具体仓库无关",
+      "value": 4,
+      "subsystems": [
+        "parallel",
+        "trainer",
+        "objective"
+      ],
+      "rl_concepts": [
+        "KL",
+        "context-parallelism",
+        "Megatron",
+        "advantage",
+        "PPO"
+      ],
+      "files": [],
+      "diff_preview": {
+        "additions": 0,
+        "deletions": 0,
+        "hunks": []
+      },
+      "analyzed_at": "2026-07-26T06:56:23.486315+00:00"
+    },
+    {
+      "id": "radixark/miles#1755",
+      "repo": "radixark/miles",
+      "pr_number": 1755,
+      "title": "ci: cancel unfinished PR runs when the PR closes",
+      "state": "open",
+      "author": "guapisolo",
+      "created_at": "2026-07-21T21:23:52Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1755",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "添加 CI 工作流，在 PR 关闭或合并时自动取消未完成的 CI 运行，避免占用 GPU runner 资源",
+      "reason": "CI 配置属于仓库自身的基础设施管理，与 RL 训练框架的核心组件无关，其他框架即使有相同问题也需各自配置，不具备算法或架构层面的通用参考价值",
+      "value": 1,
+      "subsystems": [
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [],
+      "diff_preview": {
+        "additions": 0,
+        "deletions": 0,
+        "hunks": []
+      },
+      "analyzed_at": "2026-07-26T06:56:14.480833+00:00"
+    },
+    {
+      "id": "radixark/miles#1756",
+      "repo": "radixark/miles",
+      "pr_number": 1756,
+      "title": "[chore] Move ruff select/ignore under [tool.ruff.lint]",
+      "state": "open",
+      "author": "SriRangaTarun",
+      "created_at": "2026-07-21T22:33:06Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1756",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "将 pyproject.toml 中 ruff 的 select/ignore 配置从顶层 [tool.ruff] 移至 [tool.ruff.lint] 子节，消除废弃警告",
+      "reason": "这是针对该仓库 ruff 配置文件的格式调整，属于 lint 工具链维护，与 RL 训练框架的核心逻辑无关，不具备跨框架复用价值",
+      "value": 1,
+      "subsystems": [
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "pyproject.toml"
+      ],
+      "diff_preview": {
+        "additions": 2,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "pyproject.toml",
+            "lang": "toml",
+            "lines": [
+              [
+                "h",
+                "@@ -24,6 +24,8 @@ line_length = 119"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "[tool.ruff]"
+              ],
+              [
+                " ",
+                "line-length = 320  # TODO"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "[tool.ruff.lint]"
+              ],
+              [
+                " ",
+                "select = ["
+              ],
+              [
+                " ",
+                "    \"E\",      # Pycodestyle Errors (Structural/Fundamental Errors like bad indentation)"
+              ],
+              [
+                " ",
+                "    \"F\",      # Pyflakes (Core Errors: Unused imports, undefined names)"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:56:06.339573+00:00"
+    },
+    {
       "id": "radixark/miles#1757",
       "repo": "radixark/miles",
       "pr_number": 1757,
@@ -34607,6 +34937,7 @@
     "radixark/miles#1766",
     "THUDM/slime#2208",
     "radixark/miles#1008",
+    "radixark/miles#1753",
     "THUDM/slime#1965",
     "radixark/miles#1758",
     "radixark/miles#1716",
@@ -34649,6 +34980,7 @@
     "radixark/miles#996",
     "radixark/miles#1706",
     "radixark/miles#1026",
+    "radixark/miles#1750",
     "THUDM/slime#1944",
     "radixark/miles#1045",
     "radixark/miles#1180",
@@ -34741,6 +35073,7 @@
     "radixark/miles#1013",
     "radixark/miles#1018",
     "THUDM/slime#2172",
+    "radixark/miles#1754",
     "radixark/miles#938",
     "radixark/miles#1695",
     "radixark/miles#1183",
@@ -34780,6 +35113,7 @@
     "THUDM/slime#1925",
     "radixark/miles#1037",
     "THUDM/slime#1942",
+    "radixark/miles#1755",
     "radixark/miles#1181",
     "radixark/miles#967",
     "THUDM/slime#1855",
@@ -34789,6 +35123,7 @@
     "THUDM/slime#1920",
     "radixark/miles#1689",
     "radixark/miles#1772",
+    "radixark/miles#1748",
     "radixark/miles#1732",
     "radixark/miles#1198",
     "radixark/miles#1213",
@@ -34832,6 +35167,7 @@
     "THUDM/slime#2205",
     "THUDM/slime#2228",
     "THUDM/slime#1823",
+    "radixark/miles#1752",
     "THUDM/slime#2218",
     "radixark/miles#958",
     "THUDM/slime#1828",
@@ -34862,6 +35198,8 @@
     "radixark/miles#1764",
     "radixark/miles#971",
     "radixark/miles#1688",
+    "radixark/miles#1756",
+    "radixark/miles#1751",
     "THUDM/slime#2196",
     "THUDM/slime#2206",
     "radixark/miles#1022",
@@ -34937,6 +35275,7 @@
     "radixark/miles#980",
     "radixark/miles#1721",
     "radixark/miles#1730",
+    "radixark/miles#1747",
     "radixark/miles#1208",
     "radixark/miles#1757",
     "radixark/miles#975",
@@ -34957,5 +35296,5 @@
   ],
   "weekly_note": "<em>本周重点</em>：<b>#1720</b> 修复 CP>1 时 PPO <em>终端奖励位置错误</em>，<b>#1730</b> 消除 <em>MoE 共享专家</em>权重同步死锁，<b>#1735</b> Actor/Critic <em>共享 GPU</em> 大幅降低显存占用。",
   "weekly_note_week": "2026-W30",
-  "last_updated": "2026-07-26T06:44:27.343250+00:00"
+  "last_updated": "2026-07-26T06:57:19.695241+00:00"
 }
