@@ -1,6 +1,3918 @@
 {
   "prs": [
     {
+      "id": "radixark/miles#1757",
+      "repo": "radixark/miles",
+      "pr_number": 1757,
+      "title": "Add SGLang Omni multimodal input adapter",
+      "state": "closed",
+      "author": "JingwenGu0829",
+      "created_at": "2026-07-21T22:52:26Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1757",
+      "category": "feature",
+      "scope": "universal",
+      "summary": "为 Miles 框架的 SGLang Omni rollout 引擎添加多模态输入适配器，修复多模态数据在 rollout 流程中的传播问题",
+      "reason": "多模态（VLM）输入支持是 RL 训练框架的通用需求，其他框架在接入视觉输入、处理图像/音频 token 传播时会遇到相同的设计问题，具有跨框架参考价值",
+      "value": 3,
+      "subsystems": [
+        "rollout",
+        "multimodal",
+        "infra"
+      ],
+      "rl_concepts": [
+        "rollout",
+        "reward-model"
+      ],
+      "files": [
+        "miles/rollout/generate_hub/sglang_omni.py",
+        "miles/rollout/generate_utils/generate_endpoint_utils.py",
+        "miles/utils/processing_utils.py",
+        "requirements.txt",
+        "tests/fast/rollout/generate_hub/test_sglang_omni.py"
+      ],
+      "diff_preview": {
+        "additions": 293,
+        "deletions": 9,
+        "hunks": [
+          {
+            "file": "miles/rollout/generate_hub/sglang_omni.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,65 @@"
+              ],
+              [
+                "+",
+                "\"\"\"Single-turn rollout using SGLang Omni's processed multimodal contract."
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "Select with ``--custom-generate-function-path"
+              ],
+              [
+                "+",
+                "miles.rollout.generate_hub.sglang_omni.generate``."
+              ],
+              [
+                "+",
+                "\"\"\""
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "from miles.rollout.base_types import GenerateFnInput, GenerateFnOutput"
+              ],
+              [
+                "+",
+                "from miles.rollout.generate_utils.generate_endpoint_utils import ("
+              ],
+              [
+                "+",
+                "    compute_prompt_ids_from_sample,"
+              ],
+              [
+                "+",
+                "    compute_request_payload,"
+              ],
+              [
+                "+",
+                "    compute_routing_headers,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:44:27.343165+00:00"
+    },
+    {
+      "id": "radixark/miles#1758",
+      "repo": "radixark/miles",
+      "pr_number": 1758,
+      "title": "(1/3) refactor(session): move sample assembly into the session package",
+      "state": "closed",
+      "author": "guapisolo",
+      "created_at": "2026-07-21T23:09:04Z",
+      "merged_at": "2026-07-24T21:16:14Z",
+      "url": "https://github.com/radixark/miles/pull/1758",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将样本组装逻辑（compute_samples_from_openai_records 等函数）从 generate_utils 模块迁移到 session/samples 子包，理清模块依赖方向",
+      "reason": "此次重构仅调整了该仓库内部特有的目录结构和模块划分（generate_utils → session/samples），不涉及算法、训练循环或通用基础设施的变更，对其他框架无直接参考价值",
+      "value": 1,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docs/user-guide/rollout-endpoints.md",
+        "miles/rollout/generate_hub/agentic_tool_call.py",
+        "miles/rollout/generate_utils/openai_endpoint_utils.py",
+        "miles/rollout/session/samples/__init__.py",
+        "miles/rollout/session/samples/merge.py",
+        "tests/e2e/sglang/utils/logprob_verify_generate.py",
+        "tests/fast/rollout/generate_utils/test_openai_endpoint_utils.py",
+        "tests/fast/rollout/session/__init__.py",
+        "tests/fast/rollout/session/test_samples.py"
+      ],
+      "diff_preview": {
+        "additions": 895,
+        "deletions": 1281,
+        "hunks": [
+          {
+            "file": "docs/user-guide/rollout-endpoints.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -234,7 +234,7 @@ TITO needs two things from every SGLang response:"
+              ],
+              [
+                " ",
+                "By default, `build_chat_request_kwargs` sets both flags. The session middleware"
+              ],
+              [
+                " ",
+                "forwards raw `messages` to SGLang, which tokenizes the prompt and returns the"
+              ],
+              [
+                " ",
+                "response. `_compute_sample_from_openai_record` in"
+              ],
+              [
+                "-",
+                "[`openai_endpoint_utils.py`](https://github.com/radixark/miles/blob/main/miles/rollout/generate_utils/openai_endpoint_utils.py)"
+              ],
+              [
+                "+",
+                "[`merge.py`](https://github.com/radixark/miles/blob/main/miles/rollout/session/samples/merge.py)"
+              ],
+              [
+                " ",
+                "extracts prompt and output ids from the response and concatenates them into"
+              ],
+              [
+                " ",
+                "`sample.tokens`. You don't need to provide `input_ids` yourself."
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:44:21.671242+00:00"
+    },
+    {
+      "id": "radixark/miles#1759",
+      "repo": "radixark/miles",
+      "pr_number": 1759,
+      "title": "(2/3) refactor(session): assemble training samples on the session server; records never leave it",
+      "state": "open",
+      "author": "guapisolo",
+      "created_at": "2026-07-21T23:09:32Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1759",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "(2/3) refactor(session): assemble training samples on the session server; records never leave it",
+      "reason": "解析失败",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "docs/user-guide/rollout-endpoints.md",
+        "miles/rollout/generate_hub/agentic_tool_call.py",
+        "miles/rollout/generate_utils/openai_endpoint_utils.py",
+        "miles/rollout/session/core.py",
+        "miles/rollout/session/samples/codec.py",
+        "miles/rollout/session/samples/merge.py",
+        "miles/rollout/session/sessions.py",
+        "miles/utils/http_utils.py",
+        "requirements.txt",
+        "tests/fast/fixtures/generation_fixtures.py",
+        "tests/fast/fixtures/rollout_fixtures.py",
+        "tests/fast/rollout/generate_hub/test_multi_turn.py",
+        "tests/fast/rollout/generate_utils/test_openai_endpoint_utils.py",
+        "tests/fast/rollout/session/test_samples.py",
+        "tests/fast/rollout/session/test_samples_codec.py",
+        "tests/fast/router/test_session_samples_op.py"
+      ],
+      "diff_preview": {
+        "additions": 1140,
+        "deletions": 160,
+        "hunks": [
+          {
+            "file": "docs/user-guide/rollout-endpoints.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -217,8 +217,9 @@ is a thin wrapper around the custom agent. It:"
+              ],
+              [
+                " ",
+                "1. Creates a session on MilesRouter and builds a session-scoped `base_url`."
+              ],
+              [
+                " ",
+                "2. Calls the custom agent (from `--custom-agent-function-path`) to send one or more"
+              ],
+              [
+                " ",
+                "   chat requests."
+              ],
+              [
+                "-",
+                "3. Collects session records via `OpenAIEndpointTracer`."
+              ],
+              [
+                "-",
+                "4. Converts records into `Sample` objects via `compute_samples_from_openai_records`."
+              ],
+              [
+                "+",
+                "3. Collects server-assembled `Sample` objects via `OpenAIEndpointTracer.collect_samples`"
+              ],
+              [
+                "+",
+                "   (the session server converts records into samples, truncates and merges on the"
+              ],
+              [
+                "+",
+                "   owning instance; records never leave the server)."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "For broader customization beyond the OpenAI wrapper, see the `/generate` path above."
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:44:13.491972+00:00"
+    },
+    {
+      "id": "radixark/miles#1760",
+      "repo": "radixark/miles",
+      "pr_number": 1760,
+      "title": "(3/3) refactor(rollout): drop --generate-multi-samples and its per-turn sample semantics",
+      "state": "open",
+      "author": "guapisolo",
+      "created_at": "2026-07-21T23:09:58Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1760",
+      "category": "refactor",
+      "scope": "universal",
+      "summary": "移除 --generate-multi-samples 标志及其按轮次拆分样本的语义，改为始终将线性多轮对话合并为单个样本，修正样本边界应由轨迹决定而非 CLI 开关的设计错误",
+      "reason": "样本边界（sample boundary）的定义方式、group_index 共享导致 baseline 污染、多轮 rollout 的合并策略，是所有 RL 训练框架在实现 multi-turn rollout 时都会面临的通用设计问题，不依赖该仓库特有组件",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "algo",
+        "infra"
+      ],
+      "rl_concepts": [
+        "group-baseline",
+        "advantage",
+        "multi-turn rollout",
+        "GRPO",
+        "trajectory"
+      ],
+      "files": [
+        "docs/user-guide/rollout-endpoints.md",
+        "examples/experimental/swe-agent-v2/README.md",
+        "miles/rollout/filter_hub/dynamic_sampling_filters.py",
+        "miles/rollout/generate_hub/agentic_tool_call.py",
+        "miles/rollout/generate_hub/multi_turn.py",
+        "miles/rollout/generate_utils/openai_endpoint_utils.py",
+        "miles/rollout/session/core.py",
+        "miles/rollout/session/sessions.py",
+        "tests/fast/fixtures/generation_fixtures.py",
+        "tests/fast/rollout/generate_hub/test_multi_turn.py",
+        "tests/fast/rollout/generate_hub/test_single_turn.py",
+        "tests/fast/rollout/generate_utils/test_openai_endpoint_utils.py",
+        "tests/fast/rollout/inference_rollout/integration/test_agent_metadata.py",
+        "tests/fast/rollout/inference_rollout/integration/test_multi_turn.py",
+        "tests/fast/router/test_session_samples_op.py",
+        "tests/manual/session/bench_session_server_overhead.py"
+      ],
+      "diff_preview": {
+        "additions": 162,
+        "deletions": 340,
+        "hunks": [
+          {
+            "file": "docs/user-guide/rollout-endpoints.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -86,14 +86,14 @@ Helpers:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "- `compute_prompt_ids_from_sample` and `compute_request_payload` from"
+              ],
+              [
+                " ",
+                "  `miles/rollout/generate_utils/generate_endpoint_utils.py` build `/generate` requests."
+              ],
+              [
+                "-",
+                "- For multi-sample outputs, set `--generate-multi-samples` and return a list."
+              ],
+              [
+                "+",
+                "- Returning a `list[Sample]` from a generate function is supported natively; no flag is needed."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "### Reference generators"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "- **`single_turn.py`**: single-turn generation via `/generate`. Text or multimodal prompts."
+              ],
+              [
+                " ",
+                "- **`multi_turn.py`**: multi-turn tool calling via `/generate`. Adds CLI flags"
+              ],
+              [
+                " ",
+                "  `--generate-max-turns`, `--generate-tool-specs-path`, `--generate-tool-call-parser`,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:44:05.010576+00:00"
+    },
+    {
+      "id": "radixark/miles#1761",
+      "repo": "radixark/miles",
+      "pr_number": 1761,
+      "title": "[feat] Muon support for multi-LoRA per-slot optimizers",
+      "state": "open",
+      "author": "yushengsu-thu",
+      "created_at": "2026-07-22T00:00:46Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1761",
+      "category": "feature",
+      "scope": "universal",
+      "summary": "为 Multi-LoRA 的 per-slot 优化器开放 Muon 支持，包含 dist_muon 折叠、per-slot momentum_buffer 清零以防止 slot 复用时动量污染。",
+      "reason": "Multi-LoRA per-slot 优化器架构、Muon 优化器集成、以及 slot 退役时状态清零的问题，在任何使用 Megatron 后端 + LoRA 的 RL 训练框架中都会遇到，不依赖 miles 特有逻辑。",
+      "value": 4,
+      "subsystems": [
+        "trainer",
+        "parallel",
+        "infra"
+      ],
+      "rl_concepts": [
+        "LoRA",
+        "Megatron",
+        "optimizer",
+        "momentum",
+        "per-slot"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/model.py",
+        "miles/backends/megatron_utils/multi_lora_optimizer.py",
+        "miles/backends/megatron_utils/multi_lora_utils.py",
+        "miles/utils/multi_lora.py",
+        "tests/fast/backends/megatron_utils/test_multi_lora_slot_cleanup.py",
+        "tests/fast/utils/test_arguments.py"
+      ],
+      "diff_preview": {
+        "additions": 65,
+        "deletions": 39,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/model.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -164,17 +164,19 @@ def setup_model_and_optimizer("
+              ],
+              [
+                " ",
+                "    config = OptimizerConfig(**kwargs)"
+              ],
+              [
+                " ",
+                "    config.timers = None"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "    if _is_muon_optimizer(config.optimizer):"
+              ],
+              [
+                "+",
+                "    # Multi-LoRA wins over the plain Muon path: it builds per-slot optimizers of"
+              ],
+              [
+                "+",
+                "    # either family itself and applies LayerWise once over all slots."
+              ],
+              [
+                "+",
+                "    if is_multi_lora_enabled(args):"
+              ],
+              [
+                "+",
+                "        from miles.backends.megatron_utils.multi_lora_optimizer import build_multi_lora_optimizer"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "        optimizer = build_multi_lora_optimizer(args, config, model)"
+              ],
+              [
+                "+",
+                "    elif _is_muon_optimizer(config.optimizer):"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:43:55.048955+00:00"
+    },
+    {
+      "id": "radixark/miles#1762",
+      "repo": "radixark/miles",
+      "pr_number": 1762,
+      "title": "feat(session): serve stream:true chat completions as fake streaming",
+      "state": "closed",
+      "author": "guapisolo",
+      "created_at": "2026-07-22T00:21:12Z",
+      "merged_at": "2026-07-24T06:24:21Z",
+      "url": "https://github.com/radixark/miles/pull/1762",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "为 session 服务器的流式请求实现假流式返回，解决 sglang 拒绝 stream=true 与 return_meta_info=True 组合导致的 400 错误",
+      "reason": "该修复针对 miles 仓库自有的 session 服务器、路由器架构以及 TITO 追踪机制，属于该仓库内部 session 管理组件的特有问题，其他框架不存在相同的 session/router 设计",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/rollout/session/core.py",
+        "miles/utils/chat_template_utils/template.py",
+        "miles/utils/test_utils/mock_sglang_server.py",
+        "miles/utils/test_utils/mock_tools.py",
+        "miles/utils/test_utils/openai_stream_client.py",
+        "miles/utils/test_utils/session_verify_agent.py",
+        "tests/e2e/sglang/utils/session_tool_agent.py",
+        "tests/fast/router/test_sessions.py",
+        "tests/fast/utils/chat_template_utils/test_template.py",
+        "tests/fast/utils/test_utils/test_mock_sglang_server.py"
+      ],
+      "diff_preview": {
+        "additions": 608,
+        "deletions": 12,
+        "hunks": [
+          {
+            "file": "miles/rollout/session/core.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -4,6 +4,7 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "- ``chat_completions`` strips the R3 replay payloads (``routed_experts`` / ``indexer_topk``) from the client reply copy-on-write; the ``SessionRecord`` keeps the full response for the training path (``GET /sessions/{id}``)."
+              ],
+              [
+                " ",
+                "- ``chat_completions`` holds the per-session lock for prep and state update but not across the proxy call; ``closing`` re-checks and the ``num_assistant`` check gate concurrent DELETE/chat."
+              ],
+              [
+                "+",
+                "- ``stream: true`` is served as fake streaming: the backend call stays non-streaming (TITO needs the complete message + meta_info) and the full response is re-rendered as a single SSE chunk plus ``data: [DONE]``. Errors all happen before the SSE body is built, so they keep their real status codes as JSON."
+              ],
+              [
+                " ",
+                "\"\"\""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "import json"
+              ],
+              [
+                "h",
+                "@@ -58,7 +59,47 @@ def _strip_replay_payloads(response: dict) -> dict:"
+              ],
+              [
+                " ",
+                "    return {**response, \"choices\": stripped_choices}"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:43:47.688634+00:00"
+    },
+    {
+      "id": "radixark/miles#1763",
+      "repo": "radixark/miles",
+      "pr_number": 1763,
+      "title": "fix(megatron): finalize async saves on all ranks before hooks",
+      "state": "open",
+      "author": "HJSang",
+      "created_at": "2026-07-22T00:24:09Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1763",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 Megatron 异步 checkpoint 保存时仅在 rank 0 执行 finalize 导致多卡训练死锁的问题，改为所有 rank 均完成 finalize 后再由 rank 0 执行 post-save hook",
+      "reason": "Megatron 分布式 checkpoint finalize 需要跨 rank 协调，该 bug 在所有使用 Megatron 异步保存机制的框架中均可能出现，属于通用训练基础设施问题",
+      "value": 4,
+      "subsystems": [
+        "checkpoint",
+        "parallel",
+        "infra"
+      ],
+      "rl_concepts": [
+        "Megatron"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/actor.py",
+        "tests/fast/backends/megatron_utils/test_actor_checkpoint.py"
+      ],
+      "diff_preview": {
+        "additions": 54,
+        "deletions": 4,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -616,10 +616,12 @@ def save_model(self, rollout_id: int, force_sync: bool = False) -> None:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "            save_hf_model(self.args, rollout_id, self.model)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "        if self.args.custom_megatron_post_save_hook_path is not None and dist.get_rank() == 0:"
+              ],
+              [
+                "-",
+                "            if self.args.async_save:"
+              ],
+              [
+                "-",
+                "                maybe_finalize_async_save(blocking=True)"
+              ],
+              [
+                "+",
+                "        post_save_hook_path = self.args.custom_megatron_post_save_hook_path"
+              ],
+              [
+                "+",
+                "        if post_save_hook_path is not None and self.args.async_save:"
+              ],
+              [
+                "+",
+                "            # Distributed checkpoint finalization must run on every rank."
+              ],
+              [
+                "+",
+                "            maybe_finalize_async_save(blocking=True)"
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:43:41.441806+00:00"
+    },
+    {
+      "id": "radixark/miles#1764",
+      "repo": "radixark/miles",
+      "pr_number": 1764,
+      "title": "feat(megatron): expose collective async save finalization",
+      "state": "open",
+      "author": "HJSang",
+      "created_at": "2026-07-22T00:28:57Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1764",
+      "category": "feature",
+      "scope": "universal",
+      "summary": "为 Megatron 异步 checkpoint 暴露集合式完成轮询接口，支持训练步间重叠 checkpoint I/O",
+      "reason": "异步 checkpoint 完成同步是所有使用 Megatron 分布式 checkpoint 的 RL 训练框架的通用问题，涉及 rank 间集合操作、背压控制和故障容错等通用训练基础设施模式，slime 等同类框架面临完全相同的需求",
+      "value": 4,
+      "subsystems": [
+        "checkpoint",
+        "parallel",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "异步checkpoint",
+        "分布式训练",
+        "fault-tolerance"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/actor.py",
+        "miles/ray/actor_group.py",
+        "miles/ray/train/group.py",
+        "tests/fast/backends/megatron_utils/test_actor_checkpoint.py",
+        "tests/fast/ray/test_actor_group.py",
+        "tests/fast/ray/train/dummy_actor.py",
+        "tests/fast/ray/train/test_group.py"
+      ],
+      "diff_preview": {
+        "additions": 248,
+        "deletions": 9,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -616,10 +616,12 @@ def save_model(self, rollout_id: int, force_sync: bool = False) -> None:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "            save_hf_model(self.args, rollout_id, self.model)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "        if self.args.custom_megatron_post_save_hook_path is not None and dist.get_rank() == 0:"
+              ],
+              [
+                "-",
+                "            if self.args.async_save:"
+              ],
+              [
+                "-",
+                "                maybe_finalize_async_save(blocking=True)"
+              ],
+              [
+                "+",
+                "        post_save_hook_path = self.args.custom_megatron_post_save_hook_path"
+              ],
+              [
+                "+",
+                "        if post_save_hook_path is not None and self.args.async_save:"
+              ],
+              [
+                "+",
+                "            # Distributed checkpoint finalization must run on every rank."
+              ],
+              [
+                "+",
+                "            maybe_finalize_async_save(blocking=True)"
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:43:35.786521+00:00"
+    },
+    {
+      "id": "radixark/miles#1765",
+      "repo": "radixark/miles",
+      "pr_number": 1765,
+      "title": "refactor(fsdp): remove obsolete s_aux guard",
+      "state": "closed",
+      "author": "guapisolo",
+      "created_at": "2026-07-22T06:34:26Z",
+      "merged_at": "2026-07-22T07:00:01Z",
+      "url": "https://github.com/radixark/miles/pull/1765",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "移除针对旧版 Transformers 的 flash_attn_saux_guard 运行时源码 patch，依赖已固定的 transformers==5.12.1 中自带的 s_aux 空值检查",
+      "reason": "该 patch 是为了补丁特定旧版 Transformers 实现而存在的，移除原因强依赖 miles 仓库自己锁定的 transformers 版本号（5.12.1），其他框架可能使用不同版本或有不同的 flash attention 适配层，不具备跨仓库通用性",
+      "value": 2,
+      "subsystems": [
+        "parallel",
+        "infra"
+      ],
+      "rl_concepts": [
+        "FSDP"
+      ],
+      "files": [
+        "miles/backends/experimental/fsdp_utils/adaptations/class_patches.py",
+        "tests/fast/backends/test_fsdp_hf_compat.py"
+      ],
+      "diff_preview": {
+        "additions": 5,
+        "deletions": 65,
+        "hunks": [
+          {
+            "file": "miles/backends/experimental/fsdp_utils/adaptations/class_patches.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -4,63 +4,11 @@"
+              ],
+              [
+                " ",
+                "idempotent patches keep the training forward runnable and warn when it diverges from the SGLang rollout."
+              ],
+              [
+                " ",
+                "\"\"\""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "import inspect"
+              ],
+              [
+                " ",
+                "import logging"
+              ],
+              [
+                "-",
+                "import textwrap"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "logger = logging.getLogger(__name__)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "def apply_flash_attn_saux_guard() -> bool:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:43:29.563654+00:00"
+    },
+    {
+      "id": "radixark/miles#1766",
+      "repo": "radixark/miles",
+      "pr_number": 1766,
+      "title": "feat: support DeepSeek V4 THD packing",
+      "state": "open",
+      "author": "samaritan1998",
+      "created_at": "2026-07-22T19:20:28Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1766",
+      "category": "feature",
+      "scope": "repo-specific",
+      "summary": "为 DeepSeek-V4 添加真正的 THD packing 支持，包含 sample-local cu_seqlens 边界、CP 安全路径、损失掩码传播及相关测试",
+      "reason": "该 PR 的核心改动围绕 DeepSeek-V4 这一特定模型的专属架构特性（THD packing、window/compressed attention、TileLang indexer），涉及 miles_plugins/models/deepseek_v4 等仓库特有路径，属于对该仓库特定模型的深度适配，其他框架不会直接复用这些代码",
+      "value": 3,
+      "subsystems": [
+        "parallel",
+        "objective",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "FSDP",
+        "Megatron",
+        "loss-mask",
+        "sequence-packing",
+        "context-parallelism"
+      ],
+      "files": [
+        "miles/backends/experimental/fsdp_utils/actor.py",
+        "miles/backends/megatron_utils/parallel.py",
+        "miles/backends/sglang_utils/arguments.py",
+        "miles/backends/training_utils/cp_utils.py",
+        "miles/backends/training_utils/data.py",
+        "miles/backends/training_utils/log_utils.py",
+        "miles/backends/training_utils/loss.py",
+        "miles/backends/training_utils/loss_hub/logit_processors.py",
+        "miles/backends/training_utils/loss_hub/losses.py",
+        "miles/backends/training_utils/loss_hub/math_utils.py",
+        "miles/rollout/data_source.py",
+        "miles/rollout/sft_rollout.py",
+        "miles/utils/arguments.py",
+        "miles/utils/data.py",
+        "miles/utils/mask_utils.py",
+        "miles_plugins/mbridge/deepseekv4.py",
+        "miles_plugins/models/deepseek_v4/deepseek_v4.py",
+        "miles_plugins/models/deepseek_v4/ops/compressor.py",
+        "miles_plugins/models/deepseek_v4/ops/cp_utils.py",
+        "miles_plugins/models/deepseek_v4/ops/kernel/tilelang_indexer_fwd.py"
+      ],
+      "diff_preview": {
+        "additions": 935,
+        "deletions": 101,
+        "hunks": [
+          {
+            "file": "miles/backends/experimental/fsdp_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -386,6 +386,7 @@ def _compute_log_prob("
+              ],
+              [
+                " ",
+                "                            response_lengths=batch[\"response_lengths\"],"
+              ],
+              [
+                " ",
+                "                            with_entropy=(store_prefix == \"\"),"
+              ],
+              [
+                " ",
+                "                            max_seq_lens=batch.get(\"max_seq_lens\", None),"
+              ],
+              [
+                "+",
+                "                            padded_total_lengths=batch.get(\"padded_total_lengths\", None),"
+              ],
+              [
+                " ",
+                "                        )"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "                        batch_result = {"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:43:23.316767+00:00"
+    },
+    {
+      "id": "radixark/miles#1767",
+      "repo": "radixark/miles",
+      "pr_number": 1767,
+      "title": "fix: filter_long_prompt invalid return types and multimodal handling",
+      "state": "closed",
+      "author": "mathewjhan",
+      "created_at": "2026-07-22T20:34:17Z",
+      "merged_at": "2026-07-23T07:24:52Z",
+      "url": "https://github.com/radixark/miles/pull/1767",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 filter_long_prompt 函数在部分分支错误返回 bool 而非 List[Sample] 的问题，并修复多模态场景下 processor 未正确处理的缺陷",
+      "reason": "长度过滤是数据预处理的通用逻辑，返回类型错误和多模态 processor 处理缺失是所有基于相同数据管道的 RL 训练框架都可能遇到的 bug，且该修复明确移植自 slime，具有跨框架普适性",
+      "value": 3,
+      "subsystems": [
+        "multimodal",
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [
+        "reward-model",
+        "rollout"
+      ],
+      "files": [
+        "miles/utils/data.py"
+      ],
+      "diff_preview": {
+        "additions": 23,
+        "deletions": 9,
+        "hunks": [
+          {
+            "file": "miles/utils/data.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -17,7 +17,6 @@"
+              ],
+              [
+                " ",
+                "    pq = None"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from miles.utils import chat_template_utils"
+              ],
+              [
+                "-",
+                "from miles.utils.processing_utils import call_processor"
+              ],
+              [
+                " ",
+                "from miles.utils.types import MultimodalTypes, Sample"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -84,24 +83,39 @@ def _parse_generalized_path(s: str):"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "def filter_long_prompt(origin_samples: list[Sample], tokenizer, processor, max_length: int | None) -> list[Sample]:"
+              ],
+              [
+                " ",
+                "    if max_length is None:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:43:15.722924+00:00"
+    },
+    {
+      "id": "radixark/miles#1768",
+      "repo": "radixark/miles",
+      "pr_number": 1768,
+      "title": "codeowners: add Zhichenzzz to /miles/ and a /miles/dashboard/ rule",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-07-23T00:44:11Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1768",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "在 CODEOWNERS 中为 /miles/ 新增 @Zhichenzzz，并为 /miles/dashboard/ 单独添加一套负责人规则",
+      "reason": "CODEOWNERS 文件的修改仅影响该仓库自身的代码审查权限分配，属于仓库内部治理配置，对其他 RL 训练框架没有任何参考价值",
+      "value": 1,
+      "subsystems": [
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".github/CODEOWNERS"
+      ],
+      "diff_preview": {
+        "additions": 2,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": ".github/CODEOWNERS",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -1,9 +1,10 @@"
+              ],
+              [
+                " ",
+                "/.github/CODEOWNERS @fzyzcjy @Ying1123"
+              ],
+              [
+                " ",
+                "/.github/workflows/ @yushengsu-thu @guapisolo @yueming-yuan"
+              ],
+              [
+                "-",
+                "/miles/ @fzyzcjy @yueming-yuan"
+              ],
+              [
+                "+",
+                "/miles/ @fzyzcjy @yueming-yuan @Zhichenzzz"
+              ],
+              [
+                " ",
+                "/miles/backends/ @fzyzcjy @yueming-yuan @maocheng23 @Zhichenzzz @Shi-Dong"
+              ],
+              [
+                " ",
+                "/miles/backends/megatron_utils/ @fzyzcjy @yueming-yuan @maocheng23 @yushengsu-thu @Zhichenzzz @Shi-Dong"
+              ],
+              [
+                " ",
+                "/miles/backends/sglang_utils/ @fzyzcjy @yueming-yuan @maocheng23 @yushengsu-thu @Zhichenzzz @Shi-Dong"
+              ],
+              [
+                "+",
+                "/miles/dashboard/ @fzyzcjy @yueming-yuan @Zhichenzzz @guapisolo @Shi-Dong @maocheng23"
+              ],
+              [
+                " ",
+                "/miles/ray/ @fzyzcjy @yueming-yuan @maocheng23"
+              ],
+              [
+                " ",
+                "/miles/rollout/ @fzyzcjy @yueming-yuan @guapisolo @Shi-Dong"
+              ],
+              [
+                " ",
+                "/miles/rollout/session/ @fzyzcjy @yueming-yuan @guapisolo @maocheng23 @jybsuper @Shi-Dong"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:43:05.910136+00:00"
+    },
+    {
+      "id": "radixark/miles#1769",
+      "repo": "radixark/miles",
+      "pr_number": 1769,
+      "title": "Revert \"fix: filter_long_prompt invalid return types and multimodal handling\"",
+      "state": "closed",
+      "author": "yushengsu-thu",
+      "created_at": "2026-07-23T07:26:41Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1769",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "回滚对 filter_long_prompt 函数返回类型及多模态处理的修复，恢复至修复前状态",
+      "reason": "filter_long_prompt 是数据预处理中的通用组件，涉及长度过滤逻辑和多模态输入处理，任何使用类似 rollout 数据管道的 RL 训练框架都会遇到同类问题，属于通用基础设施范畴",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "multimodal",
+        "infra"
+      ],
+      "rl_concepts": [
+        "rollout",
+        "reward-model"
+      ],
+      "files": [
+        "miles/utils/data.py"
+      ],
+      "diff_preview": {
+        "additions": 9,
+        "deletions": 23,
+        "hunks": [
+          {
+            "file": "miles/utils/data.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -17,6 +17,7 @@"
+              ],
+              [
+                " ",
+                "    pq = None"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from miles.utils import chat_template_utils"
+              ],
+              [
+                "+",
+                "from miles.utils.processing_utils import call_processor"
+              ],
+              [
+                " ",
+                "from miles.utils.types import MultimodalTypes, Sample"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -83,39 +84,24 @@ def _parse_generalized_path(s: str):"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "def filter_long_prompt(origin_samples: list[Sample], tokenizer, processor, max_length: int | None) -> list[Sample]:"
+              ],
+              [
+                " ",
+                "    if max_length is None:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:43:00.378246+00:00"
+    },
+    {
+      "id": "radixark/miles#1770",
+      "repo": "radixark/miles",
+      "pr_number": 1770,
+      "title": "[Dashboard] cpu profiling",
+      "state": "closed",
+      "author": "xiuhu17",
+      "created_at": "2026-07-23T08:32:17Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1770",
+      "category": "feature",
+      "scope": "repo-specific",
+      "summary": "为 miles Dashboard 新增 CPU profiling 支持，扩展了已有的 GPU 性能采样与可视化能力",
+      "reason": "该 PR 涉及的是 miles 仓库自身特有的 Dashboard 监控系统（含 sglang scraper、静态前端页面、backend/server 等内部工具），CPU profiling 功能是该仓库专属的可观测性基础设施，其他 RL 训练框架不共用这套 Dashboard 实现",
+      "value": 2,
+      "subsystems": [
+        "logging",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/backends/megatron_utils/actor.py",
+        "miles/backends/sglang_utils/sglang_engine.py",
+        "miles/dashboard/README.md",
+        "miles/dashboard/__init__.py",
+        "miles/dashboard/advisory.py",
+        "miles/dashboard/args.py",
+        "miles/dashboard/backend.py",
+        "miles/dashboard/collector.py",
+        "miles/dashboard/dump_reader.py",
+        "miles/dashboard/gpu_sampler.py",
+        "miles/dashboard/hooks.py",
+        "miles/dashboard/logging_utils.py",
+        "miles/dashboard/serve.py",
+        "miles/dashboard/server.py",
+        "miles/dashboard/sglang_scraper.py",
+        "miles/dashboard/static/anatomy.js",
+        "miles/dashboard/static/api.js",
+        "miles/dashboard/static/app.js",
+        "miles/dashboard/static/carpet.js",
+        "miles/dashboard/static/charts.js"
+      ],
+      "diff_preview": {
+        "additions": 7146,
+        "deletions": 4,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -110,6 +110,12 @@ def init("
+              ],
+              [
+                " ",
+                "        if self._is_first_replica_megatron_main_rank:"
+              ],
+              [
+                " ",
+                "            init_tracking(args, primary=False)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "        # every rank, not just main: per-GPU dashboard phase lanes need each"
+              ],
+              [
+                "+",
+                "        # rank's Timer events (no-op unless --use-miles-dashboard)"
+              ],
+              [
+                "+",
+                "        from miles.dashboard.hooks import register_train_actor"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "        register_train_actor(args)"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                "        unsupported = {\"train_actor\", \"train_log_probs\"} & set(args.profile_target)"
+              ],
+              [
+                " ",
+                "        if unsupported and args.use_pytorch_profiler:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:42:54.438993+00:00"
+    },
+    {
+      "id": "radixark/miles#1771",
+      "repo": "radixark/miles",
+      "pr_number": 1771,
+      "title": "feat(session): session server v2 — opt-in trajectory-tree serving; v1 preserved byte-exact",
+      "state": "open",
+      "author": "guapisolo",
+      "created_at": "2026-07-23T10:08:54Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1771",
+      "category": "feature",
+      "scope": "universal",
+      "summary": "为 session server 新增 v2 版本，支持多分支轨迹树（重试、压缩、子代理森林），同时字节级保留 v1 线性实现为默认路径，通过 --use-session-server v2 参数选择启用",
+      "reason": "多轨迹/树状 rollout 管理（retry、compaction、subagent forest）是 agentic RL 训练框架的通用需求，trajectory tree 结构、会话状态管理与 rollout 引擎解耦设计对其他框架同样有参考价值；v1/v2 共存的向后兼容策略也是通用工程实践",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "infra",
+        "logging"
+      ],
+      "rl_concepts": [
+        "trajectory",
+        "rollout",
+        "reward-model"
+      ],
+      "files": [
+        ".pre-commit-config.yaml",
+        "docs/user-guide/rollout-endpoints.md",
+        "examples/experimental/swe-agent-v2/README.md",
+        "miles/backends/sglang_utils/arguments.py",
+        "miles/rollout/filter_hub/dynamic_sampling_filters.py",
+        "miles/rollout/generate_hub/agentic_tool_call.py",
+        "miles/rollout/generate_hub/multi_turn.py",
+        "miles/rollout/generate_utils/openai_endpoint_utils.py",
+        "miles/rollout/session/core.py",
+        "miles/rollout/session/samples/codec.py",
+        "miles/rollout/session/samples/merge.py",
+        "miles/rollout/session/sessions.py",
+        "miles/rollout/session/v2/__init__.py",
+        "miles/rollout/session/v2/assembly.py",
+        "miles/rollout/session/v2/core.py",
+        "miles/rollout/session/v2/session_state.py",
+        "miles/rollout/session/v2/trajectory_tree.py",
+        "miles/utils/arguments.py",
+        "miles/utils/chat_template_utils/deepseek.py",
+        "miles/utils/chat_template_utils/template.py"
+      ],
+      "diff_preview": {
+        "additions": 3124,
+        "deletions": 366,
+        "hunks": [
+          {
+            "file": ".pre-commit-config.yaml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -1,6 +1,10 @@"
+              ],
+              [
+                " ",
+                "default_language_version:"
+              ],
+              [
+                " ",
+                "  python: python3"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "# Vendored upstream modules stay byte-diffable against their source; keep"
+              ],
+              [
+                "+",
+                "# formatters and linters away so upstream-tracking diffs remain minimal."
+              ],
+              [
+                "+",
+                "exclude: '^miles/utils/chat_template_utils/templates/encoding_dsv(4|32)\\.py$'"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                "ci:"
+              ],
+              [
+                " ",
+                "  autofix_prs: true"
+              ],
+              [
+                " ",
+                "  autoupdate_commit_msg: '[pre-commit.ci] pre-commit suggestions'"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:42:47.979191+00:00"
+    },
+    {
+      "id": "radixark/miles#1772",
+      "repo": "radixark/miles",
+      "pr_number": 1772,
+      "title": "Add host memory monitoring to the dashboard",
+      "state": "open",
+      "author": "xiuhu17",
+      "created_at": "2026-07-23T10:57:28Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1772",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为 dashboard 新增主机内存监控，在计算利用率视图中展示节点级内存压力，并补充测试覆盖",
+      "reason": "这是对该仓库自有 dashboard 系统的功能扩展，涉及其特定的 collector/store/server/前端 JS 架构，其他 RL 框架不共享这套 dashboard 实现，因此属于 repo-specific",
+      "value": 2,
+      "subsystems": [
+        "logging",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/backends/megatron_utils/actor.py",
+        "miles/dashboard/README.md",
+        "miles/dashboard/args.py",
+        "miles/dashboard/collector.py",
+        "miles/dashboard/gpu_sampler.py",
+        "miles/dashboard/hooks.py",
+        "miles/dashboard/server.py",
+        "miles/dashboard/static/views_timeline.js",
+        "miles/dashboard/store.py",
+        "tests/fast/dashboard/dummy_telemetry.py",
+        "tests/fast/dashboard/test_collector.py",
+        "tests/fast/dashboard/test_gpu_sampler.py",
+        "tests/fast/dashboard/test_hooks.py",
+        "tests/fast/dashboard/test_store.py",
+        "tests/fast/dashboard/test_timeline.py"
+      ],
+      "diff_preview": {
+        "additions": 369,
+        "deletions": 25,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -354,7 +354,8 @@ def train("
+              ],
+              [
+                " ",
+                "                return TrainStepOutcome.NORMAL"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "        if self.role == \"critic\":"
+              ],
+              [
+                "-",
+                "            return self.train_critic(rollout_id, rollout_data)"
+              ],
+              [
+                "+",
+                "            with timer(\"critic_train\"):"
+              ],
+              [
+                "+",
+                "                return self.train_critic(rollout_id, rollout_data)"
+              ],
+              [
+                " ",
+                "        else:"
+              ],
+              [
+                " ",
+                "            return self.train_actor(rollout_id, rollout_data, witness_info=witness_info, attempt=attempt)"
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:42:40.146412+00:00"
+    },
+    {
+      "id": "radixark/miles#1773",
+      "repo": "radixark/miles",
+      "pr_number": 1773,
+      "title": "chore(docker): upgrade torch_memory_saver to 6d5bce48",
+      "state": "closed",
+      "author": "zyzshishui",
+      "created_at": "2026-07-23T18:13:19Z",
+      "merged_at": "2026-07-23T18:24:51Z",
+      "url": "https://github.com/radixark/miles/pull/1773",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "将 CUDA 和 ROCm Dockerfile 中固定的 torch_memory_saver 提交哈希从 d64a639 升级至 6d5bce48",
+      "reason": "这是针对该仓库 Docker 构建脚本的依赖版本 bump，属于特定硬件构建脚本和版本号更新，其他框架不会直接受益",
+      "value": 1,
+      "subsystems": [
+        "memory",
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docker/Dockerfile",
+        "docker/Dockerfile.rocm"
+      ],
+      "diff_preview": {
+        "additions": 2,
+        "deletions": 2,
+        "hunks": [
+          {
+            "file": "docker/Dockerfile",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -128,7 +128,7 @@ RUN git clone https://github.com/${MEGATRON_REPO}.git --recursive -b ${MEGATRON_"
+              ],
+              [
+                " ",
+                "# git source Megatron-LM itself pins in pyproject.toml."
+              ],
+              [
+                " ",
+                "RUN pip install \"git+https://github.com/NVIDIA-NeMo/Emerging-Optimizers.git@v0.1.0\""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "RUN pip install git+https://github.com/fzyzcjy/torch_memory_saver.git@d64a639 --no-cache-dir --force-reinstall"
+              ],
+              [
+                "+",
+                "RUN pip install git+https://github.com/fzyzcjy/torch_memory_saver.git --no-cache-dir --force-reinstall"
+              ],
+              [
+                " ",
+                "RUN pip install \"nvidia-modelopt[torch]>=0.37.0\" --no-build-isolation"
+              ],
+              [
+                " ",
+                "RUN pip install git+https://github.com/radixark/Megatron-Bridge.git@bridge --no-deps --no-build-isolation"
+              ],
+              [
+                " ",
+                "RUN pip install megatron-energon --no-deps"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:42:34.266126+00:00"
+    },
+    {
+      "id": "radixark/miles#1774",
+      "repo": "radixark/miles",
+      "pr_number": 1774,
+      "title": "fix(docker): set TMS_CUDA_MAJOR for torch_memory_saver source build",
+      "state": "closed",
+      "author": "Zhichenzzz",
+      "created_at": "2026-07-23T19:03:30Z",
+      "merged_at": "2026-07-23T19:29:09Z",
+      "url": "https://github.com/radixark/miles/pull/1774",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复 Docker 构建中未设置 TMS_CUDA_MAJOR 环境变量导致 torch_memory_saver 源码编译失败的问题",
+      "reason": "此 PR 仅涉及该仓库自身的 Docker 镜像构建脚本修复，属于特定硬件/环境的构建配置问题，与 RL 训练框架的核心逻辑无关",
+      "value": 1,
+      "subsystems": [
+        "infra",
+        "ci",
+        "memory"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docker/Dockerfile"
+      ],
+      "diff_preview": {
+        "additions": 3,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "docker/Dockerfile",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -128,7 +128,9 @@ RUN git clone https://github.com/${MEGATRON_REPO}.git --recursive -b ${MEGATRON_"
+              ],
+              [
+                " ",
+                "# git source Megatron-LM itself pins in pyproject.toml."
+              ],
+              [
+                " ",
+                "RUN pip install \"git+https://github.com/NVIDIA-NeMo/Emerging-Optimizers.git@v0.1.0\""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "RUN pip install git+https://github.com/fzyzcjy/torch_memory_saver.git --no-cache-dir --force-reinstall"
+              ],
+              [
+                "+",
+                "# torch_memory_saver's source build needs TMS_CUDA_MAJOR; take it from torch."
+              ],
+              [
+                "+",
+                "RUN TMS_CUDA_MAJOR=$(python3 -c \"import torch; print(torch.version.cuda.split('.')[0])\") \\"
+              ],
+              [
+                "+",
+                "    pip install git+https://github.com/fzyzcjy/torch_memory_saver.git --no-cache-dir --force-reinstall"
+              ],
+              [
+                " ",
+                "RUN pip install \"nvidia-modelopt[torch]>=0.37.0\" --no-build-isolation"
+              ],
+              [
+                " ",
+                "RUN pip install git+https://github.com/radixark/Megatron-Bridge.git@bridge --no-deps --no-build-isolation"
+              ],
+              [
+                " ",
+                "RUN pip install megatron-energon --no-deps"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:42:25.031007+00:00"
+    },
+    {
+      "id": "radixark/miles#1775",
+      "repo": "radixark/miles",
+      "pr_number": 1775,
+      "title": "fix(mlflow): keep track of run id for multi-threaded mlflow logging",
+      "state": "open",
+      "author": "mathewjhan",
+      "created_at": "2026-07-23T22:30:13Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1775",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复多线程环境下 MLflow 日志记录因 active_run() 线程局部变量导致 run id 丢失的问题，改为缓存 run id",
+      "reason": "MLflow 多线程日志记录的线程局部变量问题是所有使用 MLflow 作为 tracking backend 的训练框架都会遇到的通用 bug，与框架特有逻辑无关",
+      "value": 3,
+      "subsystems": [
+        "logging"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/tracking_utils/mlflow_utils.py"
+      ],
+      "diff_preview": {
+        "additions": 26,
+        "deletions": 5,
+        "hunks": [
+          {
+            "file": "miles/utils/tracking_utils/mlflow_utils.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -12,11 +12,15 @@"
+              ],
+              [
+                " ",
+                "import logging"
+              ],
+              [
+                " ",
+                "import os"
+              ],
+              [
+                " ",
+                "import re"
+              ],
+              [
+                "+",
+                "import time"
+              ],
+              [
+                " ",
+                "from copy import deepcopy"
+              ],
+              [
+                " ",
+                "from typing import Any"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "logger = logging.getLogger(__name__)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "# Run id captured at init; lets threads without the (thread-local) active run still log."
+              ],
+              [
+                "+",
+                "_run_id: str | None = None"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:42:20.098717+00:00"
+    },
+    {
+      "id": "radixark/miles#1776",
+      "repo": "radixark/miles",
+      "pr_number": 1776,
+      "title": "fix:  multimodal crash when filtering samples",
+      "state": "open",
+      "author": "mathewjhan",
+      "created_at": "2026-07-23T22:59:58Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1776",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复多模态场景下过滤样本时发生崩溃的问题",
+      "reason": "多模态数据过滤逻辑（如按长度或条件筛选样本）是通用的训练数据处理环节，任何支持VLM/多模态输入的RL训练框架都会遇到类似问题，不依赖该仓库特有实现",
+      "value": 4,
+      "subsystems": [
+        "multimodal",
+        "infra"
+      ],
+      "rl_concepts": [
+        "reward-model",
+        "rollout"
+      ],
+      "files": [
+        "miles/utils/data.py",
+        "tests/fast/utils/test_data.py"
+      ],
+      "diff_preview": {
+        "additions": 72,
+        "deletions": 3,
+        "hunks": [
+          {
+            "file": "miles/utils/data.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -108,11 +108,12 @@ def filter_long_prompt(origin_samples: list[Sample], tokenizer, processor, max_l"
+              ],
+              [
+                " ",
+                "                if len(input_ids) <= max_length:"
+              ],
+              [
+                " ",
+                "                    filtered_samples.append(sample)"
+              ],
+              [
+                " ",
+                "        if multimodal:"
+              ],
+              [
+                "-",
+                "            from miles.utils.processing_utils import process_vision_info"
+              ],
+              [
+                "+",
+                "            from miles.utils.processing_utils import call_processor"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "            for sample in multimodal:"
+              ],
+              [
+                "-",
+                "                multimodal_inputs = process_vision_info(sample.prompt, processor)"
+              ],
+              [
+                "-",
+                "                processor_output = processor(text=sample.prompt, **multimodal_inputs)"
+              ],
+              [
+                "+",
+                "                # sample.prompt is the rendered template string here, so reuse the"
+              ],
+              [
+                "+",
+                "                # multimodal_inputs computed from the original message list in __init__."
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:42:14.831276+00:00"
+    },
+    {
+      "id": "radixark/miles#1777",
+      "repo": "radixark/miles",
+      "pr_number": 1777,
+      "title": "feat(tito): default allowed append roles become tool+user",
+      "state": "open",
+      "author": "guapisolo",
+      "created_at": "2026-07-23T23:22:57Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1777",
+      "category": "feature",
+      "scope": "repo-specific",
+      "summary": "将 TITO 默认允许追加的角色从仅 tool 改为 tool+user，并在无 session server 时对显式角色配置进行强制校验报错",
+      "reason": "TITO（Token-In Token-Out）是该仓库特有的 chat template tokenizer 机制，涉及的 session server、append-role 配置、DeepSeekV3.2 vendor encoder 等均为 miles 仓库内部组件，其他 RL 训练框架不使用此接口设计",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docs/user-guide/agentic-chat-template.md",
+        "examples/experimental/openenv/openenv_launch_common.py",
+        "examples/experimental/swe-agent-v2-amd/run.py",
+        "examples/experimental/swe-agent-v2/run-glm47-flash-agentic-async.py",
+        "examples/experimental/swe-agent-v2/run.py",
+        "miles/rollout/session/core.py",
+        "miles/rollout/session/linear_trajectory.py",
+        "miles/rollout/session/sessions.py",
+        "miles/utils/arguments.py",
+        "miles/utils/chat_template_utils/template.py",
+        "miles/utils/chat_template_utils/templates/encoding_dsv32.py",
+        "miles/utils/chat_template_utils/tito_tokenizer.py",
+        "miles/utils/test_utils/chat_template_verify.py",
+        "miles/utils/test_utils/mock_trajectories.py",
+        "miles/utils/test_utils/session_verify_agent.py",
+        "miles/utils/test_utils/session_verify_runner.py",
+        "scripts/tools/verify_chat_template.py",
+        "scripts/tools/verify_session_tito_tokenizer.py",
+        "tests/e2e/sglang/test_session_server_multi_role/_common.py",
+        "tests/e2e/sglang/test_session_server_multi_role/test_deepseekv4.py"
+      ],
+      "diff_preview": {
+        "additions": 349,
+        "deletions": 476,
+        "hunks": [
+          {
+            "file": "docs/user-guide/agentic-chat-template.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -5,59 +5,60 @@ description: How to turn on and verify Token-In-Token-Out (TITO) for multi-turn"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# Agentic Chat Templates (TITO)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "Multi-turn agentic rollout in Miles runs on **TITO** (Token-In-Token-Out): each turn's token sequence is a bit-perfect prefix of the next, so the trainer sees exactly the tokens the engine produced — no re-tokenization, no drift. The *why* is in the blog ([No Token Left Behind](https://lmsys.org/blog/2026-05-13-no-token-left-behind/)); this page is *how*."
+              ],
+              [
+                "+",
+                "Multi-turn agentic rollout in Miles runs on **TITO** (Token-In-Token-Out): within a split, each turn's token sequence is a bit-perfect prefix of the next, so the trainer sees exactly the tokens the engine produced — no re-tokenization, no drift. The *why* is in the blog ([No Token Left Behind](https://lmsys.org/blog/2026-05-13-no-token-left-behind/)); this page is *how*."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "Your harness only ever sends and receives **OpenAI chat messages**, never tokens. Miles keeps the per-trajectory append-only token buffer (ids + logprobs + routed experts) internally and ships it straight to training."
+              ],
+              [
+                "+",
+                "Your harness only ever sends and receives **OpenAI chat messages**, never tokens. Miles keeps one append-only token buffer (ids + logprobs + routed experts) per segment and ships it straight to training."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "## Prerequisites"
+              ],
+              [
+                "+",
+                "## Who owns what"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:42:09.417278+00:00"
+    },
+    {
+      "id": "radixark/miles#1778",
+      "repo": "radixark/miles",
+      "pr_number": 1778,
+      "title": "refactor(tito): allowed append roles become a pure harness gate",
+      "state": "open",
+      "author": "guapisolo",
+      "created_at": "2026-07-23T23:23:21Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1778",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将聊天模板解析与角色集合解耦，allowed_append_roles 仅作为 harness 行为的门控，每个模型家族只需注册一个模板即可服务所有角色组合",
+      "reason": "此 PR 重构的是 miles 仓库特有的 TITO tokenizer 与 chat template 注册机制（SUPPORTED_TEMPLATES、resolve_fixed_chat_template、session/linear_trajectory 等），属于该仓库自定义的 agentic rollout session 管道中的内部模板管理逻辑，其他框架不共享这套模板注册体系",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docs/user-guide/agentic-chat-template.md",
+        "examples/experimental/openenv/openenv_launch_common.py",
+        "examples/experimental/swe-agent-v2-amd/run.py",
+        "examples/experimental/swe-agent-v2/run-glm47-flash-agentic-async.py",
+        "examples/experimental/swe-agent-v2/run.py",
+        "miles/rollout/session/core.py",
+        "miles/rollout/session/linear_trajectory.py",
+        "miles/rollout/session/sessions.py",
+        "miles/utils/arguments.py",
+        "miles/utils/chat_template_utils/template.py",
+        "miles/utils/chat_template_utils/templates/encoding_dsv32.py",
+        "miles/utils/chat_template_utils/tito_tokenizer.py",
+        "miles/utils/test_utils/chat_template_verify.py",
+        "miles/utils/test_utils/mock_trajectories.py",
+        "miles/utils/test_utils/session_verify_agent.py",
+        "miles/utils/test_utils/session_verify_runner.py",
+        "scripts/tools/verify_chat_template.py",
+        "scripts/tools/verify_session_tito_tokenizer.py",
+        "tests/e2e/sglang/test_session_server_multi_role/_common.py",
+        "tests/e2e/sglang/test_session_server_multi_role/test_deepseekv4.py"
+      ],
+      "diff_preview": {
+        "additions": 516,
+        "deletions": 617,
+        "hunks": [
+          {
+            "file": "docs/user-guide/agentic-chat-template.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -14,50 +14,62 @@ Your harness only ever sends and receives **OpenAI chat messages**, never tokens"
+              ],
+              [
+                " ",
+                "Your rollout loop must keep two invariants, or TITO is rejected at runtime:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "- **Append-only messages.** Each turn = previous messages + new ones on the tail; past turns are never edited. The only exception is retrying the latest turn — a single-step rollback to the last assistant checkpoint. Diverging earlier, or rolling back more than one turn, is rejected."
+              ],
+              [
+                "-",
+                "- **Declared roles match the flag.** `--tito-allowed-append-roles` must list exactly the roles your harness appends after the first assistant turn (`tool` is always implied) — Miles resolves a prefix-stable template for that exact set, and appending any role outside it is rejected at runtime."
+              ],
+              [
+                "+",
+                "- **Appended roles fit the fixed template.** `--tito-model` selects a family whose `FixedTemplate.allowed_append_roles` declares which of `tool`, `user`, `system`, and `assistant` may be appended. The default capability is all four roles; a family narrows it only when its fixed renderer cannot preserve a role append-only. Appending an unsupported role is rejected at runtime."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "## Pick your `--tito-model`"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "No auto-detection — pick the family matching your model. Miles then auto-resolves the fixed template from `(--tito-model, --tito-allowed-append-roles)`; pass `--chat-template-path` only to override. The table below lists common models; the full set and verified role surfaces live in [issue #712](https://github.com/radixark/miles/issues/712)."
+              ],
+              [
+                "+",
+                "No auto-detection — pick the family matching your model. For every family, Miles resolves one `FIXED_TEMPLATE` registration from `--tito-model` alone. The registration owns the bundled Jinja template (or HuggingFace-native template), fixed kwargs, and append-role capability. A non-default family rejects `--chat-template-path` overrides and conflicting fixed kwargs; use `--tito-model default` for a custom renderer."
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:42:02.051901+00:00"
+    },
+    {
+      "id": "radixark/miles#1779",
+      "repo": "radixark/miles",
+      "pr_number": 1779,
+      "title": "chore(docker): install prebuilt aarch64 wheels for mamba/fast-hadamard kernels",
+      "state": "closed",
+      "author": "guapisolo",
+      "created_at": "2026-07-24T00:06:31Z",
+      "merged_at": "2026-07-24T02:06:37Z",
+      "url": "https://github.com/radixark/miles/pull/1779",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为 aarch64 架构预构建 mamba/fast-hadamard 内核的 wheel 包，替代 QEMU 下耗时的源码编译，大幅缩短 CI 构建时间",
+      "reason": "属于该仓库特定的 Docker 构建脚本和 CI 配置改动，涉及仓库自有的 wheels 仓库地址和构建流程，其他框架无法直接复用",
+      "value": 1,
+      "subsystems": [
+        "ci",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docker/Dockerfile",
+        "docs/ci/02-docker-build.md"
+      ],
+      "diff_preview": {
+        "additions": 17,
+        "deletions": 5,
+        "hunks": [
+          {
+            "file": "docker/Dockerfile",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -27,8 +27,8 @@ ARG WHEELS_REPO=yueming-yuan/miles-wheels"
+              ],
+              [
+                " ",
+                "# Two complete wheels release tags (the wheels repo's own names). The build picks"
+              ],
+              [
+                " ",
+                "# one by TARGETARCH and installs it verbatim — no on-the-fly tag assembly here."
+              ],
+              [
+                " ",
+                "ARG TARGETARCH"
+              ],
+              [
+                "-",
+                "ARG WHEELS_TAG_X86=cu130-x86_64-v0.5.12"
+              ],
+              [
+                "-",
+                "ARG WHEELS_TAG_ARM64=cu130-aarch64-v0.5.12"
+              ],
+              [
+                "+",
+                "ARG WHEELS_TAG_X86=cu130-x86_64"
+              ],
+              [
+                "+",
+                "ARG WHEELS_TAG_ARM64=cu130-aarch64"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# ======================================== Setup ============================================="
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -87,10 +87,22 @@ RUN pip install tilelang==0.1.8 -f https://tile-ai.github.io/whl/nightly/cu128/"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:41:54.443014+00:00"
+    },
+    {
+      "id": "radixark/miles#1781",
+      "repo": "radixark/miles",
+      "pr_number": 1781,
+      "title": "Bump TransformerEngine to 2.17.0",
+      "state": "closed",
+      "author": "yueming-yuan",
+      "created_at": "2026-07-24T05:06:29Z",
+      "merged_at": "2026-07-24T07:01:19Z",
+      "url": "https://github.com/radixark/miles/pull/1781",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "将 TransformerEngine 从 2.12.0 升级至 2.17.0，并更新/新增对应的 Docker patch 文件以支持后续 NVFP4 RL 功能",
+      "reason": "改动仅涉及该仓库的 Dockerfile 构建脚本和特定硬件（cu12/cu13）的 patch 文件，属于仓库私有的构建与依赖管理，其他框架不会共享这套 patch 机制",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docker/Dockerfile",
+        "docker/patch/cu13/te_dequantized_backward_override.patch",
+        "docker/patch/cu13/te_fa2_sm103_whitelist.patch"
+      ],
+      "diff_preview": {
+        "additions": 44,
+        "deletions": 12,
+        "hunks": [
+          {
+            "file": "docker/Dockerfile",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -94,19 +94,21 @@ RUN pip install causal-conv1d==1.6.1 mamba-ssm==2.3.1 --no-build-isolation"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# transformer_engine"
+              ],
+              [
+                " ",
+                "RUN if [ \"${ENABLE_CUDA_13}\" = \"1\" ]; then \\"
+              ],
+              [
+                "-",
+                "      pip install --no-deps transformer_engine==2.12.0 && \\"
+              ],
+              [
+                "-",
+                "      pip install transformer_engine_cu13==2.12.0 && \\"
+              ],
+              [
+                "+",
+                "      pip install --no-deps transformer_engine==2.17.0 && \\"
+              ],
+              [
+                "+",
+                "      pip install transformer_engine_cu13==2.17.0 && \\"
+              ],
+              [
+                " ",
+                "      if ls /tmp/wheels/transformer_engine_torch-*.whl 2>/dev/null | grep -q .; then \\"
+              ],
+              [
+                " ",
+                "        pip install /tmp/wheels/transformer_engine_torch-*.whl; \\"
+              ],
+              [
+                " ",
+                "      else \\"
+              ],
+              [
+                " ",
+                "        pip install nvidia-mathdx==25.6.0 && \\"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:41:47.791808+00:00"
+    },
+    {
+      "id": "radixark/miles#1782",
+      "repo": "radixark/miles",
+      "pr_number": 1782,
+      "title": "eval: CheckpointEvalFn — one contract for checkpoint-consuming eval backends",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-07-24T06:03:55Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1782",
+      "category": "refactor",
+      "scope": "universal",
+      "summary": "将 checkpoint 评估后端抽象为统一的 CheckpointEvalFn 协议，解耦 checkpoint 评估与 live engine 评估两种路径",
+      "reason": "checkpoint 评估接口抽象（evaluate_checkpoint 合约、EvalSkip 机制、dispose 生命周期）是所有异步 RL 训练框架都会遇到的评估基础设施问题，与具体仓库实现无关",
+      "value": 3,
+      "subsystems": [
+        "checkpoint",
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [
+        "rollout",
+        "reward-model"
+      ],
+      "files": [
+        "docs/user-guide/fully-async.md",
+        "examples/fully_async/README.md",
+        "examples/fully_async/__init__.py",
+        "examples/fully_async/external_eval_fn.py",
+        "examples/fully_async/run-qwen3.5-4b-fully_async-eval.sh",
+        "examples/fully_async/run_qwen3_5_4b_fully_async_eval.py",
+        "miles/ray/rollout/eval_dispatch.py",
+        "miles/ray/rollout/rollout_manager.py",
+        "miles/rollout/base_types.py",
+        "miles/rollout/checkpoint_eval.py",
+        "miles/rollout/fully_async_rollout.py",
+        "miles/rollout/inference_rollout/inference_rollout_common.py",
+        "miles/utils/arguments.py",
+        "tests/fast/rollout/test_checkpoint_eval.py",
+        "tests/fast/rollout/test_fully_async_rollout.py",
+        "tools/checkpoint_eval_service.py"
+      ],
+      "diff_preview": {
+        "additions": 858,
+        "deletions": 818,
+        "hunks": [
+          {
+            "file": "docs/user-guide/fully-async.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -151,9 +151,21 @@ Two production-oriented variants:"
+              ],
+              [
+                " ",
+                "  periodic HF checkpoints (requires `eval_interval % save_interval == 0`) — zero extra"
+              ],
+              [
+                " ",
+                "  export cost. Pair with `--eval-overflow-policy skip` so a slow eval set can never"
+              ],
+              [
+                " ",
+                "  stall training."
+              ],
+              [
+                "-",
+                "- **External service**: `tools/checkpoint_eval_service.py` watches `--save-hf` output"
+              ],
+              [
+                "-",
+                "  with its own sglang server — no GPU carve-out from the training job, restartable,"
+              ],
+              [
+                "-",
+                "  backfills missed points from its ledger. Works for `--colocate` runs too."
+              ],
+              [
+                "+",
+                "- **External backend**: subclass `CheckpointEvalFn` (`miles/rollout/checkpoint_eval.py`)"
+              ],
+              [
+                "+",
+                "  and implement `evaluate_checkpoint(checkpoint_dir, input)` — the trainer exports a"
+              ],
+              [
+                "+",
+                "  snapshot per eval point, hands over its path, and owns dispatch/logging/GC; raise"
+              ],
+              [
+                "+",
+                "  `EvalSkip(reason)` for an attributable skipped point. No GPU carve-out from the"
+              ],
+              [
+                "+",
+                "  training job, and because the fn runs in-job it reads the real training args"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:41:36.951182+00:00"
+    },
+    {
+      "id": "radixark/miles#1783",
+      "repo": "radixark/miles",
+      "pr_number": 1783,
+      "title": "chore(ci): pin docker build to 2-GPU H200 runners",
+      "state": "closed",
+      "author": "guapisolo",
+      "created_at": "2026-07-24T06:21:07Z",
+      "merged_at": "2026-07-24T06:27:22Z",
+      "url": "https://github.com/radixark/miles/pull/1783",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "将 docker-build.yml 中的构建任务固定到带有 h200 和 2gpu 标签的 runner 上，避免占用任意 self-hosted 机器",
+      "reason": "这是该仓库 CI 基础设施的配置调整，涉及特定硬件 runner 标签约定，与 RL 训练框架的核心逻辑无关，其他框架不会复用此配置",
+      "value": 1,
+      "subsystems": [
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".github/workflows/docker-build.yml"
+      ],
+      "diff_preview": {
+        "additions": 1,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": ".github/workflows/docker-build.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -144,7 +144,7 @@ jobs:"
+              ],
+              [
+                " ",
+                "    if: |"
+              ],
+              [
+                " ",
+                "      always() &&"
+              ],
+              [
+                " ",
+                "      (github.event_name != 'schedule' || needs.check-upstream.outputs.should_build == 'true')"
+              ],
+              [
+                "-",
+                "    runs-on: self-hosted"
+              ],
+              [
+                "+",
+                "    runs-on: [\"h200\", \"2gpu\"]"
+              ],
+              [
+                " ",
+                "    steps:"
+              ],
+              [
+                " ",
+                "      - name: Checkout repository"
+              ],
+              [
+                " ",
+                "        uses: actions/checkout@v4"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:41:31.085428+00:00"
+    },
+    {
+      "id": "radixark/miles#1784",
+      "repo": "radixark/miles",
+      "pr_number": 1784,
+      "title": "feat(docker): overlay mooncake structured object store module pending release",
+      "state": "closed",
+      "author": "guapisolo",
+      "created_at": "2026-07-24T06:29:43Z",
+      "merged_at": "2026-07-25T02:12:59Z",
+      "url": "https://github.com/radixark/miles/pull/1784",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "在 CUDA Docker 镜像中集成 mooncake structured object store API，以支持 mooncake rollout 数据后端所需的尚未发布的上游接口",
+      "reason": "该 PR 针对 miles 仓库特有的 mooncake rollout 后端构建流程，修改的是仓库专属的 Docker 构建脚本和 CI 配置，属于特定硬件/环境构建脚本范畴，其他框架不会直接复用此方案",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".github/workflows/docker-build.yml",
+        "docker/Dockerfile",
+        "docker/build.py",
+        "docs/ci/02-docker-build.md"
+      ],
+      "diff_preview": {
+        "additions": 28,
+        "deletions": 14,
+        "hunks": [
+          {
+            "file": ".github/workflows/docker-build.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -80,17 +80,16 @@ jobs:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "          # Fingerprint the miles-wheels releases the images install from (sgl-router +"
+              ],
+              [
+                " ",
+                "          # the other prebuilt wheels). cu13 installs cu130-x86_64 / cu130-aarch64;"
+              ],
+              [
+                "-",
+                "          # cu12-x86 installs cu129-x86_64 — both build automatically, so track all"
+              ],
+              [
+                "-",
+                "          # release tags they bake. Bumping a WHEELS_TAG is a Dockerfile change already"
+              ],
+              [
+                "-",
+                "          # caught by the push trigger; asset re-uploads keep the tag's commit fixed, so"
+              ],
+              [
+                "-",
+                "          # fingerprint the asset list, not a SHA."
+              ],
+              [
+                "+",
+                "          # cu12-x86 installs cu129-x86_64 — both build automatically, so track all rolling"
+              ],
+              [
+                "+",
+                "          # release tags they bake. Rolling tags stay fixed while assets may be replaced,"
+              ],
+              [
+                "+",
+                "          # so fingerprint the asset list rather than a commit SHA."
+              ],
+              [
+                " ",
+                "          wheels_fp() {"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:41:24.836885+00:00"
+    },
+    {
+      "id": "radixark/miles#1785",
+      "repo": "radixark/miles",
+      "pr_number": 1785,
+      "title": "Fix torch_memory_saver LD_PRELOAD path for CUDA-suffixed binaries",
+      "state": "closed",
+      "author": "yueming-yuan",
+      "created_at": "2026-07-24T06:39:35Z",
+      "merged_at": "2026-07-24T07:38:18Z",
+      "url": "https://github.com/radixark/miles/pull/1785",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 torch_memory_saver 升级至 0.0.9.post1 后因 CUDA 后缀导致 LD_PRELOAD 路径硬编码失效的启动崩溃问题",
+      "reason": "torch_memory_saver 是用于 offload 训练场景的通用内存管理库，任何使用该库的 RL 训练框架（如 slime 等）在升级到同版本后都会遇到相同的路径解析问题，修复方式（使用包提供的 get_binary_path_from_package API）也具有普遍参考价值",
+      "value": 3,
+      "subsystems": [
+        "memory",
+        "infra",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "Megatron"
+      ],
+      "files": [
+        "miles/ray/train/actor_factory.py"
+      ],
+      "diff_preview": {
+        "additions": 2,
+        "deletions": 6,
+        "hunks": [
+          {
+            "file": "miles/ray/train/actor_factory.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -41,13 +41,9 @@ def allocate_gpus_for_actor("
+              ],
+              [
+                " ",
+                "        env_vars[\"DUMPER_SOURCE_PATCHER_CONFIG\"] = source_patcher_config"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    if args.offload_train and args.train_backend == \"megatron\":"
+              ],
+              [
+                "-",
+                "        import torch_memory_saver"
+              ],
+              [
+                "+",
+                "        from torch_memory_saver.utils import get_binary_path_from_package"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "        dynlib_path = os.path.join("
+              ],
+              [
+                "-",
+                "            os.path.dirname(os.path.dirname(torch_memory_saver.__file__)),"
+              ],
+              [
+                "-",
+                "            \"torch_memory_saver_hook_mode_preload.abi3.so\","
+              ],
+              [
+                "-",
+                "        )"
+              ],
+              [
+                "-",
+                "        assert os.path.exists(dynlib_path), f\"LD_PRELOAD so file {dynlib_path} does not exist.\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:41:17.958059+00:00"
+    },
+    {
+      "id": "radixark/miles#1786",
+      "repo": "radixark/miles",
+      "pr_number": 1786,
+      "title": "Add backend-aware MUSA support to Miles",
+      "state": "open",
+      "author": "ForAxel",
+      "created_at": "2026-07-24T09:19:35Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1786",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为 Miles 框架引入集中式加速器抽象层，支持 Moore Threads MUSA GPU 硬件，同时保留原有 CUDA 执行路径",
+      "reason": "MUSA 是摩尔线程特定硬件的软件栈，属于该仓库针对特定硬件平台的适配；虽然引入了加速器抽象这一通用设计思路，但具体实现绑定于 MUSA 驱动和该仓库的 Megatron/SGLang 内部路径，其他框架不会直接复用这套 patch",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "parallel",
+        "rollout"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "FSDP",
+        "SGLang"
+      ],
+      "files": [
+        "miles/__init__.py",
+        "miles/backends/experimental/fsdp_utils/actor.py",
+        "miles/backends/experimental/fsdp_utils/checkpoint.py",
+        "miles/backends/experimental/fsdp_utils/update_weight_utils.py",
+        "miles/backends/megatron_utils/__init__.py",
+        "miles/backends/megatron_utils/actor.py",
+        "miles/backends/megatron_utils/ci_utils.py",
+        "miles/backends/megatron_utils/ft/checkpoint_transfer.py",
+        "miles/backends/megatron_utils/megatron_to_hf/processors/quantizer_compressed_tensors.py",
+        "miles/backends/megatron_utils/megatron_to_hf/processors/quantizer_mxfp8.py",
+        "miles/backends/megatron_utils/model.py",
+        "miles/backends/megatron_utils/update_weight/hf_weight_iterator_bridge.py",
+        "miles/backends/megatron_utils/update_weight/hf_weight_iterator_direct.py",
+        "miles/backends/megatron_utils/update_weight/update_weight_from_distributed/broadcast.py",
+        "miles/backends/megatron_utils/update_weight/update_weight_from_distributed/delta.py",
+        "miles/backends/megatron_utils/update_weight/update_weight_from_distributed/mixin.py",
+        "miles/backends/sglang_utils/arguments.py",
+        "miles/backends/sglang_utils/sglang_engine.py",
+        "miles/backends/training_utils/data.py",
+        "miles/ray/train_actor.py"
+      ],
+      "diff_preview": {
+        "additions": 748,
+        "deletions": 159,
+        "hunks": [
+          {
+            "file": "miles/__init__.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1 @@"
+              ],
+              [
+                "+",
+                "from miles.utils import accelerator as _accelerator"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:41:11.424780+00:00"
+    },
+    {
+      "id": "radixark/miles#1787",
+      "repo": "radixark/miles",
+      "pr_number": 1787,
+      "title": "[multi-lora] Fix slice_lora_to_rank for 3D expert tensors; guard MoE expert multi-LoRA",
+      "state": "closed",
+      "author": "yushengsu-thu",
+      "created_at": "2026-07-24T09:47:59Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1787",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 MoE multi-LoRA 中 slice_lora_to_rank 对 3D expert 张量切片轴错误导致的 adapter 静默损坏，并为 expert target module 添加 validate_multi_lora_args 守卫",
+      "reason": "LoRA rank 切片轴错误是所有使用 Megatron MoE grouped-expert 布局（[num_experts, rank, in] / [num_experts, out, rank]）的框架都会遇到的隐蔽 bug，权重同步路径上的静默数据损坏具有普遍参考价值",
+      "value": 4,
+      "subsystems": [
+        "weight-sync",
+        "parallel",
+        "infra"
+      ],
+      "rl_concepts": [
+        "LoRA",
+        "Megatron",
+        "MoE",
+        "weight-sync"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/multi_lora_utils.py",
+        "miles/utils/multi_lora.py",
+        "tests/fast/backends/megatron_utils/test_multi_lora_moe_support.py",
+        "tests/fast/backends/megatron_utils/test_slice_lora_to_rank.py"
+      ],
+      "diff_preview": {
+        "additions": 115,
+        "deletions": 16,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/multi_lora_utils.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -116,21 +116,34 @@ def zero_optimizer_state_for_adapter(optimizer, model, idx: int) -> None:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "def slice_lora_to_rank(hf_name: str, tensor: torch.Tensor, adapter_rank: int) -> torch.Tensor:"
+              ],
+              [
+                "-",
+                "    if \"lora_A\" in hf_name and adapter_rank < tensor.shape[0]:"
+              ],
+              [
+                "-",
+                "        remainder = tensor[adapter_rank:]"
+              ],
+              [
+                "-",
+                "        assert remainder.abs().max() == 0, ("
+              ],
+              [
+                "-",
+                "            f\"lora_A padded dims are non-zero: {hf_name}, \""
+              ],
+              [
+                "-",
+                "            f\"max={remainder.abs().max().item():.6e}, shape={tensor.shape}, rank={adapter_rank}\""
+              ],
+              [
+                "-",
+                "        )"
+              ],
+              [
+                "-",
+                "        return tensor[:adapter_rank]"
+              ],
+              [
+                "-",
+                "    if \"lora_B\" in hf_name and adapter_rank < tensor.shape[1]:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:41:02.904957+00:00"
+    },
+    {
+      "id": "radixark/miles#1788",
+      "repo": "radixark/miles",
+      "pr_number": 1788,
+      "title": "Add an experimental DeepSeek-V4 TOP parity contract",
+      "state": "open",
+      "author": "kaixih",
+      "created_at": "2026-07-24T10:33:27Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1788",
+      "category": "algo",
+      "scope": "universal",
+      "summary": "为 DeepSeek-V4 添加实验性 true-on-policy (TOP) 数值一致性合约，确保 SGLang prefill 重计算的行为策略 log-prob 与 Megatron 训练前向传播消费的 log-prob 精确一致",
+      "reason": "true-on-policy log-prob 数值一致性问题（inference 路径与 training 路径的 FP8/浮点精度对齐）是所有使用 SGLang+Megatron 组合的 RL 训练框架都会遇到的核心算法挑战，不限于该仓库的特定实现",
+      "value": 5,
+      "subsystems": [
+        "rollout",
+        "trainer",
+        "algo"
+      ],
+      "rl_concepts": [
+        "GRPO",
+        "log-prob",
+        "on-policy",
+        "Megatron",
+        "FP8"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/megatron_to_hf/processors/quantizer_fp8.py",
+        "miles/backends/sglang_utils/dsv4_top_attention.py",
+        "miles/backends/sglang_utils/dsv4_top_moe.py",
+        "miles/backends/sglang_utils/dsv4_top_patches.py",
+        "miles/backends/sglang_utils/dsv4_top_sglang_reference.yaml",
+        "miles/backends/sglang_utils/runtime_bootstrap/sitecustomize.py",
+        "miles/backends/sglang_utils/sglang_engine.py",
+        "miles/backends/training_utils/loss_hub/logit_processors.py",
+        "miles/backends/training_utils/loss_hub/math_utils.py",
+        "miles/utils/arguments.py",
+        "miles/utils/fp8_kernel.py",
+        "miles_plugins/models/deepseek_v4/deepseek_v4.py",
+        "miles_plugins/models/deepseek_v4/ops/compressor.py",
+        "miles_plugins/models/deepseek_v4/ops/hyper_connection.py",
+        "miles_plugins/models/deepseek_v4/ops/moe.py",
+        "miles_plugins/models/deepseek_v4/ops/norm.py",
+        "miles_plugins/models/deepseek_v4/ops/utils.py",
+        "tests/e2e/megatron/model_scripts/test_deepseek_v4_flash_4layer_top_parity.py",
+        "tests/fast/backends/test_dsv4_top_patches.py",
+        "tests/fast/backends/training_utils/loss/test_true_on_policy_logsoftmax.py"
+      ],
+      "diff_preview": {
+        "additions": 2906,
+        "deletions": 23,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/megatron_to_hf/processors/quantizer_fp8.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -12,6 +12,12 @@"
+              ],
+              [
+                " ",
+                ")"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "def _use_dsv4_top_pow2_scales(args) -> bool:"
+              ],
+              [
+                "+",
+                "    return bool("
+              ],
+              [
+                "+",
+                "        getattr(args, \"true_on_policy_mode\", False) and getattr(args, \"experimental_attention_variant\", None) == \"dsv4\""
+              ],
+              [
+                "+",
+                "    )"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                "def quantize_params_fp8(args, megatron_name, converted_named_params, quantization_config):"
+              ],
+              [
+                " ",
+                "    assert quantization_config[\"quant_method\"] == \"fp8\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:40:56.678078+00:00"
+    },
+    {
+      "id": "radixark/miles#1789",
+      "repo": "radixark/miles",
+      "pr_number": 1789,
+      "title": "docker: fix main image build — install TransformerEngine from PyPI, drop stale wheel path",
+      "state": "closed",
+      "author": "Zhichenzzz",
+      "created_at": "2026-07-24T19:15:14Z",
+      "merged_at": "2026-07-24T19:34:23Z",
+      "url": "https://github.com/radixark/miles/pull/1789",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复 Dockerfile 中 TransformerEngine 版本冲突问题，改为从 PyPI 安装并移除过时的本地 wheel 路径",
+      "reason": "这是该仓库特定的 Docker 镜像构建脚本修复，涉及仓库自己的 wheels 发布路径（miles-wheels/cu130-x86_64）和特定构建流程，其他框架不会共享相同的 wheel 发布机制和 Dockerfile 结构",
+      "value": 1,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docker/Dockerfile"
+      ],
+      "diff_preview": {
+        "additions": 3,
+        "deletions": 6,
+        "hunks": [
+          {
+            "file": "docker/Dockerfile",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -108,12 +108,9 @@ RUN if ls /tmp/wheels/causal_conv1d-*.whl 2>/dev/null | grep -q . && \\"
+              ],
+              [
+                " ",
+                "RUN if [ \"${ENABLE_CUDA_13}\" = \"1\" ]; then \\"
+              ],
+              [
+                " ",
+                "      pip install --no-deps transformer_engine==2.17.0 && \\"
+              ],
+              [
+                " ",
+                "      pip install transformer_engine_cu13==2.17.0 && \\"
+              ],
+              [
+                "-",
+                "      if ls /tmp/wheels/transformer_engine_torch-*.whl 2>/dev/null | grep -q .; then \\"
+              ],
+              [
+                "-",
+                "        pip install /tmp/wheels/transformer_engine_torch-*.whl; \\"
+              ],
+              [
+                "-",
+                "      else \\"
+              ],
+              [
+                "-",
+                "        pip install nvidia-mathdx==25.6.0 && \\"
+              ],
+              [
+                "-",
+                "        pip -v install --no-build-isolation transformer_engine_torch==2.17.0; \\"
+              ],
+              [
+                "-",
+                "      fi; \\"
+              ],
+              [
+                "+",
+                "      rm -f /tmp/wheels/transformer_engine*.whl && \\"
+              ],
+              [
+                "+",
+                "      pip install nvidia-mathdx==25.6.0 && \\"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:40:50.113204+00:00"
+    },
+    {
+      "id": "radixark/miles#1790",
+      "repo": "radixark/miles",
+      "pr_number": 1790,
+      "title": "openenv/tbench2: score the shared-server leg natively; retire the adapter compensation",
+      "state": "open",
+      "author": "nblintao",
+      "created_at": "2026-07-24T21:16:57Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1790",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "统一 openenv/tbench2 两条代理路径的评分协议，删除旧版本的适配器补偿机制（_apply_workdir、_CANONICAL_EVAL_CMD 等）",
+      "reason": "该 PR 针对 miles 仓库特有的 openenv/tbench2 环境集成逻辑进行清理，涉及的 _apply_workdir、OPENENV_TASK_WORKDIR 等机制是该仓库专属的环境适配层，与 RL 训练框架的核心组件（rollout、PPO、Megatron 等）无关，其他框架不会遇到相同问题",
+      "value": 1,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [
+        "reward-model"
+      ],
+      "files": [
+        "examples/experimental/openenv/README.md",
+        "examples/experimental/openenv/openenv_agent_function.py",
+        "examples/experimental/openenv/openenv_daytona_agent_function.py",
+        "examples/experimental/openenv/tests/test_openenv_agent_function.py"
+      ],
+      "diff_preview": {
+        "additions": 121,
+        "deletions": 184,
+        "hunks": [
+          {
+            "file": "examples/experimental/openenv/README.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -50,6 +50,14 @@ concurrency. Per-task containers are heavy on disk — if you'd rather not coloc"
+              ],
+              [
+                " ",
+                "them with the GPU workload, run the env server on a separate Docker host and point"
+              ],
+              [
+                " ",
+                "the launcher at it via `--openenv-env-url http://<env-host>:8003`."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "**Server contract**: the installed `tbench2_env` must carry the canonical"
+              ],
+              [
+                "+",
+                "scoring contract — `evaluate` runs the task's own `tests/test.sh` in the image"
+              ],
+              [
+                "+",
+                "WORKDIR (huggingface/OpenEnv#965 + #972 for local mode, #1012 for docker mode)."
+              ],
+              [
+                "+",
+                "The adapter checks the harness marker on every `evaluate`: against an older"
+              ],
+              [
+                "+",
+                "deployment (bare-pytest scoring) episodes are dropped with a warning rather"
+              ],
+              [
+                "+",
+                "than silently mis-scored, so an out-of-date server surfaces as every sample"
+              ],
+              [
+                "+",
+                "dropping, not as a plausible-looking reward curve."
+              ],
+              [
+                "+",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:40:43.044621+00:00"
+    },
+    {
+      "id": "radixark/miles#1791",
+      "repo": "radixark/miles",
+      "pr_number": 1791,
+      "title": "ci(docker): PR-side image build and run the GPU matrix inside the freshly built image",
+      "state": "closed",
+      "author": "Zhichenzzz",
+      "created_at": "2026-07-24T21:40:40Z",
+      "merged_at": "2026-07-25T01:42:22Z",
+      "url": "https://github.com/radixark/miles/pull/1791",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "在PR阶段构建Docker镜像并将GPU测试矩阵切换至新镜像，防止Dockerfile问题在合并后才被发现",
+      "reason": "该PR涉及仓库特定的Docker构建脚本、CI配置文件和硬件镜像标签（cu13-x86、radixark/miles专属tag），属于该仓库自己的CI流水线改造，不涉及RL算法或通用训练基础设施",
+      "value": 2,
+      "subsystems": [
+        "ci",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".github/workflows/docker-pr-tag-cleanup.yml",
+        ".github/workflows/pr-test.yml",
+        "docker/Dockerfile",
+        "docs/ci/02-docker-build.md"
+      ],
+      "diff_preview": {
+        "additions": 99,
+        "deletions": 2,
+        "hunks": [
+          {
+            "file": ".github/workflows/docker-pr-tag-cleanup.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,27 @@"
+              ],
+              [
+                "+",
+                "name: Docker PR tag cleanup"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "on:"
+              ],
+              [
+                "+",
+                "  pull_request:"
+              ],
+              [
+                "+",
+                "    types: [closed]"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "permissions:"
+              ],
+              [
+                "+",
+                "  contents: read"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "jobs:"
+              ],
+              [
+                "+",
+                "  delete-pr-tag:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:40:36.506157+00:00"
+    },
+    {
+      "id": "radixark/miles#1792",
+      "repo": "radixark/miles",
+      "pr_number": 1792,
+      "title": "[lora] Native (raw-mode) LoRA for standard Megatron-core models",
+      "state": "open",
+      "author": "Zhichenzzz",
+      "created_at": "2026-07-25T00:25:06Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1792",
+      "category": "feature",
+      "scope": "universal",
+      "summary": "为 Megatron-core 原生模式（raw mode）添加 LoRA 支持，解决原有 LoRA 仅能通过 bridge 模式使用的限制",
+      "reason": "LoRA 与 Megatron 并行训练的结合是通用问题，权重分片、HF 导出/加载、adapter 同步等实现细节对所有使用 Megatron 做 RL 训练的框架均有参考价值",
+      "value": 4,
+      "subsystems": [
+        "trainer",
+        "weight-sync",
+        "parallel"
+      ],
+      "rl_concepts": [
+        "LoRA",
+        "Megatron",
+        "PPO",
+        "权重同步",
+        "checkpoint"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/actor.py",
+        "miles/backends/megatron_utils/lora_native.py",
+        "miles/backends/megatron_utils/lora_utils.py",
+        "miles/backends/megatron_utils/model.py",
+        "miles/backends/megatron_utils/update_weight/hf_weight_iterator_direct.py",
+        "miles/backends/megatron_utils/update_weight/update_weight_from_tensor.py",
+        "miles/backends/sglang_utils/sglang_engine.py",
+        "miles/rollout/generate_utils/generate_endpoint_utils.py",
+        "miles/rollout/generate_utils/prefill_logprobs.py",
+        "miles/rollout/sglang_rollout.py",
+        "miles/utils/arguments.py",
+        "miles/utils/lora.py",
+        "scripts/run_qwen3_lora_native.py",
+        "tests/fast/backends/megatron_utils/test_lora_native.py",
+        "tests/manual/lora/__init__.py",
+        "tests/manual/lora/verify_lora_native.py"
+      ],
+      "diff_preview": {
+        "additions": 1949,
+        "deletions": 23,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -51,7 +51,7 @@"
+              ],
+              [
+                " ",
+                "from .ft.in_memory_checkpoint import InMemoryCheckpointManager"
+              ],
+              [
+                " ",
+                "from .ft.indep_dp import reconfigure_indep_dp_group"
+              ],
+              [
+                " ",
+                "from .initialize import init, is_first_replica_megatron_main_rank"
+              ],
+              [
+                "-",
+                "from .lora_utils import is_lora_enabled"
+              ],
+              [
+                "+",
+                "from .lora_utils import is_lora_enabled, lora_rollout_enabled"
+              ],
+              [
+                " ",
+                "from .model import TrainStepOutcome, forward_only, initialize_model_and_optimizer, save, train"
+              ],
+              [
+                " ",
+                "from .parallel import verify_megatron_parallel_state"
+              ],
+              [
+                " ",
+                "from .replay_utils import register_replay_list_moe"
+              ],
+              [
+                "h",
+                "@@ -236,7 +236,7 @@ def init("
+              ],
+              [
+                " ",
+                "            weights_getter=lambda: self.weights_backuper.get(\"actor\"),"
+              ],
+              [
+                " ",
+                "            model_name=type(self.hf_config).__name__.lower() if self.args.model_name is None else self.args.model_name,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:40:30.236851+00:00"
+    },
+    {
+      "id": "radixark/miles#1793",
+      "repo": "radixark/miles",
+      "pr_number": 1793,
+      "title": "feat(optimizer): NVMe optimizer-state streaming as a miles plugin",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-07-25T00:30:02Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1793",
+      "category": "infra",
+      "scope": "universal",
+      "summary": "将 NVMe optimizer-state streaming 实现为 miles 插件，使 Adam fp32 主参数和 momentum 状态分桶存储于磁盘，每步按桶流式读入、更新、写回，解决优化器状态无法放入 GPU 显存的问题",
+      "reason": "优化器状态 NVMe offload/streaming 是通用的大模型训练内存压力解决方案，任何使用 Megatron/FSDP 并行的 RL 训练框架在超大模型（700B+）训练时都会遇到相同问题，方案设计（per-bucket 文件、流式 in-place 更新）可直接复用",
+      "value": 4,
+      "subsystems": [
+        "memory",
+        "parallel",
+        "checkpoint"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "optimizer-offload",
+        "mixed-precision",
+        "Adam",
+        "large-scale-training"
+      ],
+      "files": [
+        ".rxignore",
+        "docs/advanced/disk-offload.md",
+        "miles/backends/megatron_utils/model.py",
+        "miles/ray/train/actor_factory.py",
+        "miles/utils/arguments.py",
+        "miles_plugins/optimizers/__init__.py",
+        "miles_plugins/optimizers/nvme_stream.py"
+      ],
+      "diff_preview": {
+        "additions": 690,
+        "deletions": 10,
+        "hunks": [
+          {
+            "file": ".rxignore",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,46 @@"
+              ],
+              [
+                "+",
+                "# .rxignore — patterns mutagen will SKIP when bidirectionally syncing"
+              ],
+              [
+                "+",
+                "# this folder to your devbox. Same syntax as .gitignore (glob patterns)."
+              ],
+              [
+                "+",
+                "#"
+              ],
+              [
+                "+",
+                "# Auto-generated by `rx devbox sync start`. Edit freely — `rx` honors"
+              ],
+              [
+                "+",
+                "# the file as-is on subsequent `sync start` invocations. A small set"
+              ],
+              [
+                "+",
+                "# of patterns (.git, .mutagen, node_modules, __pycache__, .DS_Store)"
+              ],
+              [
+                "+",
+                "# is ALWAYS skipped regardless of this file to protect your devbox"
+              ],
+              [
+                "+",
+                "# from accidentally pulling in repo internals."
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "# Build outputs"
+              ],
+              [
+                "+",
+                "target/"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:40:24.151922+00:00"
+    },
+    {
+      "id": "radixark/miles#1794",
+      "repo": "radixark/miles",
+      "pr_number": 1794,
+      "title": "feat(multi-lora): enable and validate MoE expert adapters",
+      "state": "open",
+      "author": "yushengsu-thu",
+      "created_at": "2026-07-25T03:20:38Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1794",
+      "category": "feature",
+      "scope": "universal",
+      "summary": "为 MoE 专家线性层启用 Multi-LoRA 适配器支持，并修复序列并行下复制线性层的 token span 与输出 gather 错误",
+      "reason": "Multi-LoRA 在 MoE 专家层的支持缺失是所有基于 Megatron 的 RL 训练框架共同面临的问题，修复序列并行下复制线性层（MLA 模型 q/kv down-projection）的 Multi-LoRA 计算错误也属于通用 Megatron 并行基础设施 bug，任何使用 Megatron-Bridge + Multi-LoRA 的框架均受影响",
+      "value": 4,
+      "subsystems": [
+        "parallel",
+        "checkpoint",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "LoRA",
+        "Megatron",
+        "MoE",
+        "序列并行",
+        "多LoRA"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/bridge_lora_helpers.py",
+        "miles/backends/megatron_utils/multi_lora_utils.py",
+        "miles/utils/multi_lora.py",
+        "tests/fast/backends/megatron_utils/test_multi_lora_checkpoint_naming.py",
+        "tests/fast/backends/megatron_utils/test_slice_lora_to_rank.py",
+        "tests/fast/utils/test_arguments.py",
+        "tests/fast/utils/test_targets_expert_leaves.py"
+      ],
+      "diff_preview": {
+        "additions": 422,
+        "deletions": 35,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/bridge_lora_helpers.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -6,15 +6,18 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from __future__ import annotations"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "import logging"
+              ],
+              [
+                " ",
+                "from argparse import Namespace"
+              ],
+              [
+                " ",
+                "from dataclasses import dataclass"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from megatron.core.utils import get_attr_wrapped_model"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from miles.utils.hf_config import load_hf_config"
+              ],
+              [
+                "-",
+                "from miles.utils.multi_lora import is_multi_lora_enabled"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:40:16.853938+00:00"
+    },
+    {
+      "id": "radixark/miles#1795",
+      "repo": "radixark/miles",
+      "pr_number": 1795,
+      "title": "Bump sglang to v0.5.16",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-07-25T09:55:56Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1795",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "将 sglang 基础镜像及分支从 v0.5.15 升级到 v0.5.16，更新 Dockerfile 和构建脚本中的版本引用",
+      "reason": "此 PR 仅涉及该仓库专用的 Docker 构建脚本和 sglang-miles 私有分支的版本号 bump，属于仓库特定的构建基础设施维护，其他框架不共享此 sglang-miles 分支或构建流程",
+      "value": 1,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docker/Dockerfile",
+        "docker/build.py",
+        "tests/ci/requirements-ci-cpu.txt",
+        "tests/fast/utils/chat_template_utils/test_template.py"
+      ],
+      "diff_preview": {
+        "additions": 36,
+        "deletions": 6,
+        "hunks": [
+          {
+            "file": "docker/Dockerfile",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -10,12 +10,12 @@"
+              ],
+              [
+                " ",
+                "# release for the current arch picked from TARGETARCH — WHEELS_TAG_X86 on amd64,"
+              ],
+              [
+                " ",
+                "# WHEELS_TAG_ARM64 on arm64 (cu12-x86 overrides WHEELS_TAG_X86)."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "ARG SGLANG_IMAGE_TAG=v0.5.15"
+              ],
+              [
+                "+",
+                "ARG SGLANG_IMAGE_TAG=v0.5.16"
+              ],
+              [
+                " ",
+                "FROM lmsysorg/sglang:${SGLANG_IMAGE_TAG} AS sglang"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# ======================================== Arguments ============================================="
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "ARG SGLANG_BRANCH=sglang-miles"
+              ],
+              [
+                "+",
+                "ARG SGLANG_BRANCH=sglang-miles-v0.5.16"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:40:09.550593+00:00"
+    },
+    {
+      "id": "radixark/miles#1796",
+      "repo": "radixark/miles",
+      "pr_number": 1796,
+      "title": "fix(docker): install TransformerEngine from rolling wheels",
+      "state": "closed",
+      "author": "guapisolo",
+      "created_at": "2026-07-26T03:31:02Z",
+      "merged_at": "2026-07-26T06:02:24Z",
+      "url": "https://github.com/radixark/miles/pull/1796",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "修复 Docker 构建中 TransformerEngine 2.17 wheel 被丢弃或绕过的问题，改为按 CUDA 变体正确选择并安装完整的 meta/core/torch 三件套 wheel",
+      "reason": "该 PR 涉及仓库特定的 Dockerfile 构建脚本和 CI 配置，修复的是该仓库 Docker 镜像构建流程中的 TransformerEngine 安装逻辑，与 RL 训练算法或通用训练基础设施无关，属于仓库特有的构建/环境问题",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".github/workflows/docker-build.yml",
+        ".github/workflows/pr-test.yml",
+        "docker/Dockerfile",
+        "docker/verify_transformer_engine.py",
+        "docs/ci/02-docker-build.md"
+      ],
+      "diff_preview": {
+        "additions": 54,
+        "deletions": 17,
+        "hunks": [
+          {
+            "file": ".github/workflows/docker-build.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -6,6 +6,7 @@ on:"
+              ],
+              [
+                " ",
+                "      - main"
+              ],
+              [
+                " ",
+                "    paths:"
+              ],
+              [
+                " ",
+                "      - 'docker/Dockerfile'"
+              ],
+              [
+                "+",
+                "      - 'docker/verify_transformer_engine.py'"
+              ],
+              [
+                " ",
+                "      - 'requirements.txt'"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "  schedule:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:40:03.163200+00:00"
+    },
+    {
+      "id": "radixark/miles#1797",
+      "repo": "radixark/miles",
+      "pr_number": 1797,
+      "title": "fix: preserve conversation prompts when skipping length filter",
+      "state": "open",
+      "author": "jleeleee",
+      "created_at": "2026-07-26T03:57:49Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1797",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 filter_long_prompt() 对列表形式对话 prompt 返回 False 而非原始数据的 bug，导致 rollout 阶段 TypeError",
+      "reason": "长度过滤逻辑是数据预处理的通用环节，任何使用对话格式数据集并有跳过过滤逻辑的 RL 训练框架都可能遇到相同模式的 bug（函数应返回原始样本却返回布尔值）",
+      "value": 3,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/data.py",
+        "tests/fast/utils/test_data.py"
+      ],
+      "diff_preview": {
+        "additions": 16,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "miles/utils/data.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -91,7 +91,7 @@ def filter_long_prompt(origin_samples: list[Sample], tokenizer, processor, max_l"
+              ],
+              [
+                " ",
+                "        logger.warning("
+              ],
+              [
+                " ",
+                "            \"Skipping max_length check for list prompt. Set apply_chat_template=True to enable length filtering.\""
+              ],
+              [
+                " ",
+                "        )"
+              ],
+              [
+                "-",
+                "        return False"
+              ],
+              [
+                "+",
+                "        return origin_samples"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    if processor:"
+              ],
+              [
+                " ",
+                "        filtered_samples = []"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:39:56.466717+00:00"
+    },
+    {
+      "id": "radixark/miles#1798",
+      "repo": "radixark/miles",
+      "pr_number": 1798,
+      "title": "fix (docker): stop the docker gate from skipping the whole test suite",
+      "state": "open",
+      "author": "Zhichenzzz",
+      "created_at": "2026-07-26T06:32:34Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1798",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复 GitHub Actions 中 docker-build 被跳过时导致整个 CI 测试矩阵连锁跳过的问题",
+      "reason": "这是该仓库 CI 流水线配置（pr-test.yml）的特有问题，与 RL 训练框架的核心逻辑无关，属于仓库自身的 CI 配置修复",
+      "value": 1,
+      "subsystems": [
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".github/workflows/pr-test.yml"
+      ],
+      "diff_preview": {
+        "additions": 31,
+        "deletions": 7,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -71,7 +71,6 @@ jobs:"
+              ],
+              [
+                " ",
+                "        run: python -m tests.ci.ci_policy"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "  docker-paths:"
+              ],
+              [
+                "-",
+                "    if: github.event_name == 'pull_request'"
+              ],
+              [
+                " ",
+                "    runs-on: ubuntu-latest"
+              ],
+              [
+                " ",
+                "    outputs:"
+              ],
+              [
+                " ",
+                "      changed: ${{ steps.diff.outputs.changed }}"
+              ],
+              [
+                "h",
+                "@@ -81,48 +80,73 @@ jobs:"
+              ],
+              [
+                " ",
+                "          persist-credentials: false"
+              ],
+              [
+                " ",
+                "      - id: diff"
+              ],
+              [
+                " ",
+                "        shell: bash"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:39:50.838749+00:00"
+    },
+    {
+      "id": "THUDM/slime#2228",
+      "repo": "THUDM/slime",
+      "pr_number": 2228,
+      "title": "[docker] upgrade sglang to v0.5.15.post1",
+      "state": "closed",
+      "author": "zhuzilin",
+      "created_at": "2026-07-22T12:09:22Z",
+      "merged_at": "2026-07-23T08:26:50Z",
+      "url": "https://github.com/THUDM/slime/pull/2228",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "将 Docker 环境中的 sglang 依赖升级至 v0.5.15.post1，并更新相关 patch 文件和参数适配",
+      "reason": "此 PR 主要涉及该仓库特有的 Docker 构建脚本、sglang 版本 bump 及仓库内部 patch 文件的维护，属于该仓库特定的基础设施升级，其他框架不会直接复用这些 patch 或 Dockerfile",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docker/Dockerfile",
+        "docker/README.md",
+        "docker/patch/latest/sglang-pull_weights.patch",
+        "docker/patch/latest/sglang-release_hicache.patch",
+        "docker/patch/latest/sglang-top_p.patch",
+        "docker/patch/latest/sglang.patch",
+        "docker/version.txt",
+        "slime/backends/sglang_utils/arguments.py",
+        "slime/backends/sglang_utils/sglang_engine.py",
+        "tests/test_qwen3_0.6B_parallel_check.py",
+        "tests/test_qwen3_4B_external_pd.py",
+        "tests/utils/test_sglang_config.py"
+      ],
+      "diff_preview": {
+        "additions": 697,
+        "deletions": 892,
+        "hunks": [
+          {
+            "file": "docker/Dockerfile",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -1,4 +1,4 @@"
+              ],
+              [
+                "-",
+                "ARG SGLANG_IMAGE_TAG=v0.5.13-cu129"
+              ],
+              [
+                "+",
+                "ARG SGLANG_IMAGE_TAG=v0.5.15.post1-cu129"
+              ],
+              [
+                " ",
+                "FROM slimerl/sglang:${SGLANG_IMAGE_TAG} AS sglang"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# ======================================== Arguments ============================================="
+              ],
+              [
+                "h",
+                "@@ -80,8 +80,9 @@ RUN if [ \"$ENABLE_CUDA_13\" = \"1\" ]; then \\"
+              ],
+              [
+                " ",
+                "    python3 -m pip install https://github.com/sgl-project/whl/releases/download/v${SGL_KERNEL_VERSION}/sgl_kernel-${SGL_KERNEL_VERSION}+cu130-cp310-abi3-manylinux2014_$(uname -m).whl --force-reinstall --no-deps; \\"
+              ],
+              [
+                " ",
+                "  fi"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "# reinstall numpy 1.x for megatron"
+              ],
+              [
+                "-",
+                "RUN pip install \"numpy<2\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:39:45.440332+00:00"
+    },
+    {
+      "id": "THUDM/slime#2233",
+      "repo": "THUDM/slime",
+      "pr_number": 2233,
+      "title": "[Multimodal][Model] Make Qwen3.5-VL work with packed sequences",
+      "state": "open",
+      "author": "TobyYang7",
+      "created_at": "2026-07-25T10:09:17Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2233",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "为 Qwen3.5-VL 的 GatedDeltaNet 层添加 packed sequence 支持，使其能在 THD 格式下正常运行",
+      "reason": "GatedDeltaNet 不支持 packed sequence 是 megatron-core 上游的限制，任何基于 Megatron 并使用 THD/packed 格式训练 Qwen3.5-VL 的框架都会遇到同样问题；patch 思路（绕过或适配 packed_seq_params）对其他框架同样适用",
+      "value": 4,
+      "subsystems": [
+        "parallel",
+        "multimodal",
+        "infra"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "packed-sequence",
+        "THD"
+      ],
+      "files": [
+        ".github/workflows/pr-test.yml",
+        ".github/workflows/pr-test.yml.j2",
+        "examples/geo3k_vlm/README.md",
+        "examples/geo3k_vlm/run_geo3k_qwen35.sh",
+        "slime/backends/megatron_utils/model_provider.py",
+        "slime/utils/arguments.py",
+        "slime_plugins/megatron_bridge/__init__.py",
+        "slime_plugins/megatron_bridge/qwen3_5_vl.py",
+        "tests/test_qwen3_5_vl_gdn_packed.py"
+      ],
+      "diff_preview": {
+        "additions": 494,
+        "deletions": 13,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -597,6 +597,10 @@ jobs:"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_cispo_loss.py\""
+              ],
+              [
+                " ",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_qwen3_5_vl_gdn_packed.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ],
+              [
+                " ",
+                "            {"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_ppo_logprob_entropy.py\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-26T06:39:39.385525+00:00"
+    },
+    {
       "id": "radixark/miles#1688",
       "repo": "radixark/miles",
       "pr_number": 1688,
@@ -30650,357 +34562,400 @@
     }
   ],
   "analyzed_ids": [
-    "radixark/miles#1222",
-    "radixark/miles#1192",
-    "radixark/miles#967",
-    "radixark/miles#1706",
-    "THUDM/slime#2211",
-    "THUDM/slime#1935",
-    "radixark/miles#1202",
-    "THUDM/slime#2207",
-    "radixark/miles#1705",
-    "radixark/miles#968",
-    "radixark/miles#1730",
-    "THUDM/slime#1781",
-    "radixark/miles#947",
-    "THUDM/slime#1945",
-    "radixark/miles#998",
-    "radixark/miles#974",
-    "radixark/miles#1729",
-    "radixark/miles#1738",
-    "radixark/miles#1035",
-    "radixark/miles#1038",
-    "radixark/miles#1197",
-    "radixark/miles#1188",
-    "radixark/miles#988",
-    "THUDM/slime#1825",
-    "THUDM/slime#1917",
-    "THUDM/slime#1929",
-    "THUDM/slime#2177",
-    "THUDM/slime#2169",
-    "THUDM/slime#2217",
-    "radixark/miles#1715",
-    "radixark/miles#984",
-    "radixark/miles#1707",
-    "radixark/miles#1013",
-    "THUDM/slime#1841",
-    "radixark/miles#1012",
-    "radixark/miles#1181",
-    "radixark/miles#1032",
-    "radixark/miles#1043",
-    "radixark/miles#1036",
-    "THUDM/slime#1958",
-    "radixark/miles#980",
-    "radixark/miles#1037",
-    "THUDM/slime#2182",
-    "radixark/miles#1716",
-    "THUDM/slime#1832",
-    "radixark/miles#1182",
-    "THUDM/slime#1946",
-    "THUDM/slime#1925",
-    "radixark/miles#1220",
-    "radixark/miles#973",
-    "THUDM/slime#1921",
-    "THUDM/slime#2174",
-    "radixark/miles#944",
-    "THUDM/slime#1788",
-    "THUDM/slime#2206",
-    "radixark/miles#1041",
-    "radixark/miles#977",
-    "radixark/miles#950",
-    "THUDM/slime#1937",
-    "THUDM/slime#1963",
-    "THUDM/slime#1807",
-    "THUDM/slime#2220",
-    "radixark/miles#1183",
-    "radixark/miles#943",
-    "radixark/miles#1689",
-    "radixark/miles#1688",
-    "THUDM/slime#2178",
-    "radixark/miles#1020",
-    "radixark/miles#1005",
-    "THUDM/slime#1941",
-    "radixark/miles#985",
-    "radixark/miles#1699",
-    "THUDM/slime#1932",
-    "radixark/miles#1221",
-    "THUDM/slime#2167",
-    "radixark/miles#1014",
-    "radixark/miles#1193",
-    "radixark/miles#990",
-    "radixark/miles#1023",
-    "radixark/miles#1189",
-    "radixark/miles#1021",
-    "THUDM/slime#2200",
-    "radixark/miles#1033",
-    "THUDM/slime#1855",
-    "THUDM/slime#1808",
-    "THUDM/slime#1848",
-    "THUDM/slime#1928",
-    "radixark/miles#1211",
-    "THUDM/slime#2171",
-    "THUDM/slime#1957",
-    "radixark/miles#1229",
-    "THUDM/slime#1955",
-    "THUDM/slime#1816",
-    "THUDM/slime#1913",
-    "THUDM/slime#2162",
-    "THUDM/slime#2164",
-    "radixark/miles#937",
-    "THUDM/slime#2198",
-    "THUDM/slime#1849",
-    "radixark/miles#1040",
-    "radixark/miles#1695",
-    "THUDM/slime#1924",
-    "THUDM/slime#2193",
-    "radixark/miles#1218",
-    "radixark/miles#1029",
-    "radixark/miles#1010",
-    "radixark/miles#1708",
-    "radixark/miles#1712",
-    "THUDM/slime#2204",
-    "radixark/miles#976",
-    "radixark/miles#995",
-    "radixark/miles#1703",
-    "THUDM/slime#1799",
-    "radixark/miles#957",
-    "THUDM/slime#1775",
-    "radixark/miles#1230",
-    "THUDM/slime#1915",
-    "radixark/miles#1692",
-    "radixark/miles#972",
-    "radixark/miles#1025",
-    "radixark/miles#949",
-    "radixark/miles#1741",
-    "THUDM/slime#2221",
-    "radixark/miles#986",
-    "radixark/miles#996",
-    "THUDM/slime#2226",
-    "radixark/miles#1031",
-    "radixark/miles#966",
-    "radixark/miles#964",
-    "radixark/miles#1208",
-    "THUDM/slime#1842",
-    "radixark/miles#971",
-    "radixark/miles#1227",
-    "THUDM/slime#1768",
-    "radixark/miles#1216",
-    "THUDM/slime#1801",
-    "THUDM/slime#1919",
-    "THUDM/slime#1835",
-    "radixark/miles#1199",
-    "radixark/miles#1001",
-    "radixark/miles#935",
-    "THUDM/slime#1959",
-    "THUDM/slime#1773",
-    "THUDM/slime#2203",
-    "THUDM/slime#2210",
-    "THUDM/slime#1844",
-    "THUDM/slime#1814",
-    "radixark/miles#1721",
-    "radixark/miles#1711",
-    "radixark/miles#999",
-    "THUDM/slime#2223",
-    "radixark/miles#958",
-    "radixark/miles#1704",
-    "radixark/miles#1693",
-    "radixark/miles#1217",
-    "THUDM/slime#1822",
-    "radixark/miles#1206",
-    "radixark/miles#1191",
-    "radixark/miles#1727",
-    "THUDM/slime#1923",
-    "radixark/miles#1000",
-    "radixark/miles#1223",
-    "THUDM/slime#1858",
-    "THUDM/slime#1940",
-    "THUDM/slime#1846",
-    "radixark/miles#1198",
-    "radixark/miles#1030",
-    "radixark/miles#963",
-    "radixark/miles#1205",
-    "radixark/miles#1194",
-    "radixark/miles#1207",
-    "radixark/miles#1725",
-    "THUDM/slime#2208",
-    "radixark/miles#1720",
-    "radixark/miles#997",
-    "radixark/miles#1201",
-    "radixark/miles#1004",
-    "THUDM/slime#1823",
-    "THUDM/slime#1797",
-    "THUDM/slime#2192",
-    "THUDM/slime#2180",
-    "THUDM/slime#1827",
-    "THUDM/slime#1949",
-    "THUDM/slime#1774",
-    "radixark/miles#1710",
-    "THUDM/slime#1930",
-    "radixark/miles#1006",
-    "radixark/miles#975",
-    "THUDM/slime#1812",
-    "THUDM/slime#2170",
-    "THUDM/slime#1934",
-    "radixark/miles#1204",
-    "radixark/miles#1196",
-    "radixark/miles#1739",
-    "THUDM/slime#1819",
-    "radixark/miles#952",
-    "radixark/miles#1007",
-    "radixark/miles#1702",
-    "THUDM/slime#1960",
-    "radixark/miles#1185",
-    "THUDM/slime#1777",
-    "radixark/miles#1225",
-    "radixark/miles#1011",
-    "THUDM/slime#2189",
-    "THUDM/slime#2196",
-    "radixark/miles#1019",
-    "radixark/miles#1028",
-    "radixark/miles#1226",
-    "THUDM/slime#1956",
-    "radixark/miles#960",
-    "THUDM/slime#1938",
-    "THUDM/slime#2218",
-    "THUDM/slime#1791",
-    "radixark/miles#942",
-    "radixark/miles#1026",
-    "THUDM/slime#1776",
-    "radixark/miles#1203",
-    "THUDM/slime#1939",
-    "radixark/miles#961",
-    "THUDM/slime#1944",
-    "THUDM/slime#1943",
-    "radixark/miles#1009",
-    "radixark/miles#1691",
-    "radixark/miles#993",
-    "radixark/miles#1045",
-    "THUDM/slime#1836",
-    "radixark/miles#965",
-    "THUDM/slime#1798",
-    "THUDM/slime#1805",
-    "THUDM/slime#1813",
-    "THUDM/slime#2197",
-    "THUDM/slime#2190",
-    "THUDM/slime#1809",
-    "radixark/miles#1003",
-    "radixark/miles#982",
-    "THUDM/slime#1953",
-    "THUDM/slime#1817",
-    "THUDM/slime#2187",
-    "radixark/miles#951",
-    "radixark/miles#1024",
-    "THUDM/slime#1856",
-    "THUDM/slime#1933",
-    "radixark/miles#1713",
-    "radixark/miles#1190",
-    "radixark/miles#1735",
-    "THUDM/slime#2227",
-    "radixark/miles#1732",
-    "radixark/miles#1714",
-    "THUDM/slime#1795",
     "radixark/miles#1214",
-    "THUDM/slime#1950",
-    "radixark/miles#1200",
-    "radixark/miles#1733",
-    "THUDM/slime#2183",
-    "radixark/miles#1017",
-    "THUDM/slime#1920",
-    "radixark/miles#1709",
-    "radixark/miles#959",
-    "radixark/miles#1228",
-    "radixark/miles#953",
-    "radixark/miles#1736",
-    "radixark/miles#1042",
-    "radixark/miles#1212",
-    "THUDM/slime#1926",
-    "THUDM/slime#2175",
-    "radixark/miles#1728",
-    "radixark/miles#1698",
-    "radixark/miles#1719",
-    "THUDM/slime#2181",
-    "radixark/miles#941",
-    "radixark/miles#946",
-    "radixark/miles#1215",
-    "radixark/miles#987",
-    "THUDM/slime#1948",
-    "radixark/miles#1690",
-    "radixark/miles#1210",
-    "THUDM/slime#1770",
-    "radixark/miles#1722",
-    "radixark/miles#992",
-    "THUDM/slime#2213",
-    "THUDM/slime#2205",
-    "radixark/miles#1701",
-    "THUDM/slime#1918",
-    "radixark/miles#1224",
-    "THUDM/slime#1942",
-    "radixark/miles#1718",
-    "radixark/miles#1179",
-    "THUDM/slime#2195",
-    "radixark/miles#1209",
-    "radixark/miles#1694",
-    "radixark/miles#1740",
-    "radixark/miles#1184",
-    "THUDM/slime#1857",
-    "radixark/miles#1723",
-    "THUDM/slime#1927",
-    "THUDM/slime#1952",
-    "radixark/miles#1015",
-    "THUDM/slime#1931",
-    "radixark/miles#1039",
+    "radixark/miles#1038",
     "THUDM/slime#2216",
-    "radixark/miles#945",
-    "radixark/miles#939",
-    "THUDM/slime#2163",
-    "radixark/miles#989",
-    "THUDM/slime#1965",
-    "THUDM/slime#2185",
-    "THUDM/slime#1824",
-    "radixark/miles#994",
-    "THUDM/slime#2173",
-    "radixark/miles#1044",
-    "THUDM/slime#1833",
-    "radixark/miles#1696",
-    "THUDM/slime#1828",
-    "radixark/miles#1022",
-    "THUDM/slime#1772",
-    "radixark/miles#1213",
-    "THUDM/slime#1914",
-    "radixark/miles#1034",
-    "radixark/miles#991",
-    "THUDM/slime#2224",
+    "radixark/miles#1773",
     "radixark/miles#1195",
-    "radixark/miles#954",
-    "THUDM/slime#1922",
-    "THUDM/slime#1769",
-    "THUDM/slime#2166",
-    "radixark/miles#1027",
-    "radixark/miles#948",
-    "THUDM/slime#2199",
-    "radixark/miles#1737",
-    "THUDM/slime#2172",
-    "radixark/miles#940",
-    "radixark/miles#1717",
-    "THUDM/slime#1806",
+    "radixark/miles#1691",
+    "radixark/miles#1696",
+    "radixark/miles#1784",
+    "THUDM/slime#1926",
+    "radixark/miles#1715",
+    "radixark/miles#1794",
+    "radixark/miles#994",
+    "THUDM/slime#1835",
+    "THUDM/slime#1956",
+    "radixark/miles#999",
+    "radixark/miles#1215",
+    "radixark/miles#953",
+    "radixark/miles#1020",
+    "radixark/miles#1740",
+    "radixark/miles#986",
+    "THUDM/slime#1950",
+    "radixark/miles#1224",
+    "THUDM/slime#2233",
+    "radixark/miles#1182",
+    "THUDM/slime#2195",
+    "radixark/miles#998",
+    "radixark/miles#1184",
+    "radixark/miles#951",
+    "THUDM/slime#1931",
+    "THUDM/slime#1819",
+    "THUDM/slime#1917",
+    "radixark/miles#993",
+    "THUDM/slime#2224",
+    "radixark/miles#1209",
+    "radixark/miles#1029",
+    "radixark/miles#939",
+    "radixark/miles#1005",
+    "THUDM/slime#1799",
+    "radixark/miles#1698",
+    "THUDM/slime#1941",
     "THUDM/slime#1947",
-    "THUDM/slime#2184",
-    "radixark/miles#1016",
-    "radixark/miles#1018",
-    "radixark/miles#1734",
-    "radixark/miles#1180",
-    "radixark/miles#1726",
-    "THUDM/slime#1961",
-    "THUDM/slime#1962",
-    "radixark/miles#1219",
-    "radixark/miles#938",
-    "THUDM/slime#1954",
-    "THUDM/slime#1916",
-    "THUDM/slime#1834",
+    "THUDM/slime#1939",
+    "radixark/miles#1766",
+    "THUDM/slime#2208",
     "radixark/miles#1008",
-    "THUDM/slime#2219"
+    "THUDM/slime#1965",
+    "radixark/miles#1758",
+    "radixark/miles#1716",
+    "THUDM/slime#1962",
+    "radixark/miles#1200",
+    "radixark/miles#1713",
+    "radixark/miles#1034",
+    "radixark/miles#1024",
+    "radixark/miles#1725",
+    "radixark/miles#1733",
+    "THUDM/slime#2210",
+    "radixark/miles#1790",
+    "radixark/miles#1019",
+    "radixark/miles#1771",
+    "radixark/miles#1690",
+    "radixark/miles#1014",
+    "THUDM/slime#2181",
+    "radixark/miles#1692",
+    "radixark/miles#1001",
+    "THUDM/slime#2203",
+    "THUDM/slime#1798",
+    "radixark/miles#1702",
+    "radixark/miles#954",
+    "THUDM/slime#1777",
+    "THUDM/slime#1833",
+    "radixark/miles#964",
+    "radixark/miles#1765",
+    "radixark/miles#1212",
+    "THUDM/slime#2164",
+    "radixark/miles#1711",
+    "radixark/miles#1718",
+    "radixark/miles#1025",
+    "radixark/miles#1727",
+    "radixark/miles#1202",
+    "radixark/miles#1027",
+    "THUDM/slime#1781",
+    "radixark/miles#1734",
+    "radixark/miles#1192",
+    "radixark/miles#943",
+    "radixark/miles#996",
+    "radixark/miles#1706",
+    "radixark/miles#1026",
+    "THUDM/slime#1944",
+    "radixark/miles#1045",
+    "radixark/miles#1180",
+    "radixark/miles#1199",
+    "THUDM/slime#1842",
+    "radixark/miles#1044",
+    "THUDM/slime#1813",
+    "radixark/miles#1009",
+    "THUDM/slime#1928",
+    "radixark/miles#1701",
+    "THUDM/slime#1768",
+    "THUDM/slime#2219",
+    "radixark/miles#977",
+    "THUDM/slime#2163",
+    "THUDM/slime#1935",
+    "radixark/miles#1778",
+    "radixark/miles#1193",
+    "radixark/miles#1775",
+    "THUDM/slime#1961",
+    "radixark/miles#1783",
+    "radixark/miles#1782",
+    "THUDM/slime#1943",
+    "radixark/miles#1776",
+    "radixark/miles#946",
+    "radixark/miles#1000",
+    "radixark/miles#935",
+    "THUDM/slime#1856",
+    "THUDM/slime#2173",
+    "radixark/miles#1227",
+    "THUDM/slime#2211",
+    "radixark/miles#1033",
+    "THUDM/slime#1963",
+    "THUDM/slime#1841",
+    "THUDM/slime#1848",
+    "THUDM/slime#1825",
+    "THUDM/slime#1775",
+    "radixark/miles#1770",
+    "radixark/miles#992",
+    "radixark/miles#991",
+    "THUDM/slime#1795",
+    "radixark/miles#1230",
+    "THUDM/slime#1921",
+    "radixark/miles#1707",
+    "THUDM/slime#2166",
+    "radixark/miles#1041",
+    "THUDM/slime#1929",
+    "radixark/miles#1211",
+    "THUDM/slime#1933",
+    "radixark/miles#1774",
+    "radixark/miles#1007",
+    "THUDM/slime#1954",
+    "THUDM/slime#2185",
+    "THUDM/slime#2217",
+    "radixark/miles#968",
+    "radixark/miles#957",
+    "radixark/miles#1741",
+    "THUDM/slime#1930",
+    "THUDM/slime#1937",
+    "THUDM/slime#1946",
+    "radixark/miles#1736",
+    "radixark/miles#1703",
+    "radixark/miles#1221",
+    "radixark/miles#1693",
+    "THUDM/slime#1773",
+    "radixark/miles#960",
+    "THUDM/slime#1914",
+    "THUDM/slime#2226",
+    "radixark/miles#1789",
+    "THUDM/slime#1927",
+    "radixark/miles#1723",
+    "radixark/miles#987",
+    "radixark/miles#1795",
+    "radixark/miles#1040",
+    "radixark/miles#1781",
+    "radixark/miles#1205",
+    "THUDM/slime#1919",
+    "radixark/miles#972",
+    "radixark/miles#1720",
+    "radixark/miles#1004",
+    "THUDM/slime#1805",
+    "radixark/miles#1785",
+    "THUDM/slime#2171",
+    "THUDM/slime#1788",
+    "radixark/miles#1030",
+    "THUDM/slime#1827",
+    "radixark/miles#1792",
+    "radixark/miles#1779",
+    "THUDM/slime#2169",
+    "radixark/miles#1722",
+    "radixark/miles#1013",
+    "radixark/miles#1018",
+    "THUDM/slime#2172",
+    "radixark/miles#938",
+    "radixark/miles#1695",
+    "radixark/miles#1183",
+    "radixark/miles#1207",
+    "radixark/miles#1739",
+    "radixark/miles#1218",
+    "radixark/miles#1039",
+    "THUDM/slime#2213",
+    "radixark/miles#1760",
+    "THUDM/slime#2204",
+    "radixark/miles#1203",
+    "radixark/miles#944",
+    "THUDM/slime#2223",
+    "radixark/miles#1719",
+    "radixark/miles#947",
+    "radixark/miles#1699",
+    "radixark/miles#1021",
+    "THUDM/slime#1958",
+    "THUDM/slime#1955",
+    "radixark/miles#1735",
+    "radixark/miles#1694",
+    "radixark/miles#1222",
+    "THUDM/slime#1858",
+    "radixark/miles#966",
+    "THUDM/slime#1809",
+    "radixark/miles#1791",
+    "radixark/miles#988",
+    "radixark/miles#990",
+    "radixark/miles#1229",
+    "radixark/miles#1216",
+    "radixark/miles#1032",
+    "THUDM/slime#2207",
+    "THUDM/slime#1772",
+    "radixark/miles#1011",
+    "radixark/miles#1194",
+    "radixark/miles#1705",
+    "THUDM/slime#1925",
+    "radixark/miles#1037",
+    "THUDM/slime#1942",
+    "radixark/miles#1181",
+    "radixark/miles#967",
+    "THUDM/slime#1855",
+    "radixark/miles#1710",
+    "radixark/miles#1006",
+    "radixark/miles#1787",
+    "THUDM/slime#1920",
+    "radixark/miles#1689",
+    "radixark/miles#1772",
+    "radixark/miles#1732",
+    "radixark/miles#1198",
+    "radixark/miles#1213",
+    "radixark/miles#1728",
+    "radixark/miles#1762",
+    "radixark/miles#940",
+    "radixark/miles#950",
+    "THUDM/slime#2177",
+    "radixark/miles#1226",
+    "radixark/miles#1223",
+    "radixark/miles#1228",
+    "radixark/miles#1738",
+    "radixark/miles#1191",
+    "radixark/miles#1786",
+    "radixark/miles#1709",
+    "radixark/miles#1042",
+    "THUDM/slime#1814",
+    "radixark/miles#963",
+    "radixark/miles#1036",
+    "radixark/miles#941",
+    "radixark/miles#1188",
+    "radixark/miles#1031",
+    "radixark/miles#1768",
+    "THUDM/slime#1808",
+    "THUDM/slime#1774",
+    "THUDM/slime#2192",
+    "radixark/miles#1220",
+    "THUDM/slime#1836",
+    "THUDM/slime#1844",
+    "radixark/miles#1197",
+    "radixark/miles#1712",
+    "radixark/miles#945",
+    "radixark/miles#1729",
+    "radixark/miles#974",
+    "THUDM/slime#2162",
+    "radixark/miles#1217",
+    "radixark/miles#982",
+    "THUDM/slime#1806",
+    "THUDM/slime#2175",
+    "THUDM/slime#1932",
+    "THUDM/slime#2205",
+    "THUDM/slime#2228",
+    "THUDM/slime#1823",
+    "THUDM/slime#2218",
+    "radixark/miles#958",
+    "THUDM/slime#1828",
+    "THUDM/slime#2183",
+    "radixark/miles#1043",
+    "radixark/miles#1179",
+    "radixark/miles#948",
+    "radixark/miles#1035",
+    "THUDM/slime#2184",
+    "THUDM/slime#2170",
+    "THUDM/slime#2193",
+    "radixark/miles#995",
+    "THUDM/slime#2189",
+    "radixark/miles#1714",
+    "THUDM/slime#2198",
+    "THUDM/slime#1952",
+    "radixark/miles#984",
+    "radixark/miles#1012",
+    "THUDM/slime#1957",
+    "radixark/miles#1763",
+    "radixark/miles#985",
+    "radixark/miles#1204",
+    "radixark/miles#965",
+    "THUDM/slime#1816",
+    "radixark/miles#1759",
+    "radixark/miles#952",
+    "THUDM/slime#1948",
+    "radixark/miles#1764",
+    "radixark/miles#971",
+    "radixark/miles#1688",
+    "THUDM/slime#2196",
+    "THUDM/slime#2206",
+    "radixark/miles#1022",
+    "THUDM/slime#2227",
+    "THUDM/slime#1807",
+    "THUDM/slime#1812",
+    "THUDM/slime#1940",
+    "radixark/miles#1761",
+    "THUDM/slime#1953",
+    "radixark/miles#973",
+    "THUDM/slime#2182",
+    "THUDM/slime#1916",
+    "THUDM/slime#1797",
+    "THUDM/slime#1949",
+    "radixark/miles#1219",
+    "radixark/miles#1017",
+    "THUDM/slime#1824",
+    "radixark/miles#1704",
+    "radixark/miles#1796",
+    "THUDM/slime#2178",
+    "radixark/miles#1028",
+    "THUDM/slime#1849",
+    "THUDM/slime#1822",
+    "radixark/miles#942",
+    "radixark/miles#1185",
+    "radixark/miles#937",
+    "THUDM/slime#1924",
+    "radixark/miles#1015",
+    "THUDM/slime#1922",
+    "THUDM/slime#1960",
+    "THUDM/slime#2220",
+    "THUDM/slime#1913",
+    "THUDM/slime#2197",
+    "THUDM/slime#1776",
+    "THUDM/slime#1770",
+    "radixark/miles#1010",
+    "radixark/miles#976",
+    "radixark/miles#959",
+    "radixark/miles#1708",
+    "radixark/miles#1798",
+    "THUDM/slime#2200",
+    "THUDM/slime#1846",
+    "THUDM/slime#1834",
+    "THUDM/slime#1918",
+    "radixark/miles#1737",
+    "radixark/miles#1769",
+    "THUDM/slime#1817",
+    "THUDM/slime#2180",
+    "radixark/miles#1190",
+    "radixark/miles#1196",
+    "THUDM/slime#1938",
+    "THUDM/slime#2199",
+    "radixark/miles#997",
+    "THUDM/slime#2174",
+    "radixark/miles#1225",
+    "THUDM/slime#1934",
+    "radixark/miles#1206",
+    "radixark/miles#1003",
+    "radixark/miles#1767",
+    "THUDM/slime#2221",
+    "radixark/miles#1189",
+    "radixark/miles#1726",
+    "radixark/miles#989",
+    "THUDM/slime#2187",
+    "radixark/miles#1201",
+    "THUDM/slime#1857",
+    "THUDM/slime#2167",
+    "radixark/miles#1793",
+    "THUDM/slime#1923",
+    "radixark/miles#1016",
+    "radixark/miles#1788",
+    "radixark/miles#1717",
+    "radixark/miles#980",
+    "radixark/miles#1721",
+    "radixark/miles#1730",
+    "radixark/miles#1208",
+    "radixark/miles#1757",
+    "radixark/miles#975",
+    "THUDM/slime#1832",
+    "radixark/miles#1777",
+    "THUDM/slime#2190",
+    "THUDM/slime#1945",
+    "radixark/miles#961",
+    "radixark/miles#1023",
+    "THUDM/slime#1959",
+    "THUDM/slime#1915",
+    "THUDM/slime#1769",
+    "THUDM/slime#1801",
+    "THUDM/slime#1791",
+    "radixark/miles#1210",
+    "radixark/miles#949",
+    "radixark/miles#1797"
   ],
   "weekly_note": "<em>本周重点</em>：<b>#1720</b> 修复 CP>1 时 PPO <em>终端奖励位置错误</em>，<b>#1730</b> 消除 <em>MoE 共享专家</em>权重同步死锁，<b>#1735</b> Actor/Critic <em>共享 GPU</em> 大幅降低显存占用。",
   "weekly_note_week": "2026-W30",
-  "last_updated": "2026-07-21T14:53:35.867119+00:00"
+  "last_updated": "2026-07-26T06:44:27.343250+00:00"
 }
