@@ -1,6 +1,1705 @@
 {
   "prs": [
     {
+      "id": "radixark/miles#1799",
+      "repo": "radixark/miles",
+      "pr_number": 1799,
+      "title": "docker: use FA3 3.0.0 for transformer_engine 2.17",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-07-26T07:58:04Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1799",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "将 Docker 镜像中的 flash_attn_3 从 3.0.0b1 升级到 3.0.0 正式版，以兼容 transformer_engine 2.17 中 context parallel 路径对 window_size_left 参数的新调用方式",
+      "reason": "该修复针对该仓库特定的 Docker 构建脚本和内部 wheel 依赖版本，属于特定硬件/环境构建脚本的版本适配，其他框架需自行处理各自的依赖打包问题，不具有直接移植价值",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "parallel",
+        "ci"
+      ],
+      "rl_concepts": [
+        "Megatron"
+      ],
+      "files": [
+        "docker/Dockerfile"
+      ],
+      "diff_preview": {
+        "additions": 5,
+        "deletions": 5,
+        "hunks": [
+          {
+            "file": "docker/Dockerfile",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -73,11 +73,11 @@ RUN case \"${TARGETARCH}\" in \\"
+              ],
+              [
+                " ",
+                "RUN pip install /tmp/wheels/flash_attn-*.whl"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# flash-attn hopper (FA3): Hopper-only (sm_90a). Coexists with FA2."
+              ],
+              [
+                "-",
+                "RUN pip install /tmp/wheels/flash_attn_3-*.whl && \\"
+              ],
+              [
+                "-",
+                "    python_path=$(python -c \"import site; print(site.getsitepackages()[0])\") && \\"
+              ],
+              [
+                "-",
+                "    mkdir -p $python_path/flash_attn_3 && \\"
+              ],
+              [
+                "-",
+                "    curl -fSL https://raw.githubusercontent.com/Dao-AILab/flash-attention/fbf24f67cf7f6442c5cfb2c1057f4bfc57e72d89/hopper/flash_attn_interface.py \\"
+              ],
+              [
+                "-",
+                "      -o $python_path/flash_attn_3/flash_attn_interface.py"
+              ],
+              [
+                "+",
+                "# The wheel ships flash_attn_interface top-level (what transformer_engine imports)"
+              ],
+              [
+                "+",
+                "# plus a flash_attn_3.flash_attn_interface re-export shim, so there is nothing to"
+              ],
+              [
+                "+",
+                "# fetch separately. Do not overwrite the shim with a copy of the full module: it"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:07:23.498073+00:00"
+    },
+    {
+      "id": "radixark/miles#1800",
+      "repo": "radixark/miles",
+      "pr_number": 1800,
+      "title": "docker: install transformer_engine_torch runtime deps",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-07-26T08:03:21Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1800",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复自 #1796 引入 --no-deps 安装 TransformerEngine 后遗漏其运行时依赖（onnxscript 等）导致所有 GPU 测试崩溃的问题",
+      "reason": "此 PR 针对该仓库 Docker 构建流程中特定的 TransformerEngine 安装方式（rolling wheels + --no-deps）引发的依赖缺失问题，属于仓库特有的镜像构建脚本修复，其他框架不共享同一套 Dockerfile 和安装决策",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docker/Dockerfile",
+        "docker/verify_transformer_engine.py"
+      ],
+      "diff_preview": {
+        "additions": 28,
+        "deletions": 4,
+        "hunks": [
+          {
+            "file": "docker/Dockerfile",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -105,6 +105,10 @@ RUN if ls /tmp/wheels/causal_conv1d-*.whl 2>/dev/null | grep -q . && \\"
+              ],
+              [
+                " ",
+                "    fi"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# transformer_engine"
+              ],
+              [
+                "+",
+                "# --no-deps pins the three TE dists to exactly the wheels above, so pip cannot"
+              ],
+              [
+                "+",
+                "# pull a conflicting core dist. That also drops transformer_engine_torch's own"
+              ],
+              [
+                "+",
+                "# runtime deps, which still have to be installed: transformer_engine.pytorch"
+              ],
+              [
+                "+",
+                "# imports onnxscript unconditionally (module/_common -> export -> onnx_extensions)."
+              ],
+              [
+                " ",
+                "RUN --mount=type=bind,source=docker/verify_transformer_engine.py,target=/tmp/verify_transformer_engine.py \\"
+              ],
+              [
+                " ",
+                "    if [ \"${ENABLE_CUDA_13}\" = \"1\" ]; then \\"
+              ],
+              [
+                " ",
+                "      TE_CORE_DIST=transformer_engine_cu13; \\"
+              ],
+              [
+                "h",
+                "@@ -120,6 +124,7 @@ RUN --mount=type=bind,source=docker/verify_transformer_engine.py,target=/tmp/ver"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:07:16.754489+00:00"
+    },
+    {
+      "id": "radixark/miles#1801",
+      "repo": "radixark/miles",
+      "pr_number": 1801,
+      "title": "[1/5] feat(router): model asynchronous worker lifecycle",
+      "state": "open",
+      "author": "ashtonchew",
+      "created_at": "2026-07-26T10:37:22Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1801",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为 SGLang Router 的异步 worker 生命周期管理添加带类型的客户端，支持 0.2.x（URL标识）和 0.3.x（UUID标识）两套 API，并在 202 Accepted 后等待 worker 实际激活或缺失再重试",
+      "reason": "该 PR 针对 miles 仓库自有的 SGLang 路由器控制面实现，属于仓库特定调度/路由基础设施的改动，其他 RL 框架不共享此路由器设计或 worker 注册协议",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "rollout"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/backends/sglang_utils/router_worker_client.py",
+        "tests/fast/backends/sglang_utils/test_router_worker_client.py"
+      ],
+      "diff_preview": {
+        "additions": 1369,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "miles/backends/sglang_utils/router_worker_client.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,618 @@"
+              ],
+              [
+                "+",
+                "import logging"
+              ],
+              [
+                "+",
+                "import time"
+              ],
+              [
+                "+",
+                "from enum import StrEnum"
+              ],
+              [
+                "+",
+                "from typing import NamedTuple, TypeVar"
+              ],
+              [
+                "+",
+                "from urllib.parse import quote"
+              ],
+              [
+                "+",
+                "from uuid import UUID"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "import requests"
+              ],
+              [
+                "+",
+                "from pydantic import BaseModel, ConfigDict, ValidationError"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "logger = logging.getLogger(__name__)"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:07:10.839515+00:00"
+    },
+    {
+      "id": "radixark/miles#1802",
+      "repo": "radixark/miles",
+      "pr_number": 1802,
+      "title": "docs: remove nonexistent --sglang-log-dir flag and /tmp/sglang log path",
+      "state": "closed",
+      "author": "Shi-Dong",
+      "created_at": "2026-07-26T15:27:56Z",
+      "merged_at": "2026-07-26T23:51:30Z",
+      "url": "https://github.com/radixark/miles/pull/1802",
+      "category": "doc",
+      "scope": "repo-specific",
+      "summary": "删除文档中不存在的 --sglang-log-dir 参数和 /tmp/sglang/*.log 路径的错误描述",
+      "reason": "这是对该仓库自身文档错误的修正，涉及的是 miles 特有的 SGLang 后端集成方式和文档结构，其他框架不会共享这些文档内容或相同的 SGLang 参数命名约定",
+      "value": 1,
+      "subsystems": [
+        "logging"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docs/developer/debug.md",
+        "docs/faq.md",
+        "docs/getting-started/quick-start.md"
+      ],
+      "diff_preview": {
+        "additions": 3,
+        "deletions": 3,
+        "hunks": [
+          {
+            "file": "docs/developer/debug.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -99,8 +99,8 @@ Where to look:"
+              ],
+              [
+                " ",
+                "| Component | Path |"
+              ],
+              [
+                " ",
+                "|---|---|"
+              ],
+              [
+                " ",
+                "| Trainer stdout | wherever you redirected `ray job submit` |"
+              ],
+              [
+                "-",
+                "| SGLang | `/tmp/sglang/*.log` (or `--sglang-log-dir`) |"
+              ],
+              [
+                " ",
+                "| Ray workers | `~/.ray/session_latest/logs/worker-*.{out,err}` |"
+              ],
+              [
+                "+",
+                "| SGLang | inside the Ray worker logs; control verbosity with `--sglang-log-level` |"
+              ],
+              [
+                " ",
+                "| NCCL | `NCCL_DEBUG=INFO NCCL_DEBUG_FILE=/tmp/nccl_%h_%p.log` |"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "`grep` for these signal phrases:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:07:04.325029+00:00"
+    },
+    {
+      "id": "radixark/miles#1803",
+      "repo": "radixark/miles",
+      "pr_number": 1803,
+      "title": "fix(docker): install onnxscript alongside the --no-deps TE 2.17 wheels",
+      "state": "closed",
+      "author": "yushengsu-thu",
+      "created_at": "2026-07-26T20:05:23Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1803",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复 Docker 镜像中因 --no-deps 安装 TE 2.17 导致缺少 onnxscript 依赖而引发的 import 错误，并增强验证脚本以检测运行时依赖缺失",
+      "reason": "此问题由该仓库特定的 Dockerfile 构建方式（--no-deps 安装 TransformerEngine wheels）引起，属于仓库自身的 Docker 构建脚本和 CI 基础设施问题，其他框架即使使用相同的 TE 版本也可能采用不同的安装方式而不受影响",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docker/Dockerfile",
+        "docker/verify_transformer_engine.py"
+      ],
+      "diff_preview": {
+        "additions": 2,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "docker/Dockerfile",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -120,6 +120,7 @@ RUN --mount=type=bind,source=docker/verify_transformer_engine.py,target=/tmp/ver"
+              ],
+              [
+                " ",
+                "    fi && \\"
+              ],
+              [
+                " ",
+                "    pip uninstall -y transformer-engine transformer-engine-cu12 transformer-engine-cu13 transformer-engine-torch && \\"
+              ],
+              [
+                " ",
+                "    pip install --force-reinstall --no-deps \"$@\" && \\"
+              ],
+              [
+                "+",
+                "    pip install onnxscript==0.7.1 && \\"
+              ],
+              [
+                " ",
+                "    python3 /tmp/verify_transformer_engine.py \"${TE_CORE_DIST}\""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# TE patches (cu13): B300/GB300 FA2 and backward override fixes"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:06:57.327401+00:00"
+    },
+    {
+      "id": "radixark/miles#1804",
+      "repo": "radixark/miles",
+      "pr_number": 1804,
+      "title": "[2/5] fix(sglang): confirm router worker activation",
+      "state": "open",
+      "author": "ashtonchew",
+      "created_at": "2026-07-26T20:47:32Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1804",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复 SGLang 引擎注册与下线时未等待 Router 确认激活/移除的竞态条件，改为轮询确认状态后再继续",
+      "reason": "该修复针对 miles 仓库自身内置的 SGLang router worker client 及其特有的 MilesRouter/Router 0.2.x 版本兼容逻辑，属于该仓库特有的路由器与调度器实现细节，其他框架不共享此路由器设计",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/backends/sglang_utils/router_worker_client.py",
+        "miles/backends/sglang_utils/sglang_engine.py",
+        "miles/ray/rollout/server_group.py",
+        "miles/utils/test_utils/mock_sglang_engine.py",
+        "tests/fast/backends/sglang_utils/test_router_worker_client.py",
+        "tests/fast/backends/sglang_utils/test_sglang_engine_router.py",
+        "tests/fast/utils/test_utils/test_mock_sglang_engine.py"
+      ],
+      "diff_preview": {
+        "additions": 1990,
+        "deletions": 48,
+        "hunks": [
+          {
+            "file": "miles/backends/sglang_utils/router_worker_client.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,618 @@"
+              ],
+              [
+                "+",
+                "import logging"
+              ],
+              [
+                "+",
+                "import time"
+              ],
+              [
+                "+",
+                "from enum import StrEnum"
+              ],
+              [
+                "+",
+                "from typing import NamedTuple, TypeVar"
+              ],
+              [
+                "+",
+                "from urllib.parse import quote"
+              ],
+              [
+                "+",
+                "from uuid import UUID"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "import requests"
+              ],
+              [
+                "+",
+                "from pydantic import BaseModel, ConfigDict, ValidationError"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "logger = logging.getLogger(__name__)"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:06:51.027326+00:00"
+    },
+    {
+      "id": "radixark/miles#1805",
+      "repo": "radixark/miles",
+      "pr_number": 1805,
+      "title": "[3/5] fix(ray): gate recovered engines on weight publication",
+      "state": "open",
+      "author": "ashtonchew",
+      "created_at": "2026-07-26T20:47:44Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1805",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复容错恢复中的权重发布竞态条件：在替换引擎完成权重同步前，将其置于路由池之外，避免使用旧检查点权重响应请求",
+      "reason": "该修复针对 miles 仓库自有的 SGLang 引擎路由器、RayTrainGroup 权重更新机制及 rollout server 的具体实现逻辑，涉及仓库内部的 actor 恢复流程、generation identity 追踪和广播注册机制，其他框架不共享这套 Ray actor 管理与路由架构",
+      "value": 3,
+      "subsystems": [
+        "rollout",
+        "weight-sync",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/backends/sglang_utils/router_worker_client.py",
+        "miles/backends/sglang_utils/sglang_engine.py",
+        "miles/ray/actor_group.py",
+        "miles/ray/rollout/rollout_manager.py",
+        "miles/ray/rollout/rollout_server.py",
+        "miles/ray/rollout/server_engine.py",
+        "miles/ray/rollout/server_group.py",
+        "miles/ray/train/group.py",
+        "miles/utils/test_utils/mock_sglang_engine.py",
+        "tests/fast/backends/sglang_utils/test_router_worker_client.py",
+        "tests/fast/backends/sglang_utils/test_sglang_engine_router.py",
+        "tests/fast/ray/rollout/real_ray/test_fault_tolerance.py",
+        "tests/fast/ray/rollout/real_ray/test_rollout_manager.py",
+        "tests/fast/ray/rollout/real_ray/test_rollout_server.py",
+        "tests/fast/ray/rollout/real_ray/test_server_group.py",
+        "tests/fast/ray/rollout/test_addr_allocator.py",
+        "tests/fast/ray/rollout/test_rollout_server.py",
+        "tests/fast/ray/rollout/test_server_engine.py",
+        "tests/fast/ray/rollout/test_server_group_recovery.py",
+        "tests/fast/ray/test_actor_group_weight_update.py"
+      ],
+      "diff_preview": {
+        "additions": 2786,
+        "deletions": 87,
+        "hunks": [
+          {
+            "file": "miles/backends/sglang_utils/router_worker_client.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,618 @@"
+              ],
+              [
+                "+",
+                "import logging"
+              ],
+              [
+                "+",
+                "import time"
+              ],
+              [
+                "+",
+                "from enum import StrEnum"
+              ],
+              [
+                "+",
+                "from typing import NamedTuple, TypeVar"
+              ],
+              [
+                "+",
+                "from urllib.parse import quote"
+              ],
+              [
+                "+",
+                "from uuid import UUID"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "import requests"
+              ],
+              [
+                "+",
+                "from pydantic import BaseModel, ConfigDict, ValidationError"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "logger = logging.getLogger(__name__)"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:06:44.522319+00:00"
+    },
+    {
+      "id": "radixark/miles#1806",
+      "repo": "radixark/miles",
+      "pr_number": 1806,
+      "title": "[4/5] fix(rollout): reject initial weights after publication",
+      "state": "open",
+      "author": "ashtonchew",
+      "created_at": "2026-07-26T20:48:03Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1806",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "在 rollout 阶段拒绝已发布 actor 权重后 SGLang 引擎仍返回 default 初始权重版本的请求，防止未同步引擎参与推理",
+      "reason": "该修复针对 miles 仓库特有的 SGLang 路由器与 updatable serving route 架构，涉及仓库内部的权重发布状态追踪机制和路由解析逻辑，其他框架不共享这套路由/worker-client 设计",
+      "value": 3,
+      "subsystems": [
+        "rollout",
+        "weight-sync",
+        "infra"
+      ],
+      "rl_concepts": [
+        "rollout",
+        "LoRA"
+      ],
+      "files": [
+        "miles/backends/sglang_utils/router_worker_client.py",
+        "miles/backends/sglang_utils/sglang_engine.py",
+        "miles/ray/actor_group.py",
+        "miles/ray/rollout/rollout_manager.py",
+        "miles/ray/rollout/rollout_server.py",
+        "miles/ray/rollout/server_engine.py",
+        "miles/ray/rollout/server_group.py",
+        "miles/ray/train/group.py",
+        "miles/rollout/generate_utils/generate_endpoint_utils.py",
+        "miles/rollout/sglang_rollout.py",
+        "miles/utils/test_utils/mock_sglang_engine.py",
+        "tests/fast/backends/sglang_utils/test_router_worker_client.py",
+        "tests/fast/backends/sglang_utils/test_sglang_engine_router.py",
+        "tests/fast/ray/rollout/real_ray/test_fault_tolerance.py",
+        "tests/fast/ray/rollout/real_ray/test_rollout_manager.py",
+        "tests/fast/ray/rollout/real_ray/test_rollout_server.py",
+        "tests/fast/ray/rollout/real_ray/test_server_group.py",
+        "tests/fast/ray/rollout/test_addr_allocator.py",
+        "tests/fast/ray/rollout/test_rollout_server.py",
+        "tests/fast/ray/rollout/test_server_engine.py"
+      ],
+      "diff_preview": {
+        "additions": 2881,
+        "deletions": 87,
+        "hunks": [
+          {
+            "file": "miles/backends/sglang_utils/router_worker_client.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,618 @@"
+              ],
+              [
+                "+",
+                "import logging"
+              ],
+              [
+                "+",
+                "import time"
+              ],
+              [
+                "+",
+                "from enum import StrEnum"
+              ],
+              [
+                "+",
+                "from typing import NamedTuple, TypeVar"
+              ],
+              [
+                "+",
+                "from urllib.parse import quote"
+              ],
+              [
+                "+",
+                "from uuid import UUID"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "import requests"
+              ],
+              [
+                "+",
+                "from pydantic import BaseModel, ConfigDict, ValidationError"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "logger = logging.getLogger(__name__)"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:06:35.916734+00:00"
+    },
+    {
+      "id": "radixark/miles#1807",
+      "repo": "radixark/miles",
+      "pr_number": 1807,
+      "title": "[5/5] fix(session): validate published rollout weights",
+      "state": "open",
+      "author": "ashtonchew",
+      "created_at": "2026-07-26T20:48:15Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1807",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "在 session rollout 将响应记录转换为训练样本时，校验已发布权重版本，防止携带 weight_version=default 的过期 actor 响应绕过 rollout 守卫进入训练数据",
+      "reason": "该 PR 修复的是 miles 框架特有的 session rollout 路径与内部路由机制（published-weight invariant、default 路由解析）的交互问题，依赖该仓库自定义的 router_worker_client、rollout_server 等内部组件，其他框架不存在相同的 session 重建路径和路由抽象",
+      "value": 3,
+      "subsystems": [
+        "rollout",
+        "weight-sync",
+        "infra"
+      ],
+      "rl_concepts": [
+        "rollout",
+        "checkpoint"
+      ],
+      "files": [
+        "miles/backends/sglang_utils/router_worker_client.py",
+        "miles/backends/sglang_utils/sglang_engine.py",
+        "miles/ray/actor_group.py",
+        "miles/ray/rollout/rollout_manager.py",
+        "miles/ray/rollout/rollout_server.py",
+        "miles/ray/rollout/server_engine.py",
+        "miles/ray/rollout/server_group.py",
+        "miles/ray/train/group.py",
+        "miles/rollout/generate_utils/generate_endpoint_utils.py",
+        "miles/rollout/session/samples/merge.py",
+        "miles/rollout/sglang_rollout.py",
+        "miles/utils/test_utils/mock_sglang_engine.py",
+        "tests/fast/backends/sglang_utils/test_router_worker_client.py",
+        "tests/fast/backends/sglang_utils/test_sglang_engine_router.py",
+        "tests/fast/ray/rollout/real_ray/test_fault_tolerance.py",
+        "tests/fast/ray/rollout/real_ray/test_rollout_manager.py",
+        "tests/fast/ray/rollout/real_ray/test_rollout_server.py",
+        "tests/fast/ray/rollout/real_ray/test_server_group.py",
+        "tests/fast/ray/rollout/test_addr_allocator.py",
+        "tests/fast/ray/rollout/test_rollout_server.py"
+      ],
+      "diff_preview": {
+        "additions": 2953,
+        "deletions": 87,
+        "hunks": [
+          {
+            "file": "miles/backends/sglang_utils/router_worker_client.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,618 @@"
+              ],
+              [
+                "+",
+                "import logging"
+              ],
+              [
+                "+",
+                "import time"
+              ],
+              [
+                "+",
+                "from enum import StrEnum"
+              ],
+              [
+                "+",
+                "from typing import NamedTuple, TypeVar"
+              ],
+              [
+                "+",
+                "from urllib.parse import quote"
+              ],
+              [
+                "+",
+                "from uuid import UUID"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "import requests"
+              ],
+              [
+                "+",
+                "from pydantic import BaseModel, ConfigDict, ValidationError"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "logger = logging.getLogger(__name__)"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:06:29.329101+00:00"
+    },
+    {
+      "id": "THUDM/slime#2234",
+      "repo": "THUDM/slime",
+      "pr_number": 2234,
+      "title": "fix: pair --log-correct-samples rewards with the DP-local samples",
+      "state": "open",
+      "author": "keepkeen",
+      "created_at": "2026-07-26T10:07:02Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2234",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 DP > 1 时 `--log-correct-samples` 因 raw_reward 未按 DP rank 切片导致的 IndexError 及错误统计",
+      "reason": "DP 并行下 per-sample 字段与全局字段混用导致的索引越界是所有使用数据并行的 RL 训练框架（如 verl、OpenRLHF 等）都可能遇到的通用 bug，根因在于 rollout 数据在 split 阶段部分字段漏切片，与 slime 特有实现无关",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "trainer",
+        "logging"
+      ],
+      "rl_concepts": [
+        "reward-model",
+        "GRPO",
+        "数据并行",
+        "rollout"
+      ],
+      "files": [
+        ".github/workflows/pr-test.yml",
+        ".github/workflows/pr-test.yml.j2",
+        "slime/backends/megatron_utils/data.py",
+        "slime/utils/data.py",
+        "tests/test_process_rollout_data.py"
+      ],
+      "diff_preview": {
+        "additions": 184,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -625,6 +625,10 @@ jobs:"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_sample.py\""
+              ],
+              [
+                " ",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_process_rollout_data.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ],
+              [
+                " ",
+                "            {"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_rollout_validation.py\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:06:18.575534+00:00"
+    },
+    {
+      "id": "THUDM/slime#2235",
+      "repo": "THUDM/slime",
+      "pr_number": 2235,
+      "title": "fix: whiten advantages over the DP group that includes context parallel",
+      "state": "open",
+      "author": "keepkeen",
+      "created_at": "2026-07-26T10:14:02Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2235",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复在 Context Parallelism 下 advantage 归一化使用了错误的进程组，导致仅在单 CP rank 内做统计而非全局统计",
+      "reason": "advantage whitening 在 CP 并行下使用错误进程组是所有基于 Megatron 并行的 RL 训练框架（如 verl、OpenRLHF 等）都可能遇到的隐蔽 bug，与仓库无关",
+      "value": 5,
+      "subsystems": [
+        "algo",
+        "parallel",
+        "objective"
+      ],
+      "rl_concepts": [
+        "advantage",
+        "PPO",
+        "GRPO",
+        "Megatron",
+        "Context Parallelism"
+      ],
+      "files": [
+        ".github/workflows/pr-test.yml",
+        ".github/workflows/pr-test.yml.j2",
+        "slime/backends/megatron_utils/loss.py",
+        "tests/test_advantage_whiten_cp.py"
+      ],
+      "diff_preview": {
+        "additions": 218,
+        "deletions": 15,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -585,6 +585,10 @@ jobs:"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_loss_cp_invariance.py\""
+              ],
+              [
+                " ",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_advantage_whiten_cp.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ],
+              [
+                " ",
+                "            {"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_logprob_response_spans.py\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:06:11.860938+00:00"
+    },
+    {
+      "id": "THUDM/slime#2236",
+      "repo": "THUDM/slime",
+      "pr_number": 2236,
+      "title": "fix: don't overwrite an explicitly set --start-rollout-id",
+      "state": "open",
+      "author": "keepkeen",
+      "created_at": "2026-07-26T10:17:51Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2236",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 --start-rollout-id 参数在非 Megatron checkpoint 恢复场景下被无条件覆盖为 0 的问题",
+      "reason": "checkpoint 续训时起始步骤 ID 被覆盖是所有使用类似参数解析模式的 RL 训练框架都可能遇到的问题，与仓库特有逻辑无关",
+      "value": 3,
+      "subsystems": [
+        "checkpoint",
+        "trainer",
+        "infra"
+      ],
+      "rl_concepts": [
+        "checkpoint"
+      ],
+      "files": [
+        "slime/utils/arguments.py",
+        "tests/test_megatron_argument_validation.py"
+      ],
+      "diff_preview": {
+        "additions": 36,
+        "deletions": 3,
+        "hunks": [
+          {
+            "file": "slime/utils/arguments.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -1768,8 +1768,11 @@ def slime_validate_args(args):"
+              ],
+              [
+                " ",
+                "        else:"
+              ],
+              [
+                " ",
+                "            if args.load is None:"
+              ],
+              [
+                " ",
+                "                args.load = args.ref_load or args.hf_checkpoint"
+              ],
+              [
+                "-",
+                "            # If is a HF checkpoint, set start_rollout_id to 0 here."
+              ],
+              [
+                "-",
+                "            args.start_rollout_id = 0"
+              ],
+              [
+                "+",
+                "            # If is a HF checkpoint, there is no iteration to resume from, so"
+              ],
+              [
+                "+",
+                "            # default to 0 -- but only when the user did not ask for a specific"
+              ],
+              [
+                "+",
+                "            # starting rollout."
+              ],
+              [
+                "+",
+                "            if args.start_rollout_id is None:"
+              ],
+              [
+                "+",
+                "                args.start_rollout_id = 0"
+              ],
+              [
+                " ",
+                "    else:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:06:05.376339+00:00"
+    },
+    {
+      "id": "THUDM/slime#2237",
+      "repo": "THUDM/slime",
+      "pr_number": 2237,
+      "title": "fix: keep dataset order in filter_long_prompt for mixed multimodal data",
+      "state": "open",
+      "author": "keepkeen",
+      "created_at": "2026-07-26T10:20:29Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2237",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 filter_long_prompt 在混合多模态数据时破坏原始数据集顺序的问题",
+      "reason": "数据长度过滤后保持样本顺序是通用训练数据管道的基本需求，任何混合文本与多模态输入的 RL 训练框架在分组处理后拼接结果时都可能遇到相同问题，与 slime 特有实现无关",
+      "value": 3,
+      "subsystems": [
+        "multimodal",
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [
+        "rollout"
+      ],
+      "files": [
+        ".github/workflows/pr-test.yml",
+        ".github/workflows/pr-test.yml.j2",
+        "slime/utils/data.py",
+        "tests/test_filter_long_prompt.py"
+      ],
+      "diff_preview": {
+        "additions": 132,
+        "deletions": 9,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -625,6 +625,10 @@ jobs:"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_sample.py\""
+              ],
+              [
+                " ",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_filter_long_prompt.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ],
+              [
+                " ",
+                "            {"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_rollout_validation.py\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:05:59.642816+00:00"
+    },
+    {
+      "id": "THUDM/slime#2238",
+      "repo": "THUDM/slime",
+      "pr_number": 2238,
+      "title": "fix: stop the fully-async rollout dropping completed groups",
+      "state": "open",
+      "author": "keepkeen",
+      "created_at": "2026-07-26T10:40:16Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2238",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复全异步 rollout 中已完成 group 被丢弃以及输出队列阻塞事件循环的双重缺陷",
+      "reason": "异步 rollout 中批次数据被消耗后结果却被静默丢弃、以及事件循环被队列阻塞，是所有采用异步 rollout 架构的 RL 训练框架都可能遇到的并发设计问题，与 slime 特有实现无关",
+      "value": 5,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [
+        "rollout",
+        "async-rollout",
+        "GRPO"
+      ],
+      "files": [
+        ".github/workflows/pr-test.yml",
+        ".github/workflows/pr-test.yml.j2",
+        "slime/rollout/fully_async_rollout.py",
+        "tests/test_fully_async_rollout.py"
+      ],
+      "diff_preview": {
+        "additions": 204,
+        "deletions": 10,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -629,6 +629,10 @@ jobs:"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_rollout_validation.py\""
+              ],
+              [
+                " ",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_fully_async_rollout.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ],
+              [
+                " ",
+                "            {"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_reloadable_process_group_world.py\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:05:52.287891+00:00"
+    },
+    {
+      "id": "THUDM/slime#2239",
+      "repo": "THUDM/slime",
+      "pr_number": 2239,
+      "title": "fix: clear exec_and_wait's spawn lock between logical invocations",
+      "state": "open",
+      "author": "keepkeen",
+      "created_at": "2026-07-26T10:43:19Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2239",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复 exec_and_wait 中 lock_dir 未清理导致同一 tag 的后续逻辑调用被幂等守卫误拦截、静默返回旧结果的 bug",
+      "reason": "该 bug 属于 slime 沙箱执行基础设施（sandbox.py）中特有的 spawn RPC 幂等机制实现缺陷，涉及仓库内部的 agent/sandbox 调度器设计，其他框架不依赖该 lock_dir 去重方案，属于仓库特有的内部工具修复",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".github/workflows/pr-test.yml",
+        ".github/workflows/pr-test.yml.j2",
+        "slime/agent/sandbox.py",
+        "tests/test_agent/test_sandbox_exec_and_wait.py"
+      ],
+      "diff_preview": {
+        "additions": 185,
+        "deletions": 4,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -745,6 +745,10 @@ jobs:"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_agent/test_harness.py\""
+              ],
+              [
+                " ",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_agent/test_sandbox_exec_and_wait.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ],
+              [
+                " ",
+                "            {"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_agent/test_agent_rollout_cpu.py\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:05:45.665485+00:00"
+    },
+    {
+      "id": "THUDM/slime#2240",
+      "repo": "THUDM/slime",
+      "pr_number": 2240,
+      "title": "fix: pool speculative-decoding metrics instead of averaging per-sample ratios",
+      "state": "open",
+      "author": "keepkeen",
+      "created_at": "2026-07-26T10:46:16Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2240",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复推测解码指标（spec_accept_rate、spec_accept_length）使用每样本比率均值而非池化批次统计导致的下偏偏差问题",
+      "reason": "推测解码（speculative decoding）是通用的推理加速技术，其指标聚合方式（pooled ratio vs. mean of ratios）的偏差问题在任何集成了 speculative decoding 的 RL rollout 引擎中都会存在，不依赖 slime 特有架构",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "logging",
+        "ci"
+      ],
+      "rl_concepts": [
+        "speculative-decoding",
+        "rollout"
+      ],
+      "files": [
+        ".github/workflows/pr-test.yml",
+        ".github/workflows/pr-test.yml.j2",
+        "slime/ray/rollout.py",
+        "tests/test_spec_metrics.py"
+      ],
+      "diff_preview": {
+        "additions": 134,
+        "deletions": 3,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -625,6 +625,10 @@ jobs:"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_sample.py\""
+              ],
+              [
+                " ",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_spec_metrics.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ],
+              [
+                " ",
+                "            {"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_rollout_validation.py\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:05:34.292819+00:00"
+    },
+    {
+      "id": "THUDM/slime#2241",
+      "repo": "THUDM/slime",
+      "pr_number": 2241,
+      "title": "fix: restore negative dataset slice bounds (path@[-100:])",
+      "state": "open",
+      "author": "keepkeen",
+      "created_at": "2026-07-26T10:47:47Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2241",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复数据集切片语法 @[-100:] 因 itertools.islice 不支持负索引而崩溃的问题",
+      "reason": "数据集文件切片（如取最后N行）是通用的数据加载需求，从 pandas iloc 迁移到 itertools.islice 时未处理负索引的兼容性问题，任何使用类似流式读取 + 切片语法的训练框架都可能遇到同类 bug",
+      "value": 3,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".github/workflows/pr-test.yml",
+        ".github/workflows/pr-test.yml.j2",
+        "slime/utils/data.py",
+        "tests/test_read_file_slicing.py"
+      ],
+      "diff_preview": {
+        "additions": 95,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -625,6 +625,10 @@ jobs:"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_sample.py\""
+              ],
+              [
+                " ",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_read_file_slicing.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ],
+              [
+                " ",
+                "            {"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_rollout_validation.py\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:05:23.789440+00:00"
+    },
+    {
+      "id": "THUDM/slime#2242",
+      "repo": "THUDM/slime",
+      "pr_number": 2242,
+      "title": "fix: honor every eval.defaults key and restore per-dataset stop / min_new_tokens",
+      "state": "open",
+      "author": "keepkeen",
+      "created_at": "2026-07-26T10:50:58Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2242",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复 eval 配置解析中 eval.defaults 多数字段被静默丢弃、以及每个数据集的 stop/min_new_tokens 从 YAML 读取后未被实际使用的两个 bug",
+      "reason": "此 PR 修复的是 slime 自身 eval 配置系统（EvalDatasetConfig、build_eval_dataset_configs）的逻辑缺陷，属于该仓库特有的 eval 配置解析架构，其他框架不共享这套配置合并机制，因此归为 repo-specific",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [
+        "reward-model"
+      ],
+      "files": [
+        ".github/workflows/pr-test.yml",
+        ".github/workflows/pr-test.yml.j2",
+        "slime/rollout/sglang_rollout.py",
+        "slime/utils/eval_config.py",
+        "tests/test_eval_config.py"
+      ],
+      "diff_preview": {
+        "additions": 161,
+        "deletions": 4,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -625,6 +625,10 @@ jobs:"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_sample.py\""
+              ],
+              [
+                " ",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_eval_config.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ],
+              [
+                " ",
+                "            {"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_rollout_validation.py\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:05:16.521119+00:00"
+    },
+    {
+      "id": "THUDM/slime#2243",
+      "repo": "THUDM/slime",
+      "pr_number": 2243,
+      "title": "fix: restore args.ckpt_step after load_other_checkpoint",
+      "state": "open",
+      "author": "keepkeen",
+      "created_at": "2026-07-26T10:52:30Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2243",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 load_other_checkpoint 中 args.ckpt_step 被 ref/teacher ckpt step 覆盖后未正确还原的 bug",
+      "reason": "checkpoint 加载时临时覆盖全局状态后未还原是通用训练框架都可能遇到的问题，任何使用类似 ref model 或 teacher model 分支加载逻辑的框架（如 miles、OpenRLHF 等）都面临相同风险",
+      "value": 4,
+      "subsystems": [
+        "checkpoint",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "PPO",
+        "GRPO",
+        "ref-model",
+        "KL"
+      ],
+      "files": [
+        "slime/backends/megatron_utils/actor.py"
+      ],
+      "diff_preview": {
+        "additions": 14,
+        "deletions": 8,
+        "hunks": [
+          {
+            "file": "slime/backends/megatron_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -628,18 +628,21 @@ def update_weights(self) -> None:"
+              ],
+              [
+                " ",
+                "            destroy_process_groups()"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    def load_other_checkpoint(self, model_tag: str, path: str) -> None:"
+              ],
+              [
+                "-",
+                "        old_args = self.args.load, self.args.no_load_optim, self.args.no_load_rng, self.args.finetune"
+              ],
+              [
+                "+",
+                "        old_args = ("
+              ],
+              [
+                "+",
+                "            self.args.load,"
+              ],
+              [
+                "+",
+                "            self.args.no_load_optim,"
+              ],
+              [
+                "+",
+                "            self.args.no_load_rng,"
+              ],
+              [
+                "+",
+                "            self.args.finetune,"
+              ],
+              [
+                "+",
+                "            self.args.ckpt_step,"
+              ],
+              [
+                "+",
+                "        )"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-27T01:05:09.102446+00:00"
+    },
+    {
       "id": "radixark/miles#1747",
       "repo": "radixark/miles",
       "pr_number": 1747,
@@ -34892,409 +36591,428 @@
     }
   ],
   "analyzed_ids": [
-    "radixark/miles#1214",
-    "radixark/miles#1038",
-    "THUDM/slime#2216",
-    "radixark/miles#1773",
-    "radixark/miles#1195",
-    "radixark/miles#1691",
-    "radixark/miles#1696",
-    "radixark/miles#1784",
-    "THUDM/slime#1926",
-    "radixark/miles#1715",
-    "radixark/miles#1794",
-    "radixark/miles#994",
-    "THUDM/slime#1835",
-    "THUDM/slime#1956",
-    "radixark/miles#999",
-    "radixark/miles#1215",
-    "radixark/miles#953",
-    "radixark/miles#1020",
-    "radixark/miles#1740",
-    "radixark/miles#986",
-    "THUDM/slime#1950",
-    "radixark/miles#1224",
-    "THUDM/slime#2233",
-    "radixark/miles#1182",
-    "THUDM/slime#2195",
-    "radixark/miles#998",
-    "radixark/miles#1184",
-    "radixark/miles#951",
-    "THUDM/slime#1931",
-    "THUDM/slime#1819",
-    "THUDM/slime#1917",
-    "radixark/miles#993",
-    "THUDM/slime#2224",
-    "radixark/miles#1209",
-    "radixark/miles#1029",
-    "radixark/miles#939",
-    "radixark/miles#1005",
-    "THUDM/slime#1799",
-    "radixark/miles#1698",
-    "THUDM/slime#1941",
-    "THUDM/slime#1947",
-    "THUDM/slime#1939",
-    "radixark/miles#1766",
-    "THUDM/slime#2208",
-    "radixark/miles#1008",
-    "radixark/miles#1753",
-    "THUDM/slime#1965",
-    "radixark/miles#1758",
-    "radixark/miles#1716",
-    "THUDM/slime#1962",
-    "radixark/miles#1200",
-    "radixark/miles#1713",
-    "radixark/miles#1034",
-    "radixark/miles#1024",
-    "radixark/miles#1725",
-    "radixark/miles#1733",
-    "THUDM/slime#2210",
-    "radixark/miles#1790",
-    "radixark/miles#1019",
-    "radixark/miles#1771",
-    "radixark/miles#1690",
-    "radixark/miles#1014",
-    "THUDM/slime#2181",
-    "radixark/miles#1692",
-    "radixark/miles#1001",
-    "THUDM/slime#2203",
-    "THUDM/slime#1798",
-    "radixark/miles#1702",
-    "radixark/miles#954",
-    "THUDM/slime#1777",
-    "THUDM/slime#1833",
-    "radixark/miles#964",
-    "radixark/miles#1765",
-    "radixark/miles#1212",
-    "THUDM/slime#2164",
-    "radixark/miles#1711",
-    "radixark/miles#1718",
-    "radixark/miles#1025",
-    "radixark/miles#1727",
-    "radixark/miles#1202",
-    "radixark/miles#1027",
-    "THUDM/slime#1781",
-    "radixark/miles#1734",
-    "radixark/miles#1192",
-    "radixark/miles#943",
-    "radixark/miles#996",
-    "radixark/miles#1706",
-    "radixark/miles#1026",
-    "radixark/miles#1750",
-    "THUDM/slime#1944",
-    "radixark/miles#1045",
-    "radixark/miles#1180",
-    "radixark/miles#1199",
-    "THUDM/slime#1842",
-    "radixark/miles#1044",
-    "THUDM/slime#1813",
-    "radixark/miles#1009",
-    "THUDM/slime#1928",
-    "radixark/miles#1701",
-    "THUDM/slime#1768",
-    "THUDM/slime#2219",
-    "radixark/miles#977",
-    "THUDM/slime#2163",
-    "THUDM/slime#1935",
-    "radixark/miles#1778",
-    "radixark/miles#1193",
-    "radixark/miles#1775",
-    "THUDM/slime#1961",
-    "radixark/miles#1783",
-    "radixark/miles#1782",
-    "THUDM/slime#1943",
-    "radixark/miles#1776",
-    "radixark/miles#946",
-    "radixark/miles#1000",
-    "radixark/miles#935",
-    "THUDM/slime#1856",
-    "THUDM/slime#2173",
-    "radixark/miles#1227",
-    "THUDM/slime#2211",
-    "radixark/miles#1033",
-    "THUDM/slime#1963",
-    "THUDM/slime#1841",
-    "THUDM/slime#1848",
-    "THUDM/slime#1825",
-    "THUDM/slime#1775",
-    "radixark/miles#1770",
-    "radixark/miles#992",
-    "radixark/miles#991",
-    "THUDM/slime#1795",
-    "radixark/miles#1230",
-    "THUDM/slime#1921",
-    "radixark/miles#1707",
-    "THUDM/slime#2166",
-    "radixark/miles#1041",
-    "THUDM/slime#1929",
-    "radixark/miles#1211",
-    "THUDM/slime#1933",
-    "radixark/miles#1774",
-    "radixark/miles#1007",
-    "THUDM/slime#1954",
-    "THUDM/slime#2185",
-    "THUDM/slime#2217",
-    "radixark/miles#968",
-    "radixark/miles#957",
-    "radixark/miles#1741",
-    "THUDM/slime#1930",
-    "THUDM/slime#1937",
-    "THUDM/slime#1946",
     "radixark/miles#1736",
-    "radixark/miles#1703",
-    "radixark/miles#1221",
-    "radixark/miles#1693",
-    "THUDM/slime#1773",
-    "radixark/miles#960",
-    "THUDM/slime#1914",
-    "THUDM/slime#2226",
-    "radixark/miles#1789",
-    "THUDM/slime#1927",
-    "radixark/miles#1723",
-    "radixark/miles#987",
-    "radixark/miles#1795",
-    "radixark/miles#1040",
-    "radixark/miles#1781",
-    "radixark/miles#1205",
-    "THUDM/slime#1919",
-    "radixark/miles#972",
-    "radixark/miles#1720",
-    "radixark/miles#1004",
-    "THUDM/slime#1805",
-    "radixark/miles#1785",
-    "THUDM/slime#2171",
-    "THUDM/slime#1788",
-    "radixark/miles#1030",
-    "THUDM/slime#1827",
-    "radixark/miles#1792",
-    "radixark/miles#1779",
-    "THUDM/slime#2169",
-    "radixark/miles#1722",
-    "radixark/miles#1013",
-    "radixark/miles#1018",
-    "THUDM/slime#2172",
-    "radixark/miles#1754",
-    "radixark/miles#938",
-    "radixark/miles#1695",
-    "radixark/miles#1183",
-    "radixark/miles#1207",
-    "radixark/miles#1739",
-    "radixark/miles#1218",
-    "radixark/miles#1039",
-    "THUDM/slime#2213",
-    "radixark/miles#1760",
-    "THUDM/slime#2204",
-    "radixark/miles#1203",
-    "radixark/miles#944",
-    "THUDM/slime#2223",
-    "radixark/miles#1719",
-    "radixark/miles#947",
-    "radixark/miles#1699",
-    "radixark/miles#1021",
-    "THUDM/slime#1958",
-    "THUDM/slime#1955",
-    "radixark/miles#1735",
-    "radixark/miles#1694",
-    "radixark/miles#1222",
-    "THUDM/slime#1858",
-    "radixark/miles#966",
-    "THUDM/slime#1809",
-    "radixark/miles#1791",
-    "radixark/miles#988",
-    "radixark/miles#990",
-    "radixark/miles#1229",
-    "radixark/miles#1216",
-    "radixark/miles#1032",
-    "THUDM/slime#2207",
-    "THUDM/slime#1772",
-    "radixark/miles#1011",
-    "radixark/miles#1194",
-    "radixark/miles#1705",
-    "THUDM/slime#1925",
-    "radixark/miles#1037",
+    "radixark/miles#957",
+    "THUDM/slime#2174",
+    "THUDM/slime#2187",
+    "radixark/miles#1752",
+    "radixark/miles#1766",
+    "radixark/miles#1764",
+    "THUDM/slime#1841",
+    "radixark/miles#1800",
+    "THUDM/slime#1938",
+    "THUDM/slime#2206",
+    "THUDM/slime#2227",
+    "radixark/miles#1696",
+    "THUDM/slime#1933",
+    "radixark/miles#1001",
     "THUDM/slime#1942",
-    "radixark/miles#1755",
-    "radixark/miles#1181",
-    "radixark/miles#967",
-    "THUDM/slime#1855",
-    "radixark/miles#1710",
-    "radixark/miles#1006",
-    "radixark/miles#1787",
+    "THUDM/slime#1922",
+    "radixark/miles#1783",
+    "radixark/miles#1221",
+    "radixark/miles#1767",
+    "THUDM/slime#1925",
+    "radixark/miles#1690",
+    "radixark/miles#972",
+    "radixark/miles#1782",
+    "THUDM/slime#2192",
+    "THUDM/slime#2198",
+    "radixark/miles#1208",
+    "THUDM/slime#1795",
+    "radixark/miles#1707",
     "THUDM/slime#1920",
-    "radixark/miles#1689",
-    "radixark/miles#1772",
-    "radixark/miles#1748",
-    "radixark/miles#1732",
-    "radixark/miles#1198",
-    "radixark/miles#1213",
+    "radixark/miles#1029",
+    "THUDM/slime#1857",
+    "radixark/miles#987",
+    "THUDM/slime#1836",
+    "THUDM/slime#2216",
+    "THUDM/slime#1921",
+    "radixark/miles#1185",
+    "radixark/miles#1044",
+    "radixark/miles#1211",
     "radixark/miles#1728",
+    "radixark/miles#1791",
+    "radixark/miles#941",
+    "radixark/miles#1033",
+    "THUDM/slime#1807",
+    "THUDM/slime#1769",
+    "radixark/miles#959",
+    "THUDM/slime#1832",
+    "radixark/miles#1014",
+    "radixark/miles#1009",
+    "radixark/miles#1792",
+    "THUDM/slime#1856",
+    "THUDM/slime#1776",
+    "radixark/miles#1761",
+    "THUDM/slime#1943",
+    "radixark/miles#1734",
+    "radixark/miles#1803",
+    "THUDM/slime#1808",
+    "radixark/miles#1725",
+    "THUDM/slime#1947",
+    "THUDM/slime#1914",
+    "THUDM/slime#2228",
+    "THUDM/slime#1923",
+    "radixark/miles#1704",
+    "radixark/miles#964",
+    "THUDM/slime#1774",
+    "radixark/miles#1188",
+    "radixark/miles#1214",
+    "radixark/miles#943",
+    "radixark/miles#1806",
+    "THUDM/slime#2217",
+    "radixark/miles#977",
+    "radixark/miles#1733",
+    "THUDM/slime#1823",
+    "radixark/miles#985",
+    "THUDM/slime#1948",
+    "radixark/miles#951",
+    "radixark/miles#968",
+    "radixark/miles#1795",
+    "radixark/miles#1006",
+    "THUDM/slime#1797",
+    "THUDM/slime#1926",
+    "radixark/miles#1020",
+    "radixark/miles#1772",
+    "THUDM/slime#1937",
+    "radixark/miles#1739",
+    "radixark/miles#952",
+    "radixark/miles#1689",
+    "radixark/miles#1796",
+    "radixark/miles#1712",
+    "radixark/miles#1222",
+    "radixark/miles#988",
+    "radixark/miles#1732",
+    "radixark/miles#1031",
+    "radixark/miles#1798",
+    "radixark/miles#945",
+    "radixark/miles#1723",
+    "radixark/miles#1691",
+    "radixark/miles#1200",
+    "radixark/miles#1040",
+    "THUDM/slime#1913",
+    "radixark/miles#1032",
+    "radixark/miles#1179",
+    "radixark/miles#1797",
+    "radixark/miles#1227",
+    "radixark/miles#1740",
+    "THUDM/slime#2243",
+    "THUDM/slime#1809",
+    "radixark/miles#1019",
+    "THUDM/slime#1824",
+    "radixark/miles#1017",
     "radixark/miles#1762",
-    "radixark/miles#940",
-    "radixark/miles#950",
-    "THUDM/slime#2177",
-    "radixark/miles#1226",
-    "radixark/miles#1223",
+    "radixark/miles#1209",
+    "radixark/miles#1695",
     "radixark/miles#1228",
-    "radixark/miles#1738",
-    "radixark/miles#1191",
-    "radixark/miles#1786",
-    "radixark/miles#1709",
-    "radixark/miles#1042",
+    "THUDM/slime#2200",
+    "THUDM/slime#1819",
+    "radixark/miles#1735",
+    "THUDM/slime#2178",
+    "THUDM/slime#1963",
+    "radixark/miles#1698",
+    "radixark/miles#1763",
+    "radixark/miles#1701",
+    "radixark/miles#1741",
+    "radixark/miles#1184",
+    "radixark/miles#1201",
+    "radixark/miles#1750",
+    "THUDM/slime#2173",
+    "radixark/miles#966",
+    "radixark/miles#1805",
+    "radixark/miles#1196",
+    "THUDM/slime#2236",
+    "radixark/miles#1193",
+    "radixark/miles#1801",
+    "radixark/miles#1025",
+    "radixark/miles#1034",
+    "radixark/miles#1037",
+    "radixark/miles#1023",
+    "THUDM/slime#2213",
+    "radixark/miles#1705",
+    "radixark/miles#1708",
+    "THUDM/slime#1781",
     "THUDM/slime#1814",
+    "THUDM/slime#1825",
+    "radixark/miles#946",
+    "radixark/miles#994",
+    "radixark/miles#1729",
+    "radixark/miles#947",
+    "radixark/miles#938",
+    "radixark/miles#1183",
+    "THUDM/slime#1827",
+    "radixark/miles#1794",
+    "radixark/miles#1219",
+    "THUDM/slime#1935",
+    "THUDM/slime#1944",
+    "THUDM/slime#2193",
+    "radixark/miles#1205",
+    "THUDM/slime#1929",
+    "radixark/miles#1198",
+    "THUDM/slime#1915",
+    "radixark/miles#989",
+    "radixark/miles#1192",
+    "THUDM/slime#1953",
+    "radixark/miles#1688",
+    "THUDM/slime#2180",
+    "THUDM/slime#2242",
+    "THUDM/slime#2185",
+    "radixark/miles#1788",
+    "THUDM/slime#1816",
+    "THUDM/slime#1918",
+    "radixark/miles#1035",
+    "radixark/miles#999",
+    "radixark/miles#1199",
+    "THUDM/slime#2223",
     "radixark/miles#963",
     "radixark/miles#1036",
-    "radixark/miles#941",
-    "radixark/miles#1188",
-    "radixark/miles#1031",
-    "radixark/miles#1768",
-    "THUDM/slime#1808",
-    "THUDM/slime#1774",
-    "THUDM/slime#2192",
-    "radixark/miles#1220",
-    "THUDM/slime#1836",
-    "THUDM/slime#1844",
-    "radixark/miles#1197",
-    "radixark/miles#1712",
-    "radixark/miles#945",
-    "radixark/miles#1729",
-    "radixark/miles#974",
-    "THUDM/slime#2162",
-    "radixark/miles#1217",
-    "radixark/miles#982",
-    "THUDM/slime#1806",
-    "THUDM/slime#2175",
-    "THUDM/slime#1932",
-    "THUDM/slime#2205",
-    "THUDM/slime#2228",
-    "THUDM/slime#1823",
-    "radixark/miles#1752",
-    "THUDM/slime#2218",
-    "radixark/miles#958",
-    "THUDM/slime#1828",
-    "THUDM/slime#2183",
-    "radixark/miles#1043",
-    "radixark/miles#1179",
-    "radixark/miles#948",
-    "radixark/miles#1035",
-    "THUDM/slime#2184",
-    "THUDM/slime#2170",
-    "THUDM/slime#2193",
-    "radixark/miles#995",
-    "THUDM/slime#2189",
-    "radixark/miles#1714",
-    "THUDM/slime#2198",
-    "THUDM/slime#1952",
-    "radixark/miles#984",
-    "radixark/miles#1012",
-    "THUDM/slime#1957",
-    "radixark/miles#1763",
-    "radixark/miles#985",
-    "radixark/miles#1204",
-    "radixark/miles#965",
-    "THUDM/slime#1816",
-    "radixark/miles#1759",
-    "radixark/miles#952",
-    "THUDM/slime#1948",
-    "radixark/miles#1764",
-    "radixark/miles#971",
-    "radixark/miles#1688",
-    "radixark/miles#1756",
-    "radixark/miles#1751",
     "THUDM/slime#2196",
-    "THUDM/slime#2206",
-    "radixark/miles#1022",
-    "THUDM/slime#2227",
-    "THUDM/slime#1807",
-    "THUDM/slime#1812",
-    "THUDM/slime#1940",
-    "radixark/miles#1761",
-    "THUDM/slime#1953",
-    "radixark/miles#973",
-    "THUDM/slime#2182",
+    "radixark/miles#939",
+    "radixark/miles#965",
     "THUDM/slime#1916",
-    "THUDM/slime#1797",
-    "THUDM/slime#1949",
-    "radixark/miles#1219",
-    "radixark/miles#1017",
-    "THUDM/slime#1824",
-    "radixark/miles#1704",
-    "radixark/miles#1796",
-    "THUDM/slime#2178",
-    "radixark/miles#1028",
-    "THUDM/slime#1849",
+    "radixark/miles#1784",
+    "radixark/miles#1716",
     "THUDM/slime#1822",
-    "radixark/miles#942",
-    "radixark/miles#1185",
-    "radixark/miles#937",
-    "THUDM/slime#1924",
-    "radixark/miles#1015",
-    "THUDM/slime#1922",
-    "THUDM/slime#1960",
-    "THUDM/slime#2220",
-    "THUDM/slime#1913",
-    "THUDM/slime#2197",
-    "THUDM/slime#1776",
-    "THUDM/slime#1770",
-    "radixark/miles#1010",
-    "radixark/miles#976",
-    "radixark/miles#959",
-    "radixark/miles#1708",
-    "radixark/miles#1798",
-    "THUDM/slime#2200",
-    "THUDM/slime#1846",
-    "THUDM/slime#1834",
-    "THUDM/slime#1918",
-    "radixark/miles#1737",
-    "radixark/miles#1769",
-    "THUDM/slime#1817",
-    "THUDM/slime#2180",
-    "radixark/miles#1190",
-    "radixark/miles#1196",
-    "THUDM/slime#1938",
-    "THUDM/slime#2199",
-    "radixark/miles#997",
-    "THUDM/slime#2174",
-    "radixark/miles#1225",
-    "THUDM/slime#1934",
-    "radixark/miles#1206",
-    "radixark/miles#1003",
-    "radixark/miles#1767",
-    "THUDM/slime#2221",
-    "radixark/miles#1189",
-    "radixark/miles#1726",
-    "radixark/miles#989",
-    "THUDM/slime#2187",
-    "radixark/miles#1201",
-    "THUDM/slime#1857",
-    "THUDM/slime#2167",
-    "radixark/miles#1793",
-    "THUDM/slime#1923",
-    "radixark/miles#1016",
-    "radixark/miles#1788",
-    "radixark/miles#1717",
-    "radixark/miles#980",
-    "radixark/miles#1721",
-    "radixark/miles#1730",
-    "radixark/miles#1747",
-    "radixark/miles#1208",
-    "radixark/miles#1757",
-    "radixark/miles#975",
-    "THUDM/slime#1832",
-    "radixark/miles#1777",
+    "THUDM/slime#1965",
+    "radixark/miles#1774",
     "THUDM/slime#2190",
-    "THUDM/slime#1945",
-    "radixark/miles#961",
-    "radixark/miles#1023",
+    "radixark/miles#1039",
+    "THUDM/slime#2164",
+    "THUDM/slime#1849",
     "THUDM/slime#1959",
-    "THUDM/slime#1915",
-    "THUDM/slime#1769",
-    "THUDM/slime#1801",
-    "THUDM/slime#1791",
+    "radixark/miles#1030",
+    "radixark/miles#1220",
+    "radixark/miles#1751",
+    "radixark/miles#1000",
+    "THUDM/slime#2233",
+    "THUDM/slime#1962",
+    "radixark/miles#1004",
+    "radixark/miles#1018",
+    "radixark/miles#1769",
+    "THUDM/slime#2181",
+    "THUDM/slime#2211",
+    "radixark/miles#1045",
+    "radixark/miles#1781",
+    "THUDM/slime#1927",
+    "radixark/miles#1043",
+    "THUDM/slime#1855",
+    "THUDM/slime#2175",
+    "radixark/miles#1715",
+    "radixark/miles#1760",
+    "radixark/miles#1223",
+    "radixark/miles#1727",
+    "radixark/miles#1758",
+    "THUDM/slime#2234",
+    "radixark/miles#996",
+    "radixark/miles#1730",
+    "radixark/miles#1224",
+    "radixark/miles#1038",
+    "radixark/miles#1748",
+    "radixark/miles#1759",
+    "THUDM/slime#1917",
+    "radixark/miles#992",
+    "radixark/miles#953",
+    "radixark/miles#998",
+    "radixark/miles#1225",
+    "THUDM/slime#1928",
+    "radixark/miles#940",
+    "THUDM/slime#1828",
+    "radixark/miles#1768",
+    "THUDM/slime#1798",
+    "radixark/miles#1028",
+    "THUDM/slime#1924",
+    "radixark/miles#1709",
+    "radixark/miles#1719",
+    "radixark/miles#1180",
+    "THUDM/slime#2199",
+    "THUDM/slime#1954",
+    "THUDM/slime#2177",
+    "THUDM/slime#1919",
+    "THUDM/slime#1846",
+    "radixark/miles#997",
+    "THUDM/slime#2239",
+    "radixark/miles#1799",
+    "radixark/miles#1714",
+    "radixark/miles#1213",
+    "THUDM/slime#1775",
+    "THUDM/slime#2226",
     "radixark/miles#1210",
+    "THUDM/slime#1956",
+    "THUDM/slime#2240",
+    "radixark/miles#990",
+    "radixark/miles#1757",
+    "THUDM/slime#1932",
+    "radixark/miles#1793",
+    "THUDM/slime#1773",
+    "radixark/miles#1206",
+    "THUDM/slime#1960",
+    "radixark/miles#1008",
+    "radixark/miles#1747",
+    "radixark/miles#1737",
+    "radixark/miles#1802",
+    "radixark/miles#1012",
+    "radixark/miles#1718",
+    "radixark/miles#1003",
+    "radixark/miles#1710",
+    "radixark/miles#1720",
+    "radixark/miles#1027",
+    "radixark/miles#1726",
+    "radixark/miles#1765",
+    "radixark/miles#935",
+    "THUDM/slime#2205",
+    "radixark/miles#1190",
+    "radixark/miles#1189",
+    "THUDM/slime#1945",
+    "radixark/miles#1005",
+    "radixark/miles#1699",
+    "radixark/miles#1204",
+    "radixark/miles#973",
+    "radixark/miles#944",
+    "radixark/miles#984",
+    "radixark/miles#1202",
+    "radixark/miles#1024",
     "radixark/miles#949",
-    "radixark/miles#1797"
+    "radixark/miles#991",
+    "radixark/miles#1218",
+    "THUDM/slime#2166",
+    "radixark/miles#1194",
+    "radixark/miles#980",
+    "radixark/miles#1775",
+    "THUDM/slime#2170",
+    "THUDM/slime#2235",
+    "radixark/miles#1226",
+    "radixark/miles#967",
+    "radixark/miles#1753",
+    "radixark/miles#1787",
+    "radixark/miles#1706",
+    "THUDM/slime#1939",
+    "radixark/miles#958",
+    "THUDM/slime#2220",
+    "radixark/miles#1021",
+    "THUDM/slime#1955",
+    "THUDM/slime#1957",
+    "THUDM/slime#1844",
+    "THUDM/slime#1961",
+    "THUDM/slime#2218",
+    "radixark/miles#1786",
+    "THUDM/slime#2189",
+    "radixark/miles#961",
+    "radixark/miles#1693",
+    "radixark/miles#1711",
+    "THUDM/slime#2195",
+    "THUDM/slime#2241",
+    "THUDM/slime#1777",
+    "radixark/miles#1721",
+    "radixark/miles#974",
+    "THUDM/slime#1834",
+    "radixark/miles#1703",
+    "radixark/miles#937",
+    "THUDM/slime#1770",
+    "THUDM/slime#1952",
+    "radixark/miles#1754",
+    "THUDM/slime#2171",
+    "radixark/miles#1181",
+    "radixark/miles#1694",
+    "THUDM/slime#2167",
+    "THUDM/slime#1799",
+    "radixark/miles#1777",
+    "radixark/miles#1778",
+    "radixark/miles#954",
+    "radixark/miles#1702",
+    "radixark/miles#1771",
+    "radixark/miles#1182",
+    "radixark/miles#948",
+    "THUDM/slime#1788",
+    "THUDM/slime#1813",
+    "radixark/miles#950",
+    "THUDM/slime#1950",
+    "THUDM/slime#1934",
+    "THUDM/slime#1801",
+    "radixark/miles#993",
+    "THUDM/slime#2224",
+    "THUDM/slime#2197",
+    "radixark/miles#960",
+    "radixark/miles#1785",
+    "radixark/miles#1007",
+    "radixark/miles#1216",
+    "THUDM/slime#2204",
+    "radixark/miles#1756",
+    "THUDM/slime#2169",
+    "THUDM/slime#1949",
+    "THUDM/slime#2163",
+    "THUDM/slime#1817",
+    "radixark/miles#1011",
+    "radixark/miles#1217",
+    "radixark/miles#1789",
+    "radixark/miles#1203",
+    "THUDM/slime#2183",
+    "THUDM/slime#1806",
+    "THUDM/slime#1812",
+    "THUDM/slime#1848",
+    "THUDM/slime#1768",
+    "THUDM/slime#2172",
+    "radixark/miles#1042",
+    "THUDM/slime#2237",
+    "radixark/miles#1010",
+    "THUDM/slime#1931",
+    "radixark/miles#1755",
+    "THUDM/slime#2162",
+    "radixark/miles#1773",
+    "radixark/miles#1016",
+    "THUDM/slime#2238",
+    "radixark/miles#1041",
+    "THUDM/slime#1930",
+    "radixark/miles#1770",
+    "radixark/miles#1713",
+    "THUDM/slime#2221",
+    "radixark/miles#986",
+    "radixark/miles#1230",
+    "radixark/miles#1738",
+    "THUDM/slime#1805",
+    "THUDM/slime#1858",
+    "THUDM/slime#1791",
+    "THUDM/slime#1833",
+    "THUDM/slime#2208",
+    "THUDM/slime#1946",
+    "radixark/miles#995",
+    "radixark/miles#1779",
+    "radixark/miles#1215",
+    "radixark/miles#1195",
+    "THUDM/slime#1842",
+    "radixark/miles#1692",
+    "radixark/miles#1804",
+    "THUDM/slime#1958",
+    "radixark/miles#1212",
+    "radixark/miles#975",
+    "radixark/miles#1022",
+    "radixark/miles#1229",
+    "THUDM/slime#2207",
+    "radixark/miles#1197",
+    "THUDM/slime#1940",
+    "radixark/miles#1015",
+    "radixark/miles#1717",
+    "THUDM/slime#2210",
+    "radixark/miles#1790",
+    "radixark/miles#976",
+    "radixark/miles#971",
+    "THUDM/slime#2184",
+    "THUDM/slime#1835",
+    "radixark/miles#982",
+    "THUDM/slime#2182",
+    "THUDM/slime#1772",
+    "radixark/miles#1722",
+    "radixark/miles#1191",
+    "radixark/miles#1013",
+    "THUDM/slime#2219",
+    "THUDM/slime#2203",
+    "radixark/miles#1807",
+    "THUDM/slime#1941",
+    "radixark/miles#942",
+    "radixark/miles#1026",
+    "radixark/miles#1207",
+    "radixark/miles#1776"
   ],
-  "weekly_note": "<em>本周重点</em>：<b>#1720</b> 修复 CP>1 时 PPO <em>终端奖励位置错误</em>，<b>#1730</b> 消除 <em>MoE 共享专家</em>权重同步死锁，<b>#1735</b> Actor/Critic <em>共享 GPU</em> 大幅降低显存占用。",
-  "weekly_note_week": "2026-W30",
-  "last_updated": "2026-07-26T06:57:19.695241+00:00"
+  "weekly_note": "<p>本周多框架聚焦<em>Context Parallelism</em>正确性：<b>#slime#2235</b>修复CP下<em>advantage归一化</em>进程组错误，<b>#miles#1720</b>解决CP>1时<em>PPO终端奖励</em>写入位置偏移；<b>#miles#1788</b>引入<em>true-on-policy</em>数值一致性合约，<b>#slime#2238</b>堵住异步rollout双重泄漏。</p>",
+  "weekly_note_week": "2026-W31",
+  "last_updated": "2026-07-27T01:07:26.931860+00:00"
 }
