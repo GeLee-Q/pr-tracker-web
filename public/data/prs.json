@@ -1,6 +1,2139 @@
 {
   "prs": [
     {
+      "id": "radixark/miles#1808",
+      "repo": "radixark/miles",
+      "pr_number": 1808,
+      "title": "docker: stop downgrading cuDNN below what torch ships",
+      "state": "closed",
+      "author": "yueming-yuan",
+      "created_at": "2026-07-27T01:07:29Z",
+      "merged_at": "2026-07-27T07:28:18Z",
+      "url": "https://github.com/radixark/miles/pull/1808",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "移除 Dockerfile 中对 nvidia-cudnn-cu13==9.16.0.29 的过时版本锁定，允许使用 PyTorch 自带的更新版 cuDNN",
+      "reason": "这是针对该仓库 Docker 构建环境的版本依赖调整，属于特定硬件/构建脚本修改，cuDNN 版本锁定与 Conv3D bf16 慢速问题已被上游 torch 2.11.0 修复，不涉及 RL 算法或通用训练组件",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docker/Dockerfile",
+        "docker/verify_transformer_engine.py"
+      ],
+      "diff_preview": {
+        "additions": 30,
+        "deletions": 7,
+        "hunks": [
+          {
+            "file": "docker/Dockerfile",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -105,6 +105,10 @@ RUN if ls /tmp/wheels/causal_conv1d-*.whl 2>/dev/null | grep -q . && \\"
+              ],
+              [
+                " ",
+                "    fi"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# transformer_engine"
+              ],
+              [
+                "+",
+                "# --no-deps pins the three TE dists to exactly the wheels above, so pip cannot"
+              ],
+              [
+                "+",
+                "# pull a conflicting core dist. That also drops transformer_engine_torch's own"
+              ],
+              [
+                "+",
+                "# runtime deps, which still have to be installed: transformer_engine.pytorch"
+              ],
+              [
+                "+",
+                "# imports onnxscript unconditionally (module/_common -> export -> onnx_extensions)."
+              ],
+              [
+                " ",
+                "RUN --mount=type=bind,source=docker/verify_transformer_engine.py,target=/tmp/verify_transformer_engine.py \\"
+              ],
+              [
+                " ",
+                "    if [ \"${ENABLE_CUDA_13}\" = \"1\" ]; then \\"
+              ],
+              [
+                " ",
+                "      TE_CORE_DIST=transformer_engine_cu13; \\"
+              ],
+              [
+                "h",
+                "@@ -120,6 +124,7 @@ RUN --mount=type=bind,source=docker/verify_transformer_engine.py,target=/tmp/ver"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:07:46.046226+00:00"
+    },
+    {
+      "id": "radixark/miles#1809",
+      "repo": "radixark/miles",
+      "pr_number": 1809,
+      "title": "docs: fix factual errors in fully-async example page",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-07-27T02:19:13Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1809",
+      "category": "doc",
+      "scope": "repo-specific",
+      "summary": "修正 fully-async 示例文档中的虚构日志输出、不存在的构造函数参数及伪造的协程实现，使其与实际代码一致",
+      "reason": "属于该仓库特定示例页面的文档纠错，涉及的类名、参数名和日志格式均为 miles 仓库内部实现细节，对其他框架无参考意义",
+      "value": 1,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docs/examples/fully-async.md"
+      ],
+      "diff_preview": {
+        "additions": 51,
+        "deletions": 31,
+        "hunks": [
+          {
+            "file": "docs/examples/fully-async.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -49,7 +49,9 @@ You should see:"
+              ],
+              [
+                " ",
+                "```text"
+              ],
+              [
+                " ",
+                "Creating new global async worker..."
+              ],
+              [
+                " ",
+                "Continuous async rollout worker started"
+              ],
+              [
+                "-",
+                "[trainer] iter 1/3000 | drained 32 samples (queued: 18)"
+              ],
+              [
+                "+",
+                "Starting async rollout generation for 32 groups"
+              ],
+              [
+                "+",
+                "..."
+              ],
+              [
+                "+",
+                "Rollout completed in 41.23s! Global worker queue size: 3"
+              ],
+              [
+                " ",
+                "```"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "## What changes vs. the default recipe"
+              ],
+              [
+                "h",
+                "@@ -77,8 +79,7 @@ def get_global_worker(args, data_buffer):"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:07:39.800343+00:00"
+    },
+    {
+      "id": "radixark/miles#1810",
+      "repo": "radixark/miles",
+      "pr_number": 1810,
+      "title": "docs: fix factual errors in openhermes-sft example page",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-07-27T02:19:15Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1810",
+      "category": "doc",
+      "scope": "repo-specific",
+      "summary": "修正 openhermes-sft 示例文档中的磁盘需求、监控指标和学习率预热参数等事实性错误",
+      "reason": "改动仅针对该仓库特定示例文档的描述错误，涉及仓库内部脚本路径和日志格式，对其他框架无参考意义",
+      "value": 1,
+      "subsystems": [
+        "logging"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docs/examples/openhermes-sft.md"
+      ],
+      "diff_preview": {
+        "additions": 14,
+        "deletions": 18,
+        "hunks": [
+          {
+            "file": "docs/examples/openhermes-sft.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -15,7 +15,7 @@ Why use Miles for SFT? Two reasons:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "* You completed the [Qwen3-4B](/models/qwen/qwen3) recipe (we reuse the"
+              ],
+              [
+                " ",
+                "  conversion)."
+              ],
+              [
+                "-",
+                "* ~50 GB free disk for OpenHermes-2.5."
+              ],
+              [
+                "+",
+                "* ~5 GB free disk for OpenHermes-2.5."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "## Quick start"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -105,16 +105,14 @@ Compare to [run-qwen3-4B.sh](/models/qwen/qwen3). The deltas:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "## What to watch"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:07:32.525276+00:00"
+    },
+    {
+      "id": "radixark/miles#1811",
+      "repo": "radixark/miles",
+      "pr_number": 1811,
+      "title": "docs: fix factual errors in retool example page",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-07-27T02:19:17Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1811",
+      "category": "doc",
+      "scope": "repo-specific",
+      "summary": "修正 retool 示例文档中的虚构奖励函数描述，替换为代码中实际存在的 reward_func 实现细节",
+      "reason": "这是对该仓库 retool 示例专属文档的事实性错误修正，涉及的奖励函数和调参表格均与该仓库特定示例代码绑定，对其他 RL 训练框架无参考意义",
+      "value": 1,
+      "subsystems": [
+        "logging"
+      ],
+      "rl_concepts": [
+        "reward-model"
+      ],
+      "files": [
+        "docs/examples/retool.md"
+      ],
+      "diff_preview": {
+        "additions": 23,
+        "deletions": 23,
+        "hunks": [
+          {
+            "file": "docs/examples/retool.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -155,23 +155,26 @@ filesystem), swap in a container-based runner — the interface is just"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "```python"
+              ],
+              [
+                " ",
+                "async def reward_func(args, sample, **kwargs):"
+              ],
+              [
+                "-",
+                "    parsed = parse_trace(sample.response)"
+              ],
+              [
+                "-",
+                "    correct = check_answer(parsed.final_answer, sample.label)"
+              ],
+              [
+                "+",
+                "    \"\"\"Tool call reward function using math_dapo as primary reward model\"\"\""
+              ],
+              [
+                "+",
+                "    solution_str = sample.response"
+              ],
+              [
+                "+",
+                "    ground_truth = sample.label if sample.label is not None else \"\""
+              ],
+              [
+                "+",
+                "    num_turns = getattr(sample, \"tool_call_count\", 0)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "    # 1. Final answer (most weight)"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:07:26.998254+00:00"
+    },
+    {
+      "id": "radixark/miles#1812",
+      "repo": "radixark/miles",
+      "pr_number": 1812,
+      "title": "docs: fix factual errors in search-r1 example page",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-07-27T02:19:19Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1812",
+      "category": "doc",
+      "scope": "repo-specific",
+      "summary": "修正 search-r1 示例文档中与实际代码不符的虚构代码片段，替换为真实的 generate() 函数和 reward_func 实现",
+      "reason": "该 PR 仅修正该仓库 docs/examples/search-r1.md 中的文档错误，涉及的是该仓库特有示例的说明文字，不涉及任何通用训练组件或算法逻辑",
+      "value": 1,
+      "subsystems": [
+        "rollout",
+        "logging"
+      ],
+      "rl_concepts": [
+        "reward-model"
+      ],
+      "files": [
+        "docs/examples/search-r1.md"
+      ],
+      "diff_preview": {
+        "additions": 45,
+        "deletions": 45,
+        "hunks": [
+          {
+            "file": "docs/examples/search-r1.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -98,40 +98,38 @@ SEARCH_R1_CONFIGS = {"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "## Walkthrough — multi-turn rollout"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "The custom rollout lives in `generate_with_search.py:generate`. The loop is"
+              ],
+              [
+                "-",
+                "straightforward but every step matters:"
+              ],
+              [
+                "+",
+                "The custom rollout lives in `generate_with_search.py:generate`. The model emits"
+              ],
+              [
+                "+",
+                "either `<search>query</search>` or `<answer>...</answer>`; search results come back"
+              ],
+              [
+                "+",
+                "wrapped in `<information>...</information>`. Condensed:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "```python"
+              ],
+              [
+                " ",
+                "async def generate(args, sample: Sample, sampling_params) -> Sample:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:07:21.191536+00:00"
+    },
+    {
+      "id": "radixark/miles#1813",
+      "repo": "radixark/miles",
+      "pr_number": 1813,
+      "title": "docs: fix factual errors in multi-agent example page",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-07-27T02:19:22Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1813",
+      "category": "doc",
+      "scope": "repo-specific",
+      "summary": "修正多智能体示例文档中的事实错误，使其与实际代码中的三角色流水线（solver/rewriter/selector）保持一致",
+      "reason": "纯文档修正，针对该仓库特有的多智能体示例实现细节，不涉及任何通用RL训练组件或算法",
+      "value": 1,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docs/examples/multi-agent.md"
+      ],
+      "diff_preview": {
+        "additions": 16,
+        "deletions": 17,
+        "hunks": [
+          {
+            "file": "docs/examples/multi-agent.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -3,11 +3,12 @@ title: Multi-Agent Co-Evolution"
+              ],
+              [
+                " ",
+                "description: Two specialized agents train together and improve each other."
+              ],
+              [
+                " ",
+                "---"
+              ],
+              [
+                " ",
+                "**What you'll learn:** how to wire up an asynchronous multi-agent system in Miles, where"
+              ],
+              [
+                "-",
+                "two (or more) specialized agents take alternating turns and the joint outcome drives a"
+              ],
+              [
+                "+",
+                "multiple specialized agent roles cooperate on a prompt and the joint outcome drives a"
+              ],
+              [
+                " ",
+                "single shared reward."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "This example uses a dual-agent setup that interleaves a \"thinker\" and a \"verifier\", but"
+              ],
+              [
+                "-",
+                "the same pattern scales to:"
+              ],
+              [
+                "+",
+                "This example ships a three-role pipeline — parallel *solvers*, a round of *rewriters*"
+              ],
+              [
+                "+",
+                "that revise the solvers' answers, and a *selector* that picks the best one — but the"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:07:15.528500+00:00"
+    },
+    {
+      "id": "radixark/miles#1814",
+      "repo": "radixark/miles",
+      "pr_number": 1814,
+      "title": "Move in-model CP layout helpers out of training_utils into model plugins",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-07-27T04:48:11Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1814",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将仅在模型插件内部forward中使用的CP上下文构建函数`build_gdn_cp_context`从核心训练工具模块迁移到模型插件目录，消除核心模块对flash-linear-attention的可选依赖",
+      "reason": "此重构涉及的是该仓库特有的Qwen3系列模型适配插件（qwen3_next.py、qwen3_5.py）以及仓库内部的目录结构调整，`build_gdn_cp_context`是该仓库特有的GDN（Gate-Decay-Norm）注意力机制的CP上下文辅助函数，其他框架不会有相同的模型插件与核心训练模块之间的耦合问题",
+      "value": 2,
+      "subsystems": [
+        "parallel",
+        "infra"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "context-parallelism"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/actor.py",
+        "miles/backends/training_utils/cp_utils.py",
+        "miles_plugins/models/cp_utils.py",
+        "miles_plugins/models/hf_attention.py",
+        "miles_plugins/models/qwen3_5.py",
+        "miles_plugins/models/qwen3_next.py",
+        "tests/e2e/precision/test_hf_attention_cp_relayout.py"
+      ],
+      "diff_preview": {
+        "additions": 180,
+        "deletions": 168,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -168,7 +168,7 @@ def init("
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "        parallel_state = get_parallel_state()"
+              ],
+              [
+                " ",
+                "        if parallel_state.cp.size > 1:"
+              ],
+              [
+                "-",
+                "            from miles_plugins.models.cp_utils import detect_and_setup_hybrid_cp"
+              ],
+              [
+                "+",
+                "            from miles_plugins.models.hf_attention import detect_and_setup_hybrid_cp"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "            for model_chunk in self.model:"
+              ],
+              [
+                " ",
+                "                detect_and_setup_hybrid_cp("
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:07:10.512396+00:00"
+    },
+    {
+      "id": "radixark/miles#1815",
+      "repo": "radixark/miles",
+      "pr_number": 1815,
+      "title": "refactor(tito): rename tokenize_additional_non_assistant to tokenize_additional_messages",
+      "state": "closed",
+      "author": "guapisolo",
+      "created_at": "2026-07-27T07:31:43Z",
+      "merged_at": "2026-07-27T19:44:31Z",
+      "url": "https://github.com/radixark/miles/pull/1815",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将 tito_tokenizer 中的方法名 tokenize_additional_non_assistant 重命名为 tokenize_additional_messages，以反映附加输入可能包含 assistant 轮次的新现实",
+      "reason": "TITO（Tokenizer）是该仓库特有的内部工具，此次改动仅涉及仓库自身命名/文档的机械重命名，不涉及任何通用 RL 算法、训练基础设施或跨框架可复用的逻辑",
+      "value": 1,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/chat_template_utils/tito_tokenizer.py",
+        "miles/utils/test_utils/chat_template_verify.py",
+        "tests/fast/router/test_linear_trajectory.py",
+        "tests/fast/utils/chat_template_utils/test_pretokenized_via_tito.py",
+        "tests/fast/utils/chat_template_utils/test_tito_tokenizer.py"
+      ],
+      "diff_preview": {
+        "additions": 34,
+        "deletions": 43,
+        "hunks": [
+          {
+            "file": "miles/utils/chat_template_utils/tito_tokenizer.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -1,14 +1,8 @@"
+              ],
+              [
+                " ",
+                "\"\"\"TITO tokenizer — incremental tokenization for pretokenized prefix reuse."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "``TITOTokenizer`` computes incremental token IDs for non-assistant messages"
+              ],
+              [
+                "-",
+                "(tool responses, user follow-ups, system injections) that follow the"
+              ],
+              [
+                "-",
+                "assistant's generated token sequence, then merges them with the pretokenized"
+              ],
+              [
+                "-",
+                "prefix — handling model-specific boundary tokens at the junction."
+              ],
+              [
+                "-",
+                ""
+              ],
+              [
+                "-",
+                "The default implementation renders the complete appended non-assistant suffix"
+              ],
+              [
+                "-",
+                "and the next generation prompt once under a synthetic"
+              ],
+              [
+                "-",
+                "``[dummy_system, dummy_assistant]`` prefix.  Model-specific subclasses only"
+              ],
+              [
+                "-",
+                "override ``merge_tokens`` for boundary quirks at the prefix junction."
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:07:03.342401+00:00"
+    },
+    {
+      "id": "radixark/miles#1816",
+      "repo": "radixark/miles",
+      "pr_number": 1816,
+      "title": "feat(chat-template): DSv3.2 encoder honors drop_thinking=False when preserving thinking",
+      "state": "closed",
+      "author": "guapisolo",
+      "created_at": "2026-07-27T07:32:07Z",
+      "merged_at": "2026-07-27T19:58:27Z",
+      "url": "https://github.com/radixark/miles/pull/1816",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复 DSv3.2 编码器在 drop_thinking=False 路径下错误应用 reasoning_content 校验导致合法历史被拒绝的问题",
+      "reason": "该修复针对 miles 仓库内部 vendor 的 DSv3.2 chat template 编码器的特定实现逻辑，属于该仓库对 DeepSeek-V3.2 模型的专属适配代码，其他框架不共享此编码器实现，因此是 repo-specific",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/chat_template_utils/templates/encoding_dsv32.py",
+        "tests/fast/utils/chat_template_utils/test_deepseek_v32.py",
+        "tests/fast/utils/chat_template_utils/test_deepseek_v4.py"
+      ],
+      "diff_preview": {
+        "additions": 63,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "miles/utils/chat_template_utils/templates/encoding_dsv32.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -282,7 +282,8 @@ def render_message("
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "        summary_content = content or \"\""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "        if thinking_mode == \"thinking\" and index > last_user_idx:"
+              ],
+              [
+                "+",
+                "        # Miles modification: TiTO disallows drop_thinking=True."
+              ],
+              [
+                "+",
+                "        if drop_thinking and thinking_mode == \"thinking\" and index > last_user_idx:"
+              ],
+              [
+                " ",
+                "            if not (reasoning_content or tool_calls):"
+              ],
+              [
+                " ",
+                "                raise DS32EncodingError("
+              ],
+              [
+                " ",
+                "                    f\"ThinkingMode: {thinking_mode}, invalid message without reasoning_content/tool_calls `{msg}` after last user message\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:06:57.455313+00:00"
+    },
+    {
+      "id": "radixark/miles#1817",
+      "repo": "radixark/miles",
+      "pr_number": 1817,
+      "title": "refactor(tito): bind append roles to fixed templates",
+      "state": "closed",
+      "author": "guapisolo",
+      "created_at": "2026-07-27T07:32:29Z",
+      "merged_at": "2026-07-27T20:25:27Z",
+      "url": "https://github.com/radixark/miles/pull/1817",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将 TITO 模型与单一固定 chat template 绑定，移除一个模型对应多个模板的过度设计，解析逻辑仅依赖 --tito-model 参数",
+      "reason": "TITO（该仓库特有的 tokenizer-in-tokenizer-out 机制）及其 FixedTemplate/SUPPORTED_TEMPLATES 体系是 miles 仓库私有抽象，chat template 路由逻辑属于仓库内部调度器改动，不涉及通用 rollout、RL 算法或训练基础设施",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/rollout/session/linear_trajectory.py",
+        "miles/rollout/session/sessions.py",
+        "miles/utils/arguments.py",
+        "miles/utils/chat_template_utils/template.py",
+        "miles/utils/chat_template_utils/tito_tokenizer.py",
+        "miles/utils/test_utils/chat_template_verify.py",
+        "miles/utils/test_utils/mock_trajectories.py",
+        "tests/fast/rollout/generate_hub/test_multi_turn.py",
+        "tests/fast/router/session_pretokenized_test_utils.py",
+        "tests/fast/router/test_linear_trajectory.py",
+        "tests/fast/router/test_session_pretokenized_e2e.py",
+        "tests/fast/utils/chat_template_utils/test_fixed_templates.py",
+        "tests/fast/utils/chat_template_utils/test_pretokenized_chat.py",
+        "tests/fast/utils/chat_template_utils/test_pretokenized_via_tito.py",
+        "tests/fast/utils/chat_template_utils/test_template.py",
+        "tests/fast/utils/chat_template_utils/test_tito_tokenizer.py"
+      ],
+      "diff_preview": {
+        "additions": 440,
+        "deletions": 565,
+        "hunks": [
+          {
+            "file": "miles/rollout/session/linear_trajectory.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -78,7 +78,9 @@ def prepare_pretokenized("
+              ],
+              [
+                " ",
+                "                self.messages, request_messages, tito_tokenizer.allowed_append_roles"
+              ],
+              [
+                " ",
+                "            )"
+              ],
+              [
+                " ",
+                "        except ValueError as e:"
+              ],
+              [
+                "-",
+                "            raise MessageValidationError(f\"{e}; to allow more roles use --tito-allowed-append-roles\") from e"
+              ],
+              [
+                "+",
+                "            raise MessageValidationError("
+              ],
+              [
+                "+",
+                "                f\"{e}; the selected TITO fixed template does not support appending this role\""
+              ],
+              [
+                "+",
+                "            ) from e"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "        return tito_tokenizer.merge_tokens("
+              ],
+              [
+                " ",
+                "            old_messages=self.messages,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:06:51.873517+00:00"
+    },
+    {
+      "id": "radixark/miles#1818",
+      "repo": "radixark/miles",
+      "pr_number": 1818,
+      "title": "refactor(tito): remove --tito-allowed-append-roles and derive append surfaces from fixed templates",
+      "state": "closed",
+      "author": "guapisolo",
+      "created_at": "2026-07-27T07:32:48Z",
+      "merged_at": "2026-07-27T20:45:04Z",
+      "url": "https://github.com/radixark/miles/pull/1818",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "移除 --tito-allowed-append-roles 命令行参数，改为从 FIXED_TEMPLATE 自动推导 append 角色列表，简化验证流程配置",
+      "reason": "TITO（Token-In Token-Out）角色调度和 session-verify 链路是该仓库特有的内部机制，与 RL 训练核心组件无关，其他框架不存在类似的 append-roles 参数设计",
+      "value": 1,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docs/user-guide/agentic-chat-template.md",
+        "examples/experimental/openenv/openenv_launch_common.py",
+        "examples/experimental/swe-agent-v2-amd/run.py",
+        "examples/experimental/swe-agent-v2/run-glm47-flash-agentic-async.py",
+        "examples/experimental/swe-agent-v2/run.py",
+        "miles/utils/arguments.py",
+        "miles/utils/test_utils/session_verify_agent.py",
+        "miles/utils/test_utils/session_verify_runner.py",
+        "scripts/tools/verify_chat_template.py",
+        "scripts/tools/verify_session_tito_tokenizer.py",
+        "tests/e2e/sglang/test_session_server_multi_role/_common.py",
+        "tests/e2e/sglang/test_session_server_multi_role/test_deepseekv4.py",
+        "tests/e2e/sglang/test_session_server_multi_role/test_glm47.py",
+        "tests/e2e/sglang/test_session_server_multi_role/test_minimax_m27.py",
+        "tests/e2e/sglang/test_session_server_multi_role/test_nemotron3.py",
+        "tests/e2e/sglang/test_session_server_multi_role/test_qwen3.py",
+        "tests/e2e/sglang/test_session_server_multi_role/test_qwen35.py",
+        "tests/e2e/sglang/test_session_server_multi_role/test_qwennext.py",
+        "tests/fast/fixtures/generation_fixtures.py",
+        "tests/fast/fixtures/rollout_fixtures.py"
+      ],
+      "diff_preview": {
+        "additions": 392,
+        "deletions": 169,
+        "hunks": [
+          {
+            "file": "docs/user-guide/agentic-chat-template.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -14,50 +14,51 @@ Your harness only ever sends and receives **OpenAI chat messages**, never tokens"
+              ],
+              [
+                " ",
+                "Your rollout loop must keep two invariants, or TITO is rejected at runtime:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "- **Append-only messages.** Each turn = previous messages + new ones on the tail; past turns are never edited. The only exception is retrying the latest turn — a single-step rollback to the last assistant checkpoint. Diverging earlier, or rolling back more than one turn, is rejected."
+              ],
+              [
+                "-",
+                "- **Declared roles match the flag.** `--tito-allowed-append-roles` must list exactly the roles your harness appends after the first assistant turn (`tool` is always implied) — Miles resolves a prefix-stable template for that exact set, and appending any role outside it is rejected at runtime."
+              ],
+              [
+                "+",
+                "- **Appended roles follow the chat template.** After the first assistant message, the selected model's chat template determines which roles may be appended; users do not configure this separately."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "## Pick your `--tito-model`"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "No auto-detection — pick the family matching your model. Miles then auto-resolves the fixed template from `(--tito-model, --tito-allowed-append-roles)`; pass `--chat-template-path` only to override. The table below lists common models; the full set and verified role surfaces live in [issue #712](https://github.com/radixark/miles/issues/712)."
+              ],
+              [
+                "+",
+                "No auto-detection — pick the family matching your model. For every family, Miles resolves one `FIXED_TEMPLATE` registration from `--tito-model` alone. The registration owns the bundled Jinja template (or HuggingFace-native template) and fixed kwargs. A non-default family rejects `--chat-template-path` overrides and conflicting fixed kwargs; use `--tito-model default` for a custom renderer."
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:06:44.815934+00:00"
+    },
+    {
+      "id": "radixark/miles#1819",
+      "repo": "radixark/miles",
+      "pr_number": 1819,
+      "title": "refactor(session): track generated checkpoints separately from client assistant history",
+      "state": "open",
+      "author": "guapisolo",
+      "created_at": "2026-07-27T07:33:03Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1819",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "重构 session 轨迹管理，将后端生成的 checkpoint 消息端点从客户端注入的 assistant 消息中分离，单独追踪，使 rollback 逻辑以 generated_checkpoint_message_ends 为唯一基准",
+      "reason": "该改动针对 miles 仓库特有的 LinearTrajectory 和 session 路由器架构，涉及其内部区分'客户端注入 assistant 消息'与'后端生成 assistant 消息'的私有设计，其他框架不存在相同的 session 管理抽象，属于仓库特有实现细节",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "checkpoint"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/rollout/session/linear_trajectory.py",
+        "tests/fast/router/test_linear_trajectory.py"
+      ],
+      "diff_preview": {
+        "additions": 137,
+        "deletions": 22,
+        "hunks": [
+          {
+            "file": "miles/rollout/session/linear_trajectory.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -22,6 +22,11 @@ class LinearTrajectory:"
+              ],
+              [
+                " ",
+                "    \"\"\"State for a linear trajectory."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    Tracks the full message history and accumulated token IDs for one session."
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "    Session-generated assistant responses create checkpoints; client-injected assistant messages remain prompt history."
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "    Rollback uses ``generated_checkpoint_message_ends`` instead of inferring checkpoints from message roles."
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                "    The typical message sequence is: [system?, user, assistant, tool, assistant, tool, …],"
+              ],
+              [
+                " ",
+                "    but the agent may retry from an earlier point (e.g. re-running a tool call),"
+              ],
+              [
+                " ",
+                "    in which case the session is rolled back at most one assistant step."
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:06:38.526712+00:00"
+    },
+    {
+      "id": "radixark/miles#1820",
+      "repo": "radixark/miles",
+      "pr_number": 1820,
+      "title": "feat(session): honor request chat_template_kwargs in local render and outbound",
+      "state": "open",
+      "author": "guapisolo",
+      "created_at": "2026-07-27T07:33:21Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1820",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复 session server 中本地 input_ids 渲染与 SGLang 请求使用不同 chat_template_kwargs 导致 token 流不一致的问题，统一以请求携带的 kwargs 覆盖启动时参数后驱动两侧",
+      "reason": "该问题根植于 miles 仓库特有的 session server 架构（本地 TITO tokenizer + SGLang 双渲染路径），以及其自定义的 agentic chat template 机制（enable_thinking 等参数），其他框架不存在相同的 session/SGLang 分离设计，属于仓库内部实现问题",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docs/user-guide/agentic-chat-template.md",
+        "examples/experimental/openenv/openenv_launch_common.py",
+        "examples/experimental/swe-agent-v2-amd/run.py",
+        "examples/experimental/swe-agent-v2/run-glm47-flash-agentic-async.py",
+        "examples/experimental/swe-agent-v2/run.py",
+        "miles/rollout/session/core.py",
+        "miles/rollout/session/linear_trajectory.py",
+        "miles/rollout/session/sessions.py",
+        "miles/utils/arguments.py",
+        "miles/utils/chat_template_utils/template.py",
+        "miles/utils/chat_template_utils/templates/encoding_dsv32.py",
+        "miles/utils/chat_template_utils/tito_tokenizer.py",
+        "miles/utils/test_utils/chat_template_verify.py",
+        "miles/utils/test_utils/mock_trajectories.py",
+        "miles/utils/test_utils/session_verify_agent.py",
+        "miles/utils/test_utils/session_verify_runner.py",
+        "scripts/tools/verify_chat_template.py",
+        "scripts/tools/verify_session_tito_tokenizer.py",
+        "tests/e2e/sglang/test_session_server_multi_role/_common.py",
+        "tests/e2e/sglang/test_session_server_multi_role/test_deepseekv4.py"
+      ],
+      "diff_preview": {
+        "additions": 376,
+        "deletions": 472,
+        "hunks": [
+          {
+            "file": "docs/user-guide/agentic-chat-template.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -14,50 +14,51 @@ Your harness only ever sends and receives **OpenAI chat messages**, never tokens"
+              ],
+              [
+                " ",
+                "Your rollout loop must keep two invariants, or TITO is rejected at runtime:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "- **Append-only messages.** Each turn = previous messages + new ones on the tail; past turns are never edited. The only exception is retrying the latest turn — a single-step rollback to the last assistant checkpoint. Diverging earlier, or rolling back more than one turn, is rejected."
+              ],
+              [
+                "-",
+                "- **Declared roles match the flag.** `--tito-allowed-append-roles` must list exactly the roles your harness appends after the first assistant turn (`tool` is always implied) — Miles resolves a prefix-stable template for that exact set, and appending any role outside it is rejected at runtime."
+              ],
+              [
+                "+",
+                "- **Appended roles follow the chat template.** After the first assistant message, the selected model's chat template determines which roles may be appended; users do not configure this separately."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "## Pick your `--tito-model`"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "No auto-detection — pick the family matching your model. Miles then auto-resolves the fixed template from `(--tito-model, --tito-allowed-append-roles)`; pass `--chat-template-path` only to override. The table below lists common models; the full set and verified role surfaces live in [issue #712](https://github.com/radixark/miles/issues/712)."
+              ],
+              [
+                "+",
+                "No auto-detection — pick the family matching your model. For every family, Miles resolves one `FIXED_TEMPLATE` registration from `--tito-model` alone. The registration owns the bundled Jinja template (or HuggingFace-native template) and fixed kwargs. A non-default family rejects `--chat-template-path` overrides and conflicting fixed kwargs; use `--tito-model default` for a custom renderer."
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:06:30.063901+00:00"
+    },
+    {
+      "id": "radixark/miles#1821",
+      "repo": "radixark/miles",
+      "pr_number": 1821,
+      "title": "ci: run-ci* labels double as fork-PR CI approval",
+      "state": "closed",
+      "author": "guapisolo",
+      "created_at": "2026-07-27T07:37:56Z",
+      "merged_at": "2026-07-27T20:43:34Z",
+      "url": "https://github.com/radixark/miles/pull/1821",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "新增 GitHub Actions 工作流，使 run-ci* 标签自动触发 fork PR 的 CI 审批，免去维护者对每次推送的手动审批操作",
+      "reason": "这是针对该仓库 GitHub Actions 策略（first_time_contributors）的 CI 自动化配置，与 RL 训练框架的核心组件无关，属于仓库特有的 CI 流程管理",
+      "value": 1,
+      "subsystems": [
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".github/workflows/approve-trusted-ci.yml",
+        "docs/ci/01-label.md",
+        "docs/ci/contributor-guide.md"
+      ],
+      "diff_preview": {
+        "additions": 52,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": ".github/workflows/approve-trusted-ci.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,44 @@"
+              ],
+              [
+                "+",
+                "# A maintainer-applied `run-ci*` label doubles as the \"Approve and run\""
+              ],
+              [
+                "+",
+                "# decision for fork PRs from first-time contributors, on this and every later"
+              ],
+              [
+                "+",
+                "# push. Kept apart from pr-test.yml: tests run PR-world merge-ref code, while"
+              ],
+              [
+                "+",
+                "# approval must come from main's workflow definition and base-repo token"
+              ],
+              [
+                "+",
+                "# (`pull_request_target`). This job checks out nothing from the fork."
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "name: Approve Trusted CI"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "on:"
+              ],
+              [
+                "+",
+                "  pull_request_target:"
+              ],
+              [
+                "+",
+                "    types: [opened, synchronize, reopened, labeled]"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:06:22.847039+00:00"
+    },
+    {
+      "id": "radixark/miles#1822",
+      "repo": "radixark/miles",
+      "pr_number": 1822,
+      "title": "[multi-lora] /v1 post-training API with per-adapter token metering",
+      "state": "open",
+      "author": "yushengsu-thu",
+      "created_at": "2026-07-27T08:44:00Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1822",
+      "category": "feature",
+      "scope": "repo-specific",
+      "summary": "为 multi-LoRA 控制器新增声明式 /v1 后训练 API，支持按适配器维度提交 LoRA 训练任务并统计 rollout/训练 token 用量。",
+      "reason": "该 PR 实现的是 miles 仓库特有的 multi-LoRA HTTP 管控平面（controller/gateway/http_server/registry），包括单文件 Web 控制台和 token 计量账本，属于该仓库自身调度器与路由器的扩展，其他框架不共享这套 API 层设计。",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra",
+        "logging"
+      ],
+      "rl_concepts": [
+        "LoRA",
+        "rollout"
+      ],
+      "files": [
+        "examples/multi_lora/README.md",
+        "examples/multi_lora/v1_api_demo.py",
+        "miles/ray/multi_lora/backend.py",
+        "miles/ray/multi_lora/controller.py",
+        "miles/ray/multi_lora/gateway.py",
+        "miles/ray/multi_lora/http_server.py",
+        "miles/ray/multi_lora/registry.py",
+        "miles/rollout/multi_lora/async_rollout.py",
+        "miles/rollout/session/samples/merge.py",
+        "miles/utils/adapter_config.py",
+        "miles/utils/token_usage.py",
+        "miles/utils/types.py",
+        "tests/fast/ray/multi_lora/test_gateway_http.py",
+        "tests/fast/ray/multi_lora/test_registry_usage.py",
+        "tests/fast/ray/multi_lora/test_ui_launcher.py",
+        "tests/fast/utils/test_token_usage.py",
+        "ui/console.html",
+        "ui/launcher.py",
+        "ui/run.sh"
+      ],
+      "diff_preview": {
+        "additions": 3504,
+        "deletions": 23,
+        "hunks": [
+          {
+            "file": "examples/multi_lora/README.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -109,6 +109,22 @@ python examples/multi_lora/service_smoke.py --api-url http://127.0.0.1:8068 \\"
+              ],
+              [
+                " ",
+                "    --data /root/datasets/gsm8k/train.parquet --input-key messages --label-key label --rm-type math"
+              ],
+              [
+                " ",
+                "```"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "## /v1 API demo (public fine-tuning surface)"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "The public resource API (`/v1/postTrainingJobs`, datasets,"
+              ],
+              [
+                "+",
+                "evaluators, models, per-adapter token usage). `v1_api_demo.py` is the"
+              ],
+              [
+                "+",
+                "reference client: it submits 4 LoRA jobs, watches steps and token usage,"
+              ],
+              [
+                "+",
+                "cancels 2 mid-run, and prints the final billing ledger:"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "```bash"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:06:16.095271+00:00"
+    },
+    {
+      "id": "radixark/miles#1823",
+      "repo": "radixark/miles",
+      "pr_number": 1823,
+      "title": "run_megatron: dump parameter grads, fix CP loss normalisation, skip DDP on forward-only runs",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-07-27T14:55:03Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1823",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 run_megatron 独立 worker 中反向传播不输出参数梯度、CP 模式下 loss 归一化错误、以及纯前向运行时误触发 DDP 三个问题",
+      "reason": "梯度 dump 缺失、loss 归一化与 Context Parallelism 的交互问题、前向/反向对齐调试工具的正确性，均属于 Megatron 并行训练中普遍存在的基础设施问题，任何使用 Megatron 做前向/反向对齐调试的框架都可能遭遇相同 bug",
+      "value": 4,
+      "subsystems": [
+        "parallel",
+        "trainer",
+        "logging"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "gradient",
+        "Context Parallelism",
+        "loss normalization"
+      ],
+      "files": [
+        "miles/utils/debug_utils/run_megatron/worker/batch.py",
+        "miles/utils/debug_utils/run_megatron/worker/main.py"
+      ],
+      "diff_preview": {
+        "additions": 60,
+        "deletions": 7,
+        "hunks": [
+          {
+            "file": "miles/utils/debug_utils/run_megatron/worker/batch.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -4,6 +4,9 @@"
+              ],
+              [
+                " ",
+                "from typing import Any"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "import torch"
+              ],
+              [
+                "+",
+                "import torch.distributed as dist"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "from miles.backends.training_utils.parallel import get_parallel_state"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "def prepare_batch("
+              ],
+              [
+                "h",
+                "@@ -95,17 +98,32 @@ def loss_func("
+              ],
+              [
+                " ",
+                "    labels: torch.Tensor,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:06:08.252136+00:00"
+    },
+    {
+      "id": "radixark/miles#1824",
+      "repo": "radixark/miles",
+      "pr_number": 1824,
+      "title": "docker: remove the base image's apt cuDNN so the pip one is what loads",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-07-27T14:58:23Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1824",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "移除基础镜像中通过 apt 安装的 cuDNN 包，避免 apt 版本与 pip 版本混用导致符号未定义错误",
+      "reason": "属于该仓库特定 Docker 基础镜像的构建脚本修复，解决的是镜像内 apt 与 pip 两套 cuDNN 库路径冲突问题，与 RL 训练算法或通用训练组件无关，其他框架若不使用相同基础镜像则不会遇到此问题",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docker/Dockerfile"
+      ],
+      "diff_preview": {
+        "additions": 8,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "docker/Dockerfile",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -162,6 +162,14 @@ RUN pip install multi-storage-client --no-deps"
+              ],
+              [
+                " ",
+                "COPY requirements.txt /tmp/requirements.txt"
+              ],
+              [
+                " ",
+                "RUN rm -rf /usr/lib/python3/dist-packages/jwt /usr/lib/python3/dist-packages/PyJWT* && pip install -r /tmp/requirements.txt"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "# The apt copy shadows the pip one in ldconfig and the loader interleaves the two,"
+              ],
+              [
+                "+",
+                "# so transformer_engine gets a mixed set of libcudnn sub-libraries. The packages are"
+              ],
+              [
+                "+",
+                "# held, hence --allow-change-held-packages."
+              ],
+              [
+                "+",
+                "RUN if [ \"${ENABLE_CUDA_13}\" = \"1\" ]; then CU=13; else CU=12; fi; \\"
+              ],
+              [
+                "+",
+                "  apt-get remove -y --purge --allow-change-held-packages \\"
+              ],
+              [
+                "+",
+                "    libcudnn9-cuda-${CU} libcudnn9-dev-cuda-${CU} libcudnn9-headers-cuda-${CU} \\"
+              ],
+              [
+                "+",
+                "  && rm -rf /var/lib/apt/lists/*"
+              ],
+              [
+                "+",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:05:59.650319+00:00"
+    },
+    {
+      "id": "radixark/miles#1825",
+      "repo": "radixark/miles",
+      "pr_number": 1825,
+      "title": "Kimi-K3 lora RL day-0 support",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-07-27T15:55:11Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1825",
+      "category": "feature",
+      "scope": "repo-specific",
+      "summary": "为 Kimi K3 模型添加 Megatron 训练后端支持，包含 KDA/MLA 注意力、注意力残差快照银行、TP/EP/PP/CP 并行下的原生 LoRA 适配器，以及通过 CUDA IPC 导出权重到 rollout 引擎",
+      "reason": "虽然涉及 Megatron 并行、LoRA、权重同步等通用组件，但核心是针对 Kimi K3 这一特定模型架构（KDA/MLA 注意力、896 专家 MoE 的 shared-A/per-expert-B LoRA 因子）的专属适配，其他框架无法直接复用这些模型特定的实现细节",
+      "value": 3,
+      "subsystems": [
+        "parallel",
+        "weight-sync",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "LoRA",
+        "TP/EP/PP/CP"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/actor.py",
+        "miles/backends/megatron_utils/checkpoint.py",
+        "miles/backends/megatron_utils/lora_utils.py",
+        "miles/backends/megatron_utils/megatron_to_hf/__init__.py",
+        "miles/backends/megatron_utils/megatron_to_hf/kimi_k3.py",
+        "miles/backends/megatron_utils/megatron_to_hf/processors/quantizer_compressed_tensors.py",
+        "miles/backends/megatron_utils/model.py",
+        "miles/backends/megatron_utils/update_weight/common.py",
+        "miles/backends/megatron_utils/update_weight/hf_weight_iterator_base.py",
+        "miles/backends/megatron_utils/update_weight/hf_weight_iterator_bridge.py",
+        "miles/backends/megatron_utils/update_weight/hf_weight_iterator_direct.py",
+        "miles/backends/megatron_utils/update_weight/update_weight_from_tensor.py",
+        "miles/backends/sglang_utils/sglang_engine.py",
+        "miles/ray/actor_group.py",
+        "miles/ray/placement_group.py",
+        "miles/ray/rollout/rollout_manager.py",
+        "miles/ray/train/actor_factory.py",
+        "miles/ray/train/group.py",
+        "miles/rollout/rm_hub/deepscaler.py",
+        "miles/router/router.py"
+      ],
+      "diff_preview": {
+        "additions": 2512,
+        "deletions": 197,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -55,7 +55,6 @@"
+              ],
+              [
+                " ",
+                "from .replay_utils import register_replay_list_moe"
+              ],
+              [
+                " ",
+                "from .update_weight.common import named_params_and_buffers"
+              ],
+              [
+                " ",
+                "from .update_weight.update_weight_from_distributed.broadcast import UpdateWeightFromDistributed"
+              ],
+              [
+                "-",
+                "from .update_weight.update_weight_from_distributed.p2p import UpdateWeightP2P"
+              ],
+              [
+                " ",
+                "from .update_weight.update_weight_from_tensor import UpdateWeightFromTensor"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "if TYPE_CHECKING:"
+              ],
+              [
+                "h",
+                "@@ -225,6 +224,8 @@ def init("
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "                update_weight_cls = UpdateWeightFromDiskDelta"
+              ],
+              [
+                " ",
+                "            else:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:05:51.870698+00:00"
+    },
+    {
+      "id": "radixark/miles#1826",
+      "repo": "radixark/miles",
+      "pr_number": 1826,
+      "title": "fix: allow TITO session rollback to the empty checkpoint",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-07-27T16:47:26Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1826",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复 TITO 会话在客户端重发第一轮请求时因无法找到回滚目标而永久拒绝请求、导致整条轨迹 reward 为 0 的 bug",
+      "reason": "该 bug 位于 miles 仓库特有的 TITO（Turn-In-Turn-Out）会话管理器和线性轨迹路由器中，涉及的 `_try_detect_and_rollback_to_assistant_checkpoint` 逻辑是该仓库自有的会话调度/路由基础设施，其他 RL 训练框架不共享此组件",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [
+        "rollout"
+      ],
+      "files": [
+        "docs/user-guide/agentic-chat-template.md",
+        "miles/rollout/session/linear_trajectory.py",
+        "tests/fast/router/test_linear_trajectory.py"
+      ],
+      "diff_preview": {
+        "additions": 88,
+        "deletions": 32,
+        "hunks": [
+          {
+            "file": "docs/user-guide/agentic-chat-template.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -13,7 +13,7 @@ Your harness only ever sends and receives **OpenAI chat messages**, never tokens"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "Your rollout loop must keep two invariants, or TITO is rejected at runtime:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "- **Append-only messages.** Each turn = previous messages + new ones on the tail; past turns are never edited. The only exception is retrying the latest turn — a single-step rollback to the last assistant checkpoint. Diverging earlier, or rolling back more than one turn, is rejected."
+              ],
+              [
+                "+",
+                "- **Append-only messages.** Each turn = previous messages + new ones on the tail; past turns are never edited. The only exception is retrying the latest turn — a single-step rollback to the last assistant checkpoint, or to an empty session when the retried turn is the first one. Diverging earlier, or rolling back more than one turn, is rejected."
+              ],
+              [
+                " ",
+                "- **Appended roles follow the chat template.** After the first assistant message, the selected model's chat template determines which roles may be appended; users do not configure this separately."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "## Pick your `--tito-model`"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:05:44.708074+00:00"
+    },
+    {
+      "id": "radixark/miles#1827",
+      "repo": "radixark/miles",
+      "pr_number": 1827,
+      "title": "fix: run PPO GAE over trainable tokens only",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-07-27T18:38:30Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1827",
+      "category": "algo",
+      "scope": "universal",
+      "summary": "修复PPO GAE仅在可训练token（loss_mask==1）上计算，避免masked token（如工具调用/环境观测）导致终端奖励衰减丢失或泄露信号",
+      "reason": "GAE计算中loss_mask对advantage估计的影响是所有支持多轮/agentic rollout的RL训练框架都会遇到的通用算法问题，不依赖miles特有实现",
+      "value": 5,
+      "subsystems": [
+        "algo",
+        "objective",
+        "rollout"
+      ],
+      "rl_concepts": [
+        "PPO",
+        "GAE",
+        "advantage",
+        "loss_mask",
+        "KL"
+      ],
+      "files": [
+        "miles/backends/training_utils/loss_hub/advantages.py",
+        "miles/backends/training_utils/loss_hub/math_utils.py",
+        "tests/fast/backends/training_utils/test_ppo_cp_advantages.py",
+        "tests/fast/backends/training_utils/test_ppo_gae_masks.py"
+      ],
+      "diff_preview": {
+        "additions": 348,
+        "deletions": 41,
+        "hunks": [
+          {
+            "file": "miles/backends/training_utils/loss_hub/advantages.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -66,6 +66,7 @@ def compute_advantages("
+              ],
+              [
+                " ",
+                "            values_list=values,"
+              ],
+              [
+                " ",
+                "            rewards_list=token_rewards,"
+              ],
+              [
+                " ",
+                "            terminal_rewards=terminal_rewards,"
+              ],
+              [
+                "+",
+                "            loss_masks=loss_masks,"
+              ],
+              [
+                " ",
+                "            gamma=args.gamma,"
+              ],
+              [
+                " ",
+                "            lambd=args.lambd,"
+              ],
+              [
+                " ",
+                "        )"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:05:36.917137+00:00"
+    },
+    {
+      "id": "radixark/miles#1828",
+      "repo": "radixark/miles",
+      "pr_number": 1828,
+      "title": "fix(session): drop upstream Server/Date so aiohttp clients can read replies",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-07-27T18:52:39Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1828",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复 HTTP 代理层重复转发上游 Server/Date 响应头，导致 aiohttp 严格解析器拒绝连接的问题",
+      "reason": "该修复针对 miles 仓库自有的 session 路由器和 router 代理组件，属于仓库内部 HTTP 代理实现细节，其他框架不共享此代理架构，不具备跨框架复用价值",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/rollout/session/core.py",
+        "miles/router/router.py",
+        "tests/fast/router/test_sessions.py"
+      ],
+      "diff_preview": {
+        "additions": 41,
+        "deletions": 3,
+        "hunks": [
+          {
+            "file": "miles/rollout/session/core.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -28,8 +28,11 @@"
+              ],
+              [
+                " ",
+                "JSON_MEDIA_TYPE = \"application/json\""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# Hop-by-hop / length-framing headers dropped from the upstream response so the"
+              ],
+              [
+                "-",
+                "# transport layer recomputes them from the body we actually send."
+              ],
+              [
+                "-",
+                "_DROP_RESPONSE_HEADERS = (\"content-length\", \"transfer-encoding\", \"content-encoding\")"
+              ],
+              [
+                "+",
+                "# transport layer recomputes them from the body we actually send. \"server\" and"
+              ],
+              [
+                "+",
+                "# \"date\" are dropped because our own ASGI server always emits them, so echoing"
+              ],
+              [
+                "+",
+                "# upstream's copy puts two of each on the wire; aiohttp's parser rejects that"
+              ],
+              [
+                "+",
+                "# outright with \"Duplicate 'Server' header found\" instead of reading the body."
+              ],
+              [
+                "+",
+                "_DROP_RESPONSE_HEADERS = (\"content-length\", \"transfer-encoding\", \"content-encoding\", \"server\", \"date\")"
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:05:30.349090+00:00"
+    },
+    {
+      "id": "radixark/miles#1829",
+      "repo": "radixark/miles",
+      "pr_number": 1829,
+      "title": "fix: require explicit off-policy correction for async PPO training",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-07-27T20:26:20Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1829",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "在异步PPO训练中，强制要求显式启用off-policy修正，防止因样本过时导致的PPO比率计算错误被静默忽略",
+      "reason": "异步训练中样本滞后（stale samples）导致PPO重要性权重误计算是所有采用async rollout + PPO架构的框架都会遇到的算法正确性问题，与具体仓库实现无关",
+      "value": 5,
+      "subsystems": [
+        "algo",
+        "rollout",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "PPO",
+        "off-policy",
+        "importance-sampling",
+        "KL",
+        "advantage"
+      ],
+      "files": [
+        "miles/utils/arguments.py",
+        "tests/fast/utils/test_arguments.py",
+        "train_async.py"
+      ],
+      "diff_preview": {
+        "additions": 48,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "miles/utils/arguments.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -2928,6 +2928,27 @@ def miles_validate_args(args):"
+              ],
+              [
+                " ",
+                "    _maybe_apply_dumper_overrides(args)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "def validate_async_off_policy_correction(args) -> None:"
+              ],
+              [
+                "+",
+                "    \"\"\"Require an explicit behavior-policy choice for async PPO training."
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "    In the async train loop the next rollout is generated before the current"
+              ],
+              [
+                "+",
+                "    weight update is published, so samples can come from a stale policy. With"
+              ],
+              [
+                "+",
+                "    the default flags the PPO ratio denominator (``log_probs``) is recomputed"
+              ],
+              [
+                "+",
+                "    by the *current* actor, silently anchoring clipping (and KL-shaped"
+              ],
+              [
+                "+",
+                "    advantages) to a policy that never generated the trajectory; the recorded"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:05:24.595200+00:00"
+    },
+    {
+      "id": "radixark/miles#1830",
+      "repo": "radixark/miles",
+      "pr_number": 1830,
+      "title": "Support PP-free Megatron forward/backward warmup",
+      "state": "open",
+      "author": "nvcastet",
+      "created_at": "2026-07-27T22:11:50Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1830",
+      "category": "infra",
+      "scope": "universal",
+      "summary": "为 Megatron actor 添加可选的无流水线并行预热（PP-free warmup）选项，在首次训练步骤前执行本地 forward/backward 以初始化 JIT 内核和双向 NCCL 通道，将 DSV4+GB300 RL 训练首步耗时减少约 20 分钟",
+      "reason": "Megatron 流水线并行的首步 JIT 编译和 NCCL 通道初始化延迟是所有使用 Megatron 后端的 RL 训练框架都会遇到的通用问题，该 warmup 方案对 slime 等同类框架同样适用",
+      "value": 4,
+      "subsystems": [
+        "parallel",
+        "infra",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "pipeline-parallelism",
+        "NCCL",
+        "FP8"
+      ],
+      "files": [
+        "docs/user-guide/cli-reference.md",
+        "miles/backends/megatron_utils/actor.py",
+        "miles/backends/megatron_utils/pp_free_warmup.py",
+        "miles/utils/arguments.py",
+        "tests/fast/utils/test_arguments.py"
+      ],
+      "diff_preview": {
+        "additions": 265,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "docs/user-guide/cli-reference.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -211,6 +211,7 @@ Sections mirror the launch-script argument groups."
+              ],
+              [
+                " ",
+                "| `--context-parallel-size` | int | `1` | CP. |"
+              ],
+              [
+                " ",
+                "| `--expert-model-parallel-size` | int | `1` | EP (MoE). |"
+              ],
+              [
+                " ",
+                "| `--expert-tensor-parallel-size` | int | `1` | TP within experts. |"
+              ],
+              [
+                "+",
+                "| `--enable-pp-free-warmup` | flag | off | Megatron only: before the first actor step, run one PP-free forward/backward per stage and virtual chunk without an optimizer step or gradient synchronization. Skipped when PP size is 1. |"
+              ],
+              [
+                " ",
+                "| `--sequence-parallel` | flag | off | Enable Megatron sequence parallel. |"
+              ],
+              [
+                " ",
+                "| `--use-dynamic-batch-size` | flag | off | Pack varlen samples. Recommended for varlen workloads. |"
+              ],
+              [
+                " ",
+                "| `--max-tokens-per-gpu` | int | – | Token budget per micro-batch per GPU. Required when dynamic batching is on. |"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:05:18.074625+00:00"
+    },
+    {
+      "id": "radixark/miles#1831",
+      "repo": "radixark/miles",
+      "pr_number": 1831,
+      "title": "docs: add Claude general code style rule",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-07-27T23:37:31Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1831",
+      "category": "doc",
+      "scope": "repo-specific",
+      "summary": "为 Miles 项目添加面向 Claude Code 和 Codex 的 Python 代码风格规范文件，以及 AGENTS.md 说明",
+      "reason": "该 PR 仅添加了针对 Miles 仓库内部 AI 辅助编码工具（Claude Code、Codex）的风格指南文件，内容是仓库特定的约定和目录结构说明，对其他 RL 训练框架无直接参考价值",
+      "value": 1,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".claude/rules/general-code-style.md",
+        ".codex/general-code-style.md",
+        "AGENTS.md"
+      ],
+      "diff_preview": {
+        "additions": 77,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": ".claude/rules/general-code-style.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,58 @@"
+              ],
+              [
+                "+",
+                "---"
+              ],
+              [
+                "+",
+                "paths:"
+              ],
+              [
+                "+",
+                "  - \"miles/**/*.py\""
+              ],
+              [
+                "+",
+                "  - \"scripts/**/*.py\""
+              ],
+              [
+                "+",
+                "  - \"tools/**/*.py\""
+              ],
+              [
+                "+",
+                "  - \"train.py\""
+              ],
+              [
+                "+",
+                "  - \"train_async.py\""
+              ],
+              [
+                "+",
+                "---"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "# General Code Style"
+              ],
+              [
+                "+",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-28T01:05:10.678758+00:00"
+    },
+    {
       "id": "radixark/miles#1799",
       "repo": "radixark/miles",
       "pr_number": 1799,
@@ -36591,428 +38724,452 @@
     }
   ],
   "analyzed_ids": [
-    "radixark/miles#1736",
-    "radixark/miles#957",
-    "THUDM/slime#2174",
-    "THUDM/slime#2187",
-    "radixark/miles#1752",
-    "radixark/miles#1766",
-    "radixark/miles#1764",
-    "THUDM/slime#1841",
-    "radixark/miles#1800",
-    "THUDM/slime#1938",
-    "THUDM/slime#2206",
-    "THUDM/slime#2227",
-    "radixark/miles#1696",
-    "THUDM/slime#1933",
-    "radixark/miles#1001",
-    "THUDM/slime#1942",
-    "THUDM/slime#1922",
-    "radixark/miles#1783",
-    "radixark/miles#1221",
-    "radixark/miles#1767",
-    "THUDM/slime#1925",
-    "radixark/miles#1690",
-    "radixark/miles#972",
-    "radixark/miles#1782",
-    "THUDM/slime#2192",
-    "THUDM/slime#2198",
-    "radixark/miles#1208",
-    "THUDM/slime#1795",
-    "radixark/miles#1707",
-    "THUDM/slime#1920",
-    "radixark/miles#1029",
-    "THUDM/slime#1857",
-    "radixark/miles#987",
-    "THUDM/slime#1836",
-    "THUDM/slime#2216",
-    "THUDM/slime#1921",
-    "radixark/miles#1185",
-    "radixark/miles#1044",
-    "radixark/miles#1211",
-    "radixark/miles#1728",
-    "radixark/miles#1791",
-    "radixark/miles#941",
-    "radixark/miles#1033",
-    "THUDM/slime#1807",
-    "THUDM/slime#1769",
-    "radixark/miles#959",
-    "THUDM/slime#1832",
-    "radixark/miles#1014",
-    "radixark/miles#1009",
-    "radixark/miles#1792",
-    "THUDM/slime#1856",
-    "THUDM/slime#1776",
-    "radixark/miles#1761",
-    "THUDM/slime#1943",
-    "radixark/miles#1734",
-    "radixark/miles#1803",
-    "THUDM/slime#1808",
-    "radixark/miles#1725",
-    "THUDM/slime#1947",
-    "THUDM/slime#1914",
-    "THUDM/slime#2228",
-    "THUDM/slime#1923",
-    "radixark/miles#1704",
-    "radixark/miles#964",
-    "THUDM/slime#1774",
-    "radixark/miles#1188",
-    "radixark/miles#1214",
-    "radixark/miles#943",
-    "radixark/miles#1806",
-    "THUDM/slime#2217",
-    "radixark/miles#977",
-    "radixark/miles#1733",
-    "THUDM/slime#1823",
-    "radixark/miles#985",
-    "THUDM/slime#1948",
-    "radixark/miles#951",
-    "radixark/miles#968",
-    "radixark/miles#1795",
-    "radixark/miles#1006",
-    "THUDM/slime#1797",
-    "THUDM/slime#1926",
-    "radixark/miles#1020",
-    "radixark/miles#1772",
-    "THUDM/slime#1937",
-    "radixark/miles#1739",
-    "radixark/miles#952",
-    "radixark/miles#1689",
-    "radixark/miles#1796",
-    "radixark/miles#1712",
-    "radixark/miles#1222",
-    "radixark/miles#988",
-    "radixark/miles#1732",
-    "radixark/miles#1031",
-    "radixark/miles#1798",
-    "radixark/miles#945",
-    "radixark/miles#1723",
-    "radixark/miles#1691",
-    "radixark/miles#1200",
-    "radixark/miles#1040",
-    "THUDM/slime#1913",
-    "radixark/miles#1032",
-    "radixark/miles#1179",
-    "radixark/miles#1797",
-    "radixark/miles#1227",
-    "radixark/miles#1740",
-    "THUDM/slime#2243",
-    "THUDM/slime#1809",
-    "radixark/miles#1019",
-    "THUDM/slime#1824",
-    "radixark/miles#1017",
-    "radixark/miles#1762",
-    "radixark/miles#1209",
-    "radixark/miles#1695",
-    "radixark/miles#1228",
-    "THUDM/slime#2200",
-    "THUDM/slime#1819",
-    "radixark/miles#1735",
-    "THUDM/slime#2178",
-    "THUDM/slime#1963",
-    "radixark/miles#1698",
-    "radixark/miles#1763",
-    "radixark/miles#1701",
-    "radixark/miles#1741",
-    "radixark/miles#1184",
-    "radixark/miles#1201",
-    "radixark/miles#1750",
-    "THUDM/slime#2173",
-    "radixark/miles#966",
-    "radixark/miles#1805",
-    "radixark/miles#1196",
-    "THUDM/slime#2236",
-    "radixark/miles#1193",
-    "radixark/miles#1801",
-    "radixark/miles#1025",
-    "radixark/miles#1034",
-    "radixark/miles#1037",
-    "radixark/miles#1023",
-    "THUDM/slime#2213",
-    "radixark/miles#1705",
-    "radixark/miles#1708",
-    "THUDM/slime#1781",
-    "THUDM/slime#1814",
-    "THUDM/slime#1825",
-    "radixark/miles#946",
-    "radixark/miles#994",
-    "radixark/miles#1729",
-    "radixark/miles#947",
-    "radixark/miles#938",
-    "radixark/miles#1183",
-    "THUDM/slime#1827",
-    "radixark/miles#1794",
-    "radixark/miles#1219",
-    "THUDM/slime#1935",
-    "THUDM/slime#1944",
-    "THUDM/slime#2193",
-    "radixark/miles#1205",
-    "THUDM/slime#1929",
-    "radixark/miles#1198",
-    "THUDM/slime#1915",
-    "radixark/miles#989",
-    "radixark/miles#1192",
-    "THUDM/slime#1953",
-    "radixark/miles#1688",
-    "THUDM/slime#2180",
-    "THUDM/slime#2242",
-    "THUDM/slime#2185",
-    "radixark/miles#1788",
-    "THUDM/slime#1816",
-    "THUDM/slime#1918",
-    "radixark/miles#1035",
-    "radixark/miles#999",
-    "radixark/miles#1199",
-    "THUDM/slime#2223",
-    "radixark/miles#963",
-    "radixark/miles#1036",
-    "THUDM/slime#2196",
-    "radixark/miles#939",
-    "radixark/miles#965",
-    "THUDM/slime#1916",
-    "radixark/miles#1784",
-    "radixark/miles#1716",
-    "THUDM/slime#1822",
-    "THUDM/slime#1965",
-    "radixark/miles#1774",
-    "THUDM/slime#2190",
-    "radixark/miles#1039",
-    "THUDM/slime#2164",
-    "THUDM/slime#1849",
-    "THUDM/slime#1959",
-    "radixark/miles#1030",
-    "radixark/miles#1220",
-    "radixark/miles#1751",
-    "radixark/miles#1000",
-    "THUDM/slime#2233",
-    "THUDM/slime#1962",
-    "radixark/miles#1004",
-    "radixark/miles#1018",
-    "radixark/miles#1769",
-    "THUDM/slime#2181",
-    "THUDM/slime#2211",
-    "radixark/miles#1045",
-    "radixark/miles#1781",
-    "THUDM/slime#1927",
-    "radixark/miles#1043",
-    "THUDM/slime#1855",
-    "THUDM/slime#2175",
-    "radixark/miles#1715",
-    "radixark/miles#1760",
-    "radixark/miles#1223",
-    "radixark/miles#1727",
-    "radixark/miles#1758",
-    "THUDM/slime#2234",
-    "radixark/miles#996",
-    "radixark/miles#1730",
+    "THUDM/slime#1848",
+    "THUDM/slime#2184",
+    "radixark/miles#1753",
     "radixark/miles#1224",
-    "radixark/miles#1038",
-    "radixark/miles#1748",
-    "radixark/miles#1759",
+    "radixark/miles#1019",
+    "THUDM/slime#2221",
     "THUDM/slime#1917",
-    "radixark/miles#992",
-    "radixark/miles#953",
-    "radixark/miles#998",
-    "radixark/miles#1225",
+    "radixark/miles#1785",
+    "THUDM/slime#2205",
+    "radixark/miles#971",
     "THUDM/slime#1928",
-    "radixark/miles#940",
-    "THUDM/slime#1828",
-    "radixark/miles#1768",
-    "THUDM/slime#1798",
-    "radixark/miles#1028",
+    "radixark/miles#1814",
+    "radixark/miles#1183",
+    "radixark/miles#1701",
+    "radixark/miles#1804",
+    "THUDM/slime#1916",
+    "THUDM/slime#1961",
+    "radixark/miles#1211",
+    "THUDM/slime#2169",
+    "radixark/miles#946",
+    "THUDM/slime#2237",
+    "radixark/miles#1214",
+    "radixark/miles#966",
+    "THUDM/slime#2240",
+    "radixark/miles#973",
+    "radixark/miles#1788",
+    "radixark/miles#1758",
+    "radixark/miles#957",
+    "radixark/miles#1716",
+    "radixark/miles#1203",
+    "THUDM/slime#1799",
+    "radixark/miles#997",
+    "THUDM/slime#1801",
+    "THUDM/slime#1960",
+    "radixark/miles#1226",
+    "radixark/miles#1215",
+    "THUDM/slime#2223",
+    "THUDM/slime#1770",
+    "THUDM/slime#2219",
+    "radixark/miles#1202",
+    "radixark/miles#1039",
+    "radixark/miles#1775",
+    "radixark/miles#1811",
+    "radixark/miles#1693",
+    "THUDM/slime#2236",
+    "radixark/miles#1828",
+    "THUDM/slime#1926",
+    "radixark/miles#1767",
+    "radixark/miles#1031",
+    "radixark/miles#1766",
+    "THUDM/slime#2213",
+    "radixark/miles#996",
+    "radixark/miles#1027",
+    "radixark/miles#1181",
+    "radixark/miles#1230",
+    "radixark/miles#1717",
+    "radixark/miles#1008",
+    "radixark/miles#935",
+    "THUDM/slime#1781",
+    "THUDM/slime#2197",
+    "radixark/miles#998",
+    "radixark/miles#1017",
+    "THUDM/slime#2177",
+    "radixark/miles#1185",
+    "THUDM/slime#1927",
+    "THUDM/slime#1777",
+    "radixark/miles#1190",
     "THUDM/slime#1924",
-    "radixark/miles#1709",
+    "radixark/miles#1707",
+    "radixark/miles#1205",
+    "radixark/miles#1028",
+    "THUDM/slime#1773",
+    "radixark/miles#1796",
+    "radixark/miles#1037",
+    "radixark/miles#1732",
+    "THUDM/slime#1956",
+    "radixark/miles#1045",
+    "THUDM/slime#1819",
+    "radixark/miles#1213",
+    "radixark/miles#1790",
+    "radixark/miles#1694",
+    "radixark/miles#1209",
+    "radixark/miles#1761",
+    "radixark/miles#1710",
+    "THUDM/slime#2166",
+    "THUDM/slime#2195",
+    "radixark/miles#1044",
+    "radixark/miles#1762",
+    "THUDM/slime#1806",
+    "THUDM/slime#1827",
+    "radixark/miles#1730",
+    "radixark/miles#1805",
+    "radixark/miles#1727",
+    "radixark/miles#1740",
+    "radixark/miles#1042",
+    "radixark/miles#1688",
+    "THUDM/slime#1791",
+    "THUDM/slime#1776",
+    "radixark/miles#990",
+    "THUDM/slime#1923",
+    "THUDM/slime#2234",
+    "THUDM/slime#1817",
+    "THUDM/slime#1934",
+    "radixark/miles#1812",
+    "radixark/miles#1826",
+    "radixark/miles#1035",
+    "radixark/miles#1204",
+    "radixark/miles#967",
+    "THUDM/slime#1915",
+    "THUDM/slime#1942",
+    "radixark/miles#968",
+    "radixark/miles#944",
+    "radixark/miles#1192",
+    "radixark/miles#1777",
+    "THUDM/slime#1812",
+    "radixark/miles#1197",
+    "radixark/miles#989",
+    "THUDM/slime#1807",
+    "radixark/miles#984",
+    "radixark/miles#1739",
+    "THUDM/slime#2164",
+    "radixark/miles#937",
+    "radixark/miles#1182",
+    "radixark/miles#1713",
+    "radixark/miles#1824",
+    "radixark/miles#1779",
+    "radixark/miles#1720",
+    "THUDM/slime#1959",
+    "radixark/miles#1038",
+    "radixark/miles#1703",
+    "radixark/miles#1715",
+    "radixark/miles#1010",
+    "radixark/miles#994",
+    "THUDM/slime#2178",
+    "radixark/miles#1200",
+    "radixark/miles#1041",
+    "radixark/miles#939",
+    "radixark/miles#1220",
+    "radixark/miles#1194",
+    "THUDM/slime#1832",
+    "radixark/miles#1794",
+    "radixark/miles#1218",
+    "radixark/miles#948",
+    "radixark/miles#1699",
+    "radixark/miles#1018",
+    "radixark/miles#1207",
+    "THUDM/slime#2193",
+    "radixark/miles#1013",
+    "THUDM/slime#1953",
+    "radixark/miles#1782",
+    "radixark/miles#1216",
+    "radixark/miles#940",
+    "THUDM/slime#1775",
+    "radixark/miles#1820",
+    "THUDM/slime#1921",
+    "THUDM/slime#1929",
+    "radixark/miles#972",
+    "radixark/miles#1705",
+    "THUDM/slime#1825",
+    "THUDM/slime#1768",
+    "THUDM/slime#2218",
+    "THUDM/slime#2170",
+    "radixark/miles#1033",
+    "radixark/miles#1754",
+    "THUDM/slime#2220",
+    "radixark/miles#1023",
+    "THUDM/slime#1855",
+    "THUDM/slime#1949",
+    "THUDM/slime#2227",
+    "THUDM/slime#1816",
+    "radixark/miles#1821",
+    "radixark/miles#958",
+    "radixark/miles#943",
+    "radixark/miles#1043",
+    "radixark/miles#976",
+    "radixark/miles#1729",
+    "THUDM/slime#2203",
+    "radixark/miles#1802",
+    "radixark/miles#1757",
+    "radixark/miles#982",
+    "radixark/miles#1227",
+    "THUDM/slime#1965",
+    "radixark/miles#1830",
+    "radixark/miles#1801",
+    "radixark/miles#1831",
+    "THUDM/slime#1938",
+    "THUDM/slime#1955",
+    "THUDM/slime#1798",
+    "radixark/miles#1210",
+    "THUDM/slime#1824",
+    "radixark/miles#1787",
+    "radixark/miles#1797",
+    "radixark/miles#985",
+    "radixark/miles#1825",
+    "THUDM/slime#2226",
+    "radixark/miles#1034",
+    "THUDM/slime#1846",
+    "THUDM/slime#1940",
+    "radixark/miles#1217",
+    "THUDM/slime#2175",
+    "radixark/miles#1689",
+    "radixark/miles#1032",
+    "radixark/miles#1702",
+    "radixark/miles#1009",
+    "THUDM/slime#1950",
+    "radixark/miles#1747",
+    "radixark/miles#1225",
+    "radixark/miles#1760",
+    "radixark/miles#1695",
+    "radixark/miles#1765",
+    "THUDM/slime#2224",
+    "THUDM/slime#2182",
+    "radixark/miles#1036",
+    "radixark/miles#1007",
+    "radixark/miles#961",
+    "THUDM/slime#1828",
+    "radixark/miles#1755",
+    "THUDM/slime#1805",
+    "THUDM/slime#2185",
+    "THUDM/slime#1849",
+    "radixark/miles#1189",
+    "radixark/miles#1012",
+    "radixark/miles#959",
+    "radixark/miles#1751",
+    "radixark/miles#963",
+    "THUDM/slime#2171",
+    "radixark/miles#1827",
+    "THUDM/slime#1788",
+    "THUDM/slime#2206",
+    "radixark/miles#942",
+    "radixark/miles#1789",
+    "THUDM/slime#2167",
+    "THUDM/slime#1932",
+    "THUDM/slime#1813",
+    "THUDM/slime#2181",
+    "radixark/miles#1829",
+    "radixark/miles#987",
+    "THUDM/slime#1946",
+    "radixark/miles#1198",
+    "radixark/miles#952",
+    "radixark/miles#1711",
+    "THUDM/slime#1842",
+    "radixark/miles#964",
+    "THUDM/slime#2172",
+    "THUDM/slime#1835",
+    "THUDM/slime#2198",
+    "radixark/miles#1737",
+    "radixark/miles#1816",
+    "radixark/miles#980",
+    "radixark/miles#1712",
+    "THUDM/slime#1935",
+    "radixark/miles#1756",
+    "radixark/miles#1024",
+    "THUDM/slime#2241",
+    "THUDM/slime#1836",
+    "THUDM/slime#1945",
+    "radixark/miles#999",
+    "radixark/miles#1728",
+    "radixark/miles#1690",
+    "radixark/miles#1786",
+    "radixark/miles#1741",
+    "THUDM/slime#1948",
+    "THUDM/slime#2163",
+    "THUDM/slime#1772",
+    "THUDM/slime#1822",
+    "radixark/miles#1778",
+    "THUDM/slime#1922",
+    "radixark/miles#1748",
+    "radixark/miles#1022",
+    "radixark/miles#1040",
+    "radixark/miles#1773",
+    "THUDM/slime#2217",
+    "THUDM/slime#2190",
+    "THUDM/slime#1774",
+    "THUDM/slime#2235",
+    "THUDM/slime#2189",
+    "radixark/miles#950",
+    "THUDM/slime#1958",
+    "THUDM/slime#2243",
+    "THUDM/slime#1925",
+    "radixark/miles#1791",
+    "radixark/miles#1025",
+    "radixark/miles#1817",
+    "radixark/miles#1222",
+    "radixark/miles#1793",
     "radixark/miles#1719",
     "radixark/miles#1180",
-    "THUDM/slime#2199",
-    "THUDM/slime#1954",
-    "THUDM/slime#2177",
-    "THUDM/slime#1919",
-    "THUDM/slime#1846",
-    "radixark/miles#997",
-    "THUDM/slime#2239",
-    "radixark/miles#1799",
-    "radixark/miles#1714",
-    "radixark/miles#1213",
-    "THUDM/slime#1775",
-    "THUDM/slime#2226",
-    "radixark/miles#1210",
-    "THUDM/slime#1956",
-    "THUDM/slime#2240",
-    "radixark/miles#990",
-    "radixark/miles#1757",
-    "THUDM/slime#1932",
-    "radixark/miles#1793",
-    "THUDM/slime#1773",
-    "radixark/miles#1206",
-    "THUDM/slime#1960",
-    "radixark/miles#1008",
-    "radixark/miles#1747",
-    "radixark/miles#1737",
-    "radixark/miles#1802",
-    "radixark/miles#1012",
-    "radixark/miles#1718",
-    "radixark/miles#1003",
-    "radixark/miles#1710",
-    "radixark/miles#1720",
-    "radixark/miles#1027",
-    "radixark/miles#1726",
-    "radixark/miles#1765",
-    "radixark/miles#935",
-    "THUDM/slime#2205",
-    "radixark/miles#1190",
-    "radixark/miles#1189",
-    "THUDM/slime#1945",
-    "radixark/miles#1005",
-    "radixark/miles#1699",
-    "radixark/miles#1204",
-    "radixark/miles#973",
-    "radixark/miles#944",
-    "radixark/miles#984",
-    "radixark/miles#1202",
-    "radixark/miles#1024",
-    "radixark/miles#949",
-    "radixark/miles#991",
-    "radixark/miles#1218",
-    "THUDM/slime#2166",
-    "radixark/miles#1194",
-    "radixark/miles#980",
-    "radixark/miles#1775",
-    "THUDM/slime#2170",
-    "THUDM/slime#2235",
-    "radixark/miles#1226",
-    "radixark/miles#967",
-    "radixark/miles#1753",
-    "radixark/miles#1787",
-    "radixark/miles#1706",
-    "THUDM/slime#1939",
-    "radixark/miles#958",
-    "THUDM/slime#2220",
-    "radixark/miles#1021",
-    "THUDM/slime#1955",
-    "THUDM/slime#1957",
-    "THUDM/slime#1844",
-    "THUDM/slime#1961",
-    "THUDM/slime#2218",
-    "radixark/miles#1786",
-    "THUDM/slime#2189",
-    "radixark/miles#961",
-    "radixark/miles#1693",
-    "radixark/miles#1711",
-    "THUDM/slime#2195",
-    "THUDM/slime#2241",
-    "THUDM/slime#1777",
-    "radixark/miles#1721",
-    "radixark/miles#974",
-    "THUDM/slime#1834",
-    "radixark/miles#1703",
-    "radixark/miles#937",
-    "THUDM/slime#1770",
-    "THUDM/slime#1952",
-    "radixark/miles#1754",
-    "THUDM/slime#2171",
-    "radixark/miles#1181",
-    "radixark/miles#1694",
-    "THUDM/slime#2167",
-    "THUDM/slime#1799",
-    "radixark/miles#1777",
-    "radixark/miles#1778",
-    "radixark/miles#954",
-    "radixark/miles#1702",
+    "radixark/miles#992",
+    "radixark/miles#1219",
+    "THUDM/slime#2174",
     "radixark/miles#1771",
-    "radixark/miles#1182",
-    "radixark/miles#948",
-    "THUDM/slime#1788",
-    "THUDM/slime#1813",
-    "radixark/miles#950",
-    "THUDM/slime#1950",
-    "THUDM/slime#1934",
-    "THUDM/slime#1801",
-    "radixark/miles#993",
-    "THUDM/slime#2224",
-    "THUDM/slime#2197",
-    "radixark/miles#960",
-    "radixark/miles#1785",
-    "radixark/miles#1007",
-    "radixark/miles#1216",
-    "THUDM/slime#2204",
-    "radixark/miles#1756",
-    "THUDM/slime#2169",
-    "THUDM/slime#1949",
-    "THUDM/slime#2163",
-    "THUDM/slime#1817",
-    "radixark/miles#1011",
-    "radixark/miles#1217",
-    "radixark/miles#1789",
-    "radixark/miles#1203",
-    "THUDM/slime#2183",
-    "THUDM/slime#1806",
-    "THUDM/slime#1812",
-    "THUDM/slime#1848",
-    "THUDM/slime#1768",
-    "THUDM/slime#2172",
-    "radixark/miles#1042",
-    "THUDM/slime#2237",
-    "radixark/miles#1010",
     "THUDM/slime#1931",
-    "radixark/miles#1755",
-    "THUDM/slime#2162",
-    "radixark/miles#1773",
-    "radixark/miles#1016",
-    "THUDM/slime#2238",
-    "radixark/miles#1041",
-    "THUDM/slime#1930",
-    "radixark/miles#1770",
-    "radixark/miles#1713",
-    "THUDM/slime#2221",
-    "radixark/miles#986",
-    "radixark/miles#1230",
-    "radixark/miles#1738",
-    "THUDM/slime#1805",
-    "THUDM/slime#1858",
-    "THUDM/slime#1791",
-    "THUDM/slime#1833",
-    "THUDM/slime#2208",
-    "THUDM/slime#1946",
-    "radixark/miles#995",
-    "radixark/miles#1779",
-    "radixark/miles#1215",
-    "radixark/miles#1195",
-    "THUDM/slime#1842",
-    "radixark/miles#1692",
-    "radixark/miles#1804",
-    "THUDM/slime#1958",
-    "radixark/miles#1212",
-    "radixark/miles#975",
-    "radixark/miles#1022",
+    "THUDM/slime#2200",
+    "radixark/miles#1003",
+    "THUDM/slime#1947",
+    "radixark/miles#949",
+    "THUDM/slime#1814",
+    "THUDM/slime#1769",
+    "radixark/miles#951",
     "radixark/miles#1229",
-    "THUDM/slime#2207",
-    "radixark/miles#1197",
-    "THUDM/slime#1940",
-    "radixark/miles#1015",
-    "radixark/miles#1717",
-    "THUDM/slime#2210",
-    "radixark/miles#1790",
-    "radixark/miles#976",
-    "radixark/miles#971",
-    "THUDM/slime#2184",
-    "THUDM/slime#1835",
-    "radixark/miles#982",
-    "THUDM/slime#2182",
-    "THUDM/slime#1772",
+    "radixark/miles#1781",
+    "THUDM/slime#1797",
+    "radixark/miles#1769",
+    "radixark/miles#986",
+    "radixark/miles#1004",
+    "radixark/miles#1188",
+    "radixark/miles#1706",
+    "radixark/miles#1792",
+    "THUDM/slime#2208",
+    "THUDM/slime#1841",
+    "radixark/miles#1736",
+    "THUDM/slime#2187",
+    "radixark/miles#988",
+    "radixark/miles#1752",
+    "THUDM/slime#2242",
+    "radixark/miles#1011",
+    "radixark/miles#1692",
+    "radixark/miles#1726",
     "radixark/miles#1722",
-    "radixark/miles#1191",
-    "radixark/miles#1013",
-    "THUDM/slime#2219",
-    "THUDM/slime#2203",
+    "THUDM/slime#1809",
+    "radixark/miles#1818",
+    "radixark/miles#1021",
+    "radixark/miles#1798",
+    "radixark/miles#1001",
+    "radixark/miles#1015",
+    "THUDM/slime#1939",
+    "radixark/miles#1800",
+    "radixark/miles#1819",
+    "THUDM/slime#2207",
+    "radixark/miles#1810",
+    "radixark/miles#1708",
+    "radixark/miles#1764",
+    "radixark/miles#1721",
+    "radixark/miles#1223",
+    "radixark/miles#995",
+    "radixark/miles#1735",
+    "THUDM/slime#2239",
+    "radixark/miles#975",
+    "radixark/miles#1000",
+    "THUDM/slime#1954",
+    "THUDM/slime#1943",
+    "radixark/miles#1823",
+    "radixark/miles#945",
+    "radixark/miles#1221",
+    "radixark/miles#1228",
+    "radixark/miles#1014",
+    "THUDM/slime#1937",
+    "radixark/miles#1784",
+    "radixark/miles#953",
+    "THUDM/slime#2183",
+    "radixark/miles#1733",
+    "radixark/miles#1806",
+    "radixark/miles#1691",
+    "THUDM/slime#2180",
+    "radixark/miles#1822",
+    "radixark/miles#1195",
+    "radixark/miles#1783",
     "radixark/miles#1807",
+    "THUDM/slime#2210",
+    "THUDM/slime#1823",
+    "radixark/miles#1734",
+    "radixark/miles#1184",
+    "THUDM/slime#1857",
+    "radixark/miles#1718",
+    "THUDM/slime#1918",
+    "radixark/miles#1193",
+    "THUDM/slime#1930",
+    "THUDM/slime#1858",
+    "THUDM/slime#1933",
+    "radixark/miles#977",
+    "THUDM/slime#1952",
+    "radixark/miles#941",
+    "radixark/miles#1709",
     "THUDM/slime#1941",
-    "radixark/miles#942",
+    "radixark/miles#1768",
+    "radixark/miles#1191",
+    "radixark/miles#1772",
+    "THUDM/slime#1920",
+    "radixark/miles#965",
+    "radixark/miles#1208",
+    "radixark/miles#1714",
+    "radixark/miles#1206",
+    "radixark/miles#1030",
+    "radixark/miles#1196",
+    "THUDM/slime#1944",
+    "radixark/miles#954",
+    "THUDM/slime#2238",
+    "THUDM/slime#1913",
+    "radixark/miles#991",
+    "radixark/miles#960",
+    "radixark/miles#1799",
+    "radixark/miles#947",
+    "radixark/miles#1750",
+    "radixark/miles#1696",
+    "radixark/miles#1020",
+    "radixark/miles#974",
+    "radixark/miles#1808",
+    "radixark/miles#1815",
+    "radixark/miles#1803",
+    "radixark/miles#1759",
+    "THUDM/slime#2233",
+    "THUDM/slime#2196",
+    "radixark/miles#1738",
+    "THUDM/slime#2199",
+    "THUDM/slime#1957",
+    "THUDM/slime#1856",
+    "THUDM/slime#2211",
+    "radixark/miles#1212",
+    "radixark/miles#1776",
+    "THUDM/slime#1834",
+    "radixark/miles#1809",
+    "THUDM/slime#2173",
+    "THUDM/slime#2216",
+    "radixark/miles#1029",
+    "radixark/miles#1698",
+    "radixark/miles#1723",
+    "radixark/miles#993",
+    "THUDM/slime#1914",
     "radixark/miles#1026",
-    "radixark/miles#1207",
-    "radixark/miles#1776"
+    "radixark/miles#1725",
+    "radixark/miles#1199",
+    "radixark/miles#1774",
+    "radixark/miles#1179",
+    "radixark/miles#1005",
+    "THUDM/slime#1833",
+    "radixark/miles#1770",
+    "radixark/miles#1704",
+    "THUDM/slime#2204",
+    "THUDM/slime#1808",
+    "radixark/miles#1006",
+    "THUDM/slime#1795",
+    "THUDM/slime#1963",
+    "radixark/miles#1016",
+    "THUDM/slime#2192",
+    "radixark/miles#1763",
+    "THUDM/slime#1962",
+    "radixark/miles#1813",
+    "THUDM/slime#1919",
+    "THUDM/slime#2162",
+    "radixark/miles#1201",
+    "THUDM/slime#1844",
+    "THUDM/slime#2228",
+    "radixark/miles#938",
+    "radixark/miles#1795"
   ],
   "weekly_note": "<p>本周多框架聚焦<em>Context Parallelism</em>正确性：<b>#slime#2235</b>修复CP下<em>advantage归一化</em>进程组错误，<b>#miles#1720</b>解决CP>1时<em>PPO终端奖励</em>写入位置偏移；<b>#miles#1788</b>引入<em>true-on-policy</em>数值一致性合约，<b>#slime#2238</b>堵住异步rollout双重泄漏。</p>",
   "weekly_note_week": "2026-W31",
-  "last_updated": "2026-07-27T01:07:26.931860+00:00"
+  "last_updated": "2026-07-28T01:07:46.046391+00:00"
 }
