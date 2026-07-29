@@ -1,6 +1,4630 @@
 {
   "prs": [
     {
+      "id": "radixark/miles#1874",
+      "repo": "radixark/miles",
+      "pr_number": 1874,
+      "title": "Raise for external rollout mode before launching actors",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T12:57:20Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1874",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "在 external rollout 模式下，于启动 actor 之前提前抛出异常，避免无效启动后才报错",
+      "reason": "external rollout 模式的提前校验逻辑是通用的防御性编程模式，任何使用分布式 rollout actor 架构的 RL 训练框架都可能遇到类似的参数校验时机问题",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [
+        "rollout"
+      ],
+      "files": [
+        "miles/ray/rollout/addr_allocator.py",
+        "miles/ray/rollout/server_group.py",
+        "tests/fast/ray/rollout/test_config_matrix.py"
+      ],
+      "diff_preview": {
+        "additions": 30,
+        "deletions": 50,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/addr_allocator.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -95,17 +95,3 @@ def allocate_rollout_engine_addr_and_ports_normal("
+              ],
+              [
+                " ",
+                "        logger.info(f\"Ports for engine {i}: {addr_and_ports[i]}\")"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    return addr_and_ports"
+              ],
+              [
+                "-",
+                ""
+              ],
+              [
+                "-",
+                ""
+              ],
+              [
+                "-",
+                "def allocate_rollout_engine_addr_and_ports_external(args, rollout_engines):"
+              ],
+              [
+                "-",
+                "    addr_and_ports = {}"
+              ],
+              [
+                "-",
+                "    for rank, _ in rollout_engines:"
+              ],
+              [
+                "-",
+                "        addr = args.rollout_external_engine_addrs[rank]"
+              ],
+              [
+                "-",
+                "        [host, port] = addr.split(\":\")"
+              ],
+              [
+                "-",
+                "        addr_and_ports[rank] = dict("
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:10:32.260396+00:00"
+    },
+    {
+      "id": "radixark/miles#1875",
+      "repo": "radixark/miles",
+      "pr_number": 1875,
+      "title": "Refactor to remove allocate_rollout_engine_addr_and_ports_normal",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T12:57:22Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1875",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "重构移除 allocate_rollout_engine_addr_and_ports_normal 函数，简化 rollout 引擎的地址与端口分配逻辑",
+      "reason": "该重构针对 miles 仓库内部特有的地址分配器模块（addr_allocator）和 server_group 组织结构，涉及的是仓库自己的调度/路由内部工具重命名与清理，不涉及通用 RL 算法或跨框架共用的训练基础设施改动",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/rollout/addr_allocator.py",
+        "miles/ray/rollout/server_group.py",
+        "tests/fast/ray/rollout/conftest.py",
+        "tests/fast/ray/rollout/real_ray/test_server_group.py",
+        "tests/fast/ray/rollout/test_addr_allocator.py"
+      ],
+      "diff_preview": {
+        "additions": 120,
+        "deletions": 165,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/addr_allocator.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -1,4 +1,3 @@"
+              ],
+              [
+                "-",
+                "import functools"
+              ],
+              [
+                " ",
+                "import logging"
+              ],
+              [
+                " ",
+                "from dataclasses import dataclass"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -27,71 +26,3 @@ def alloc(self, *, engine, node_ip: str, consecutive: int = 1) -> int:"
+              ],
+              [
+                " ",
+                "        )"
+              ],
+              [
+                " ",
+                "        self._values[node_ip] = port + consecutive"
+              ],
+              [
+                " ",
+                "        return port"
+              ],
+              [
+                "-",
+                ""
+              ],
+              [
+                "-",
+                ""
+              ],
+              [
+                "-",
+                "# NOTE: May re-implement this in a potentially easier way if needed"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:10:26.937866+00:00"
+    },
+    {
+      "id": "radixark/miles#1876",
+      "repo": "radixark/miles",
+      "pr_number": 1876,
+      "title": "Make start_engines async and await engine init inside it",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T12:57:25Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1876",
+      "category": "refactor",
+      "scope": "universal",
+      "summary": "将 start_engines 改为异步函数，并在其内部 await 引擎初始化，以支持非阻塞的 rollout 引擎启动流程",
+      "reason": "异步化引擎初始化是 rollout 服务器组管理中的通用模式，其他基于 Ray 的 RL 训练框架（如 slime）在管理多个 rollout worker 时会面临同样的并发初始化问题，具有跨框架参考价值",
+      "value": 3,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [
+        "rollout"
+      ],
+      "files": [
+        "miles/ray/rollout/rollout_server.py",
+        "miles/ray/rollout/server_group.py",
+        "tests/fast/ray/rollout/real_ray/test_fault_tolerance.py",
+        "tests/fast/ray/rollout/real_ray/test_rollout_server.py",
+        "tests/fast/ray/rollout/real_ray/test_server_group.py",
+        "tests/fast/ray/rollout/real_ray/test_server_group_teardown.py",
+        "tests/fast/ray/rollout/test_addr_allocator.py",
+        "tests/fast/ray/rollout/test_config_matrix.py"
+      ],
+      "diff_preview": {
+        "additions": 68,
+        "deletions": 81,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/rollout_server.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -2,8 +2,6 @@"
+              ],
+              [
+                " ",
+                "import dataclasses"
+              ],
+              [
+                " ",
+                "import logging"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "import ray"
+              ],
+              [
+                "-",
+                ""
+              ],
+              [
+                " ",
+                "from miles.backends.sglang_utils.sglang_config import ModelConfig, ServerGroupConfig, SglangConfig"
+              ],
+              [
+                " ",
+                "from miles.ray.rollout.addr_allocator import PortAllocator"
+              ],
+              [
+                " ",
+                "from miles.ray.rollout.router_manager import start_router"
+              ],
+              [
+                "h",
+                "@@ -40,8 +38,7 @@ def start_rollout_servers(args, pg) -> dict[str, \"RolloutServer\"]:"
+              ],
+              [
+                " ",
+                "            args.sglang_router_port = router_port"
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:10:20.639209+00:00"
+    },
+    {
+      "id": "radixark/miles#1877",
+      "repo": "radixark/miles",
+      "pr_number": 1877,
+      "title": "Restructure start_engines into per-cell blocks and assume engines in one cell have same lifecycle",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T12:57:28Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1877",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将 start_engines 逻辑重构为按 cell 分块，并假设同一 cell 内的引擎具有相同的生命周期",
+      "reason": "该重构针对 miles 框架自身特有的 server_cell/server_group 抽象层设计，涉及仓库内部的 rollout 引擎组织方式和 cell 概念，不属于其他框架通用的架构模式",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/rollout/server_cell.py",
+        "miles/ray/rollout/server_group.py"
+      ],
+      "diff_preview": {
+        "additions": 49,
+        "deletions": 62,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/server_cell.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -27,6 +27,12 @@ class ServerCell:"
+              ],
+              [
+                " ",
+                "    def primary_engine(self) -> ServerEngine:"
+              ],
+              [
+                " ",
+                "        return self.engines[0]"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "    @property"
+              ],
+              [
+                "+",
+                "    def is_allocated(self) -> bool:"
+              ],
+              [
+                "+",
+                "        states = {engine.is_allocated for engine in self.engines}"
+              ],
+              [
+                "+",
+                "        assert len(states) == 1, f\"a cell's engines are allocated and stopped together ({states=})\""
+              ],
+              [
+                "+",
+                "        return states == {True}"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                "    def stop(self):"
+              ],
+              [
+                " ",
+                "        for local_index, engine in enumerate(self.engines):"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:10:14.445539+00:00"
+    },
+    {
+      "id": "radixark/miles#1878",
+      "repo": "radixark/miles",
+      "pr_number": 1878,
+      "title": "Move per-cell engine startup into ServerCell.start_engines",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T12:57:32Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1878",
+      "category": "refactor",
+      "scope": "universal",
+      "summary": "将每个 ServerCell 的引擎启动逻辑从 ServerGroup 移入 ServerCell.start_engines 方法，实现更清晰的职责划分",
+      "reason": "rollout 引擎的启动封装方式是通用架构问题，其他使用类似 cell/group 分层设计的 rollout 框架（如 slime 等）在组织 engine 生命周期管理时会面临相同的设计决策，具有参考价值",
+      "value": 3,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/rollout/server_cell.py",
+        "miles/ray/rollout/server_group.py"
+      ],
+      "diff_preview": {
+        "additions": 89,
+        "deletions": 53,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/server_cell.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -1,3 +1,5 @@"
+              ],
+              [
+                "+",
+                "import asyncio"
+              ],
+              [
+                "+",
+                "import functools"
+              ],
+              [
+                " ",
+                "import logging"
+              ],
+              [
+                " ",
+                "import os"
+              ],
+              [
+                " ",
+                "from dataclasses import dataclass"
+              ],
+              [
+                "h",
+                "@@ -6,8 +8,9 @@"
+              ],
+              [
+                " ",
+                "import ray"
+              ],
+              [
+                " ",
+                "from ray.util.scheduling_strategies import PlacementGroupSchedulingStrategy"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "from miles.backends.sglang_utils.sglang_engine import SGLangEngine"
+              ],
+              [
+                "-",
+                "from miles.ray.rollout.server_engine import ServerEngine"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:10:08.300419+00:00"
+    },
+    {
+      "id": "radixark/miles#1879",
+      "repo": "radixark/miles",
+      "pr_number": 1879,
+      "title": "Sink the startup config from ServerGroup into ServerCell",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T12:57:35Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1879",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将 ServerGroup 中的启动配置下沉到 ServerCell 层，调整配置传递的层次结构",
+      "reason": "此重构针对 miles 仓库特有的 ServerGroup/ServerCell 内部架构，涉及的是该仓库私有的 rollout 服务器调度与路由器设计，其他框架不共享这套组件层次结构",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/rollout/rollout_server.py",
+        "miles/ray/rollout/server_cell.py",
+        "miles/ray/rollout/server_group.py",
+        "tests/fast/dashboard/test_hooks.py",
+        "tests/fast/ray/rollout/conftest.py",
+        "tests/fast/ray/rollout/real_ray/test_fault_tolerance.py",
+        "tests/fast/ray/rollout/real_ray/test_rollout_server.py",
+        "tests/fast/ray/rollout/real_ray/test_server_group.py",
+        "tests/fast/ray/rollout/real_ray/test_server_group_teardown.py",
+        "tests/fast/ray/rollout/test_addr_allocator.py",
+        "tests/fast/ray/rollout/test_config_matrix.py",
+        "tests/fast/ray/rollout/test_rollout_server.py",
+        "tests/fast/ray/rollout/test_server_cell.py",
+        "tests/fast/ray/rollout/test_server_group_router_registration.py"
+      ],
+      "diff_preview": {
+        "additions": 211,
+        "deletions": 113,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/rollout_server.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -57,23 +57,38 @@ def start_rollout_servers(args, pg) -> dict[str, \"RolloutServer\"]:"
+              ],
+              [
+                " ",
+                "                f\"(abs={group_abs_start}): needs_offload={needs_offload}\""
+              ],
+              [
+                " ",
+                "            )"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "            cells: list[ServerCell] = []"
+              ],
+              [
+                "+",
+                "            if group_cfg.worker_type != \"placeholder\":"
+              ],
+              [
+                "+",
+                "                assert num_engines % nodes_per_engine == 0, ("
+              ],
+              [
+                "+",
+                "                    f\"group '{group_cfg.worker_type}' has {num_engines=} which is not a whole number of \""
+              ],
+              [
+                "+",
+                "                    f\"{nodes_per_engine=} engines; the trailing engine would have no node to run its remaining ranks\""
+              ],
+              [
+                "+",
+                "                )"
+              ],
+              [
+                "+",
+                "                assert engine_offset % nodes_per_engine == 0, ("
+              ],
+              [
+                "+",
+                "                    f\"group '{group_cfg.worker_type}' starts at {engine_offset=}, which is not aligned to \""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:10:01.632997+00:00"
+    },
+    {
+      "id": "radixark/miles#1880",
+      "repo": "radixark/miles",
+      "pr_number": 1880,
+      "title": "Address workers by cell index and let the cell describe itself to the router",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T12:57:40Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1880",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "重构 rollout server 的 worker 寻址方式，改为按 cell index 寻址，并让 cell 自描述路由信息",
+      "reason": "该 PR 涉及 miles 仓库特有的 rollout server 内部架构——自定义的 router、server_cell、server_group 等组件及其注册/寻址机制，属于该仓库内部调度器和路由器的专属改动，其他框架不共享此设计",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/rollout/rollout_server.py",
+        "miles/ray/rollout/server_cell.py",
+        "miles/ray/rollout/server_group.py",
+        "tests/fast/ray/rollout/test_server_cell.py",
+        "tests/fast/ray/rollout/test_server_group_router_registration.py"
+      ],
+      "diff_preview": {
+        "additions": 111,
+        "deletions": 59,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/rollout_server.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -101,11 +101,11 @@ def start_rollout_servers(args, pg) -> dict[str, \"RolloutServer\"]:"
+              ],
+              [
+                " ",
+                "            engine_offset += num_engines"
+              ],
+              [
+                " ",
+                "            gpu_offset += group_cfg.num_gpus"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "        new_engine_indices_per_group = async_utils.wait_futures(start_futures)"
+              ],
+              [
+                "+",
+                "        new_cell_indices_per_group = async_utils.wait_futures(start_futures)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "        for group, new_engine_indices in zip(server_groups, new_engine_indices_per_group, strict=True):"
+              ],
+              [
+                "-",
+                "            group.mark_alive(engine_indices=new_engine_indices)"
+              ],
+              [
+                "-",
+                "            async_utils.run(group.register_workers(new_engine_indices))"
+              ],
+              [
+                "+",
+                "        for group, new_cell_indices in zip(server_groups, new_cell_indices_per_group, strict=True):"
+              ],
+              [
+                "+",
+                "            group.mark_alive(cell_indices=new_cell_indices)"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:09:52.736442+00:00"
+    },
+    {
+      "id": "radixark/miles#1881",
+      "repo": "radixark/miles",
+      "pr_number": 1881,
+      "title": "Move per-cell recovery into ServerCell.recover",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T12:57:43Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1881",
+      "category": "refactor",
+      "scope": "universal",
+      "summary": "将每个 ServerCell 的故障恢复逻辑从 ServerGroup 移入 ServerCell.recover 方法，职责内聚化",
+      "reason": "Rollout 服务单元的故障恢复（fault tolerance）架构是 RL 训练框架中 rollout 引擎的通用问题，其他使用类似 cell/group 抽象的框架（如 slime）在设计容错机制时面临相同的职责划分取舍，具有普遍参考价值",
+      "value": 3,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/rollout/rollout_server.py",
+        "miles/ray/rollout/server_cell.py",
+        "miles/ray/rollout/server_group.py",
+        "tests/fast/ray/rollout/conftest.py",
+        "tests/fast/ray/rollout/real_ray/test_fault_tolerance.py",
+        "tests/fast/ray/rollout/real_ray/test_rollout_server.py",
+        "tests/fast/ray/rollout/real_ray/test_server_group.py",
+        "tests/fast/ray/rollout/test_server_cell.py"
+      ],
+      "diff_preview": {
+        "additions": 63,
+        "deletions": 56,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/rollout_server.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -80,6 +80,9 @@ def start_rollout_servers(args, pg) -> dict[str, \"RolloutServer\"]:"
+              ],
+              [
+                " ",
+                "                            rank_offset=engine_offset + cell_start,"
+              ],
+              [
+                " ",
+                "                            gpu_offset=gpu_offset + cell_start * num_gpu_per_engine_local,"
+              ],
+              [
+                " ",
+                "                            sglang_overrides=overrides,"
+              ],
+              [
+                "+",
+                "                            needs_offload=needs_offload,"
+              ],
+              [
+                "+",
+                "                            model_path=overrides.get(\"model_path\", args.hf_checkpoint),"
+              ],
+              [
+                "+",
+                "                            update_weights=model_cfg.update_weights,"
+              ],
+              [
+                " ",
+                "                        )"
+              ],
+              [
+                " ",
+                "                    )"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -89,11 +92,8 @@ def start_rollout_servers(args, pg) -> dict[str, \"RolloutServer\"]:"
+              ],
+              [
+                " ",
+                "                num_gpus_per_engine=gpus_per_engine,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:09:45.977404+00:00"
+    },
+    {
+      "id": "radixark/miles#1882",
+      "repo": "radixark/miles",
+      "pr_number": 1882,
+      "title": "Move has_new_engines to RolloutServer",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T12:57:46Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1882",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将 has_new_engines 状态从 InferenceController 迁移至 RolloutServer，优化组件职责划分",
+      "reason": "此 PR 涉及 miles 仓库特有的内部组件（RolloutServer、InferenceController、ServerGroup）之间的状态归属重构，属于该仓库自身调度器和路由器架构的内部调整，其他框架不会有相同的组件拓扑",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/rollout/inference_controller.py",
+        "miles/ray/rollout/rollout_server.py",
+        "miles/ray/rollout/server_group.py",
+        "tests/fast/ray/rollout/conftest.py",
+        "tests/fast/ray/rollout/real_ray/test_fault_tolerance.py",
+        "tests/fast/ray/rollout/real_ray/test_inference_controller.py",
+        "tests/fast/ray/rollout/real_ray/test_rollout_server.py",
+        "tests/fast/ray/rollout/real_ray/test_server_group.py",
+        "tests/fast/ray/rollout/real_ray/test_server_group_teardown.py",
+        "tests/fast/ray/rollout/test_addr_allocator.py",
+        "tests/fast/ray/rollout/test_config_matrix.py",
+        "tests/fast/ray/rollout/test_server_cell.py",
+        "tests/fast/ray/rollout/test_server_group_router_registration.py"
+      ],
+      "diff_preview": {
+        "additions": 28,
+        "deletions": 64,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/inference_controller.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -6,7 +6,6 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from miles.backends.sglang_utils.sglang_api_client import SGLangApiClient"
+              ],
+              [
+                " ",
+                "from miles.dashboard import hooks as dashboard_hooks"
+              ],
+              [
+                "-",
+                "from miles.ray.rollout.addr_allocator import PortAllocator"
+              ],
+              [
+                " ",
+                "from miles.ray.rollout.rollout_server import RolloutServer, start_rollout_servers"
+              ],
+              [
+                " ",
+                "from miles.ray.rollout.router_manager import start_session_server"
+              ],
+              [
+                " ",
+                "from miles.ray.rollout.server_cell import get_cell_indexer_of_id_map"
+              ],
+              [
+                "h",
+                "@@ -121,15 +120,12 @@ def _get_updatable_server(self) -> RolloutServer | None:"
+              ],
+              [
+                " ",
+                "    # -------------------------- external start/stop -----------------------------"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    async def start_cell(self, cell_id: int):"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:09:39.935773+00:00"
+    },
+    {
+      "id": "radixark/miles#1883",
+      "repo": "radixark/miles",
+      "pr_number": 1883,
+      "title": "Delete ServerGroup and let RolloutServer own a flat list of cells",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T12:57:51Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1883",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "删除 ServerGroup 抽象层，让 RolloutServer 直接持有扁平的 Cell 列表，简化 rollout 服务端组织结构",
+      "reason": "这是对 miles 仓库内部 rollout 服务端架构的重构，涉及 ServerGroup、RolloutServer、Cell 等该仓库特有的调度与地址分配组件，其他框架不会共享这套内部抽象设计",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/dashboard/hooks.py",
+        "miles/ray/rollout/addr_allocator.py",
+        "miles/ray/rollout/inference_controller.py",
+        "miles/ray/rollout/rollout_server.py",
+        "miles/ray/rollout/server_cell.py",
+        "miles/ray/rollout/server_group.py",
+        "miles/utils/audit_utils/checksum_utils.py",
+        "tests/e2e/sglang_config/test_sglang_config.py",
+        "tests/fast/backends/sglang_utils/test_engine_url_helpers.py",
+        "tests/fast/dashboard/test_hooks.py",
+        "tests/fast/ray/rollout/conftest.py",
+        "tests/fast/ray/rollout/real_ray/conftest.py",
+        "tests/fast/ray/rollout/real_ray/test_fault_tolerance.py",
+        "tests/fast/ray/rollout/real_ray/test_inference_controller.py",
+        "tests/fast/ray/rollout/real_ray/test_rollout_server.py",
+        "tests/fast/ray/rollout/real_ray/test_server_cell.py",
+        "tests/fast/ray/rollout/real_ray/test_server_cell_teardown.py",
+        "tests/fast/ray/rollout/real_ray/test_server_group.py",
+        "tests/fast/ray/rollout/test_addr_allocator.py",
+        "tests/fast/ray/rollout/test_config_matrix.py"
+      ],
+      "diff_preview": {
+        "additions": 833,
+        "deletions": 1208,
+        "hunks": [
+          {
+            "file": "miles/dashboard/hooks.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -348,10 +348,9 @@ def _alive_engine_chunks(servers) -> list[list]:"
+              ],
+              [
+                " ",
+                "    skipped until recovery completes.\"\"\""
+              ],
+              [
+                " ",
+                "    chunks = []"
+              ],
+              [
+                " ",
+                "    for server in servers.values():"
+              ],
+              [
+                "-",
+                "        for group in server.server_groups:"
+              ],
+              [
+                "-",
+                "            for cell in group.cells:"
+              ],
+              [
+                "-",
+                "                if all(engine.is_allocated and engine.is_alive for engine in cell.engines):"
+              ],
+              [
+                "-",
+                "                    chunks.append(cell.engines)"
+              ],
+              [
+                "+",
+                "        for cell in server.server_cells:"
+              ],
+              [
+                "+",
+                "            if all(engine.is_allocated and engine.is_alive for engine in cell.engines):"
+              ],
+              [
+                "+",
+                "                chunks.append(cell.engines)"
+              ],
+              [
+                " ",
+                "    return chunks"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:09:33.894536+00:00"
+    },
+    {
+      "id": "radixark/miles#1884",
+      "repo": "radixark/miles",
+      "pr_number": 1884,
+      "title": "Extract the rollout cell state machine into cell_state.py",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T12:57:54Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1884",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将 rollout cell 的状态机逻辑从 server_cell.py 中提取到独立的 cell_state.py 文件，提升代码可维护性",
+      "reason": "此次重构针对该仓库特有的 rollout cell/server_cell/server_engine 内部架构进行模块拆分，属于仓库自身路由与调度组件的目录结构调整，对其他 RL 训练框架无直接参考价值",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/rollout/cell_state.py",
+        "miles/ray/rollout/server_cell.py",
+        "miles/ray/rollout/server_engine.py",
+        "tests/fast/ray/rollout/test_rollout_server_router_registration.py",
+        "tests/fast/ray/rollout/test_server_cell.py",
+        "tests/fast/ray/rollout/test_server_engine.py"
+      ],
+      "diff_preview": {
+        "additions": 65,
+        "deletions": 52,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/cell_state.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,36 @@"
+              ],
+              [
+                "+",
+                "import ray"
+              ],
+              [
+                "+",
+                "from pydantic import ConfigDict"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "from miles.utils.pydantic_utils import FrozenStrictBaseModel"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "class AddrInfo(FrozenStrictBaseModel):"
+              ],
+              [
+                "+",
+                "    server_url: str"
+              ],
+              [
+                "+",
+                "    bootstrap_port: int | None = None"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:09:28.159428+00:00"
+    },
+    {
+      "id": "radixark/miles#1885",
+      "repo": "radixark/miles",
+      "pr_number": 1885,
+      "title": "Drive the cell state machine through whole-cell transitions",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T12:57:58Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1885",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "通过完整的单元格状态机驱动 rollout server 中 cell 的全生命周期状态转换",
+      "reason": "该 PR 涉及的是 miles 仓库特有的 server_cell 状态机架构（rollout_server + server_cell 的内部调度机制），属于仓库自身的调度器和内部工具修改，其他框架不共享这套 cell 状态机抽象",
+      "value": 3,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [
+        "rollout"
+      ],
+      "files": [
+        "miles/ray/rollout/rollout_server.py",
+        "miles/ray/rollout/server_cell.py",
+        "tests/fast/ray/rollout/real_ray/conftest.py",
+        "tests/fast/ray/rollout/real_ray/test_server_cell.py"
+      ],
+      "diff_preview": {
+        "additions": 65,
+        "deletions": 21,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/rollout_server.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -201,7 +201,7 @@ async def start_all_cells(self, port_allocator: PortAllocator):"
+              ],
+              [
+                " ",
+                "        self.has_new_engines |= bool(cell_indices)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    async def recover(self, cell_indices: list[int] | None = None):"
+              ],
+              [
+                "-",
+                "        \"\"\"Recover dead engines, overlapping init across cells."
+              ],
+              [
+                "+",
+                "        \"\"\"Recover dead cells, overlapping init across cells."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "        Reuses the startup allocator so its per-node cursors still sit past the"
+              ],
+              [
+                " ",
+                "        ports the live engines hold, instead of rescanning from the base port."
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:09:20.787067+00:00"
+    },
+    {
+      "id": "radixark/miles#1886",
+      "repo": "radixark/miles",
+      "pr_number": 1886,
+      "title": "Lift the state machine onto ServerCell and delete ServerEngine",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T12:58:01Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1886",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将状态机从 ServerEngine 提升到 ServerCell 层并删除 ServerEngine 组件，简化 rollout 服务器的层次结构",
+      "reason": "此 PR 是对该仓库内部 rollout 架构的重构，涉及 ServerCell/ServerEngine 这两个 miles 特有的内部抽象层，重组了仓库自己的调度器和状态机组件，对其他框架无直接参考价值",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/dashboard/hooks.py",
+        "miles/ray/rollout/cell_state.py",
+        "miles/ray/rollout/inference_controller.py",
+        "miles/ray/rollout/rollout_server.py",
+        "miles/ray/rollout/server_cell.py",
+        "miles/ray/rollout/server_engine.py",
+        "tests/fast/dashboard/test_hooks.py",
+        "tests/fast/ray/rollout/conftest.py",
+        "tests/fast/ray/rollout/real_ray/conftest.py",
+        "tests/fast/ray/rollout/real_ray/test_fault_tolerance.py",
+        "tests/fast/ray/rollout/real_ray/test_inference_controller.py",
+        "tests/fast/ray/rollout/real_ray/test_rollout_server.py",
+        "tests/fast/ray/rollout/real_ray/test_server_cell.py",
+        "tests/fast/ray/rollout/real_ray/test_server_cell_teardown.py",
+        "tests/fast/ray/rollout/test_addr_allocator.py",
+        "tests/fast/ray/rollout/test_config_matrix.py",
+        "tests/fast/ray/rollout/test_rollout_server.py",
+        "tests/fast/ray/rollout/test_rollout_server_router_registration.py",
+        "tests/fast/ray/rollout/test_server_cell.py",
+        "tests/fast/ray/rollout/test_server_engine.py"
+      ],
+      "diff_preview": {
+        "additions": 428,
+        "deletions": 511,
+        "hunks": [
+          {
+            "file": "miles/dashboard/hooks.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -314,10 +314,10 @@ def register_engines(servers) -> None:"
+              ],
+              [
+                " ",
+                "        return"
+              ],
+              [
+                " ",
+                "    try:"
+              ],
+              [
+                " ",
+                "        chunks = _alive_engine_chunks(servers)"
+              ],
+              [
+                "-",
+                "        fingerprint = tuple(id(engine.actor_handle) for chunk in chunks for engine in chunk)"
+              ],
+              [
+                "+",
+                "        fingerprint = tuple(id(actor_handle) for chunk in chunks for actor_handle in chunk)"
+              ],
+              [
+                " ",
+                "        if fingerprint == _engines_fingerprint:"
+              ],
+              [
+                " ",
+                "            return"
+              ],
+              [
+                "-",
+                "        infos = _ray_get([engine.actor_handle.get_topology_info.remote() for chunk in chunks for engine in chunk])"
+              ],
+              [
+                "+",
+                "        infos = _ray_get([actor_handle.get_topology_info.remote() for chunk in chunks for actor_handle in chunk])"
+              ],
+              [
+                " ",
+                "        handle.update_topology.remote(TopologySnapshot(ts=time.time(), engines=_group_engines(chunks, infos)))"
+              ],
+              [
+                " ",
+                "        _engines_fingerprint = fingerprint"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:09:14.742156+00:00"
+    },
+    {
+      "id": "radixark/miles#1887",
+      "repo": "radixark/miles",
+      "pr_number": 1887,
+      "title": "Key a server's cells by a globally unique string id instead of numerical indices",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T12:58:04Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1887",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将 server cell 的标识从数值索引改为全局唯一字符串 ID，以支持更健壮的容错和动态调度场景",
+      "reason": "此改动针对 miles 仓库特有的 rollout server 架构（inference_controller、rollout_server、server_cell 等内部组件），属于该仓库自身调度器和路由器的内部重构，其他框架不共享这套 cell 管理机制",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/dashboard/hooks.py",
+        "miles/ray/rollout/inference_controller.py",
+        "miles/ray/rollout/rollout_server.py",
+        "miles/ray/rollout/server_cell.py",
+        "miles/utils/ft_utils/control_server/handles.py",
+        "miles/utils/ft_utils/control_server/server.py",
+        "tests/fast/dashboard/test_hooks.py",
+        "tests/fast/ray/rollout/conftest.py",
+        "tests/fast/ray/rollout/real_ray/conftest.py",
+        "tests/fast/ray/rollout/real_ray/test_fault_tolerance.py",
+        "tests/fast/ray/rollout/real_ray/test_inference_controller.py",
+        "tests/fast/ray/rollout/real_ray/test_rollout_server.py",
+        "tests/fast/ray/rollout/real_ray/test_server_cell.py",
+        "tests/fast/ray/rollout/real_ray/test_server_cell_teardown.py",
+        "tests/fast/ray/rollout/test_addr_allocator.py",
+        "tests/fast/ray/rollout/test_config_matrix.py",
+        "tests/fast/ray/rollout/test_rollout_server.py",
+        "tests/fast/ray/rollout/test_rollout_server_router_registration.py",
+        "tests/fast/ray/rollout/test_server_cell.py",
+        "tests/fast/utils/control_server/conftest.py"
+      ],
+      "diff_preview": {
+        "additions": 216,
+        "deletions": 222,
+        "hunks": [
+          {
+            "file": "miles/dashboard/hooks.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -348,7 +348,7 @@ def _alive_engine_chunks(servers) -> list[list]:"
+              ],
+              [
+                " ",
+                "    until recovery completes.\"\"\""
+              ],
+              [
+                " ",
+                "    chunks = []"
+              ],
+              [
+                " ",
+                "    for server in servers.values():"
+              ],
+              [
+                "-",
+                "        for cell in server.server_cells:"
+              ],
+              [
+                "+",
+                "        for cell in server.server_cells.values():"
+              ],
+              [
+                " ",
+                "            if cell.is_alive:"
+              ],
+              [
+                " ",
+                "                chunks.append(cell.actor_handles)"
+              ],
+              [
+                " ",
+                "    return chunks"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:09:08.909214+00:00"
+    },
+    {
+      "id": "radixark/miles#1888",
+      "repo": "radixark/miles",
+      "pr_number": 1888,
+      "title": "Start the rollout engines without blocking the caller",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T12:58:07Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1888",
+      "category": "feature",
+      "scope": "universal",
+      "summary": "将 rollout 引擎的启动改为非阻塞方式，使调用方无需等待引擎完全就绪即可继续执行",
+      "reason": "非阻塞启动 rollout 引擎是分布式 RL 训练框架中的通用工程模式，涉及 Ray placement group 管理和推理控制器的异步初始化，其他使用类似架构的框架（如 slime、verl）同样面临此类启动阻塞问题，具有跨框架参考价值",
+      "value": 3,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [
+        "rollout"
+      ],
+      "files": [
+        "miles/ray/placement_group.py",
+        "miles/ray/rollout/inference_controller.py",
+        "miles/ray/rollout/rollout_server.py",
+        "tests/fast/ray/rollout/real_ray/test_inference_controller.py",
+        "tests/fast/ray/test_placement_group.py"
+      ],
+      "diff_preview": {
+        "additions": 40,
+        "deletions": 39,
+        "hunks": [
+          {
+            "file": "miles/ray/placement_group.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -208,7 +208,7 @@ class RolloutComponents(NamedTuple):"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "async def create_rollout_components(args, pg) -> RolloutComponents:"
+              ],
+              [
+                "-",
+                "    inference_controller = InferenceController(args, pg)"
+              ],
+              [
+                "+",
+                "    inference_controller = await InferenceController.create(args, pg)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    rollout_executor = RolloutExecutor.options("
+              ],
+              [
+                " ",
+                "        num_cpus=1, num_gpus=0, **(compute_ray_pin_head_options() if args.pin_rollout_manager_to_head else {})"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:09:02.661357+00:00"
+    },
+    {
+      "id": "radixark/miles#1889",
+      "repo": "radixark/miles",
+      "pr_number": 1889,
+      "title": "Probe every node of a cell concurrently to avoid serialized initialization",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:36:05Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1889",
+      "category": "infra",
+      "scope": "universal",
+      "summary": "并发探测 cell 内所有节点以消除串行初始化导致的启动延迟",
+      "reason": "rollout 引擎中多节点并发初始化是通用问题，任何基于 Ray 的分布式 rollout 框架（如 slime、verl 等）都会面临类似的节点探测串行瓶颈，优化方案具有普遍参考价值",
+      "value": 3,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [
+        "rollout"
+      ],
+      "files": [
+        "miles/ray/rollout/server_cell.py",
+        "tests/fast/ray/rollout/conftest.py",
+        "tests/fast/ray/rollout/test_addr_allocator.py"
+      ],
+      "diff_preview": {
+        "additions": 56,
+        "deletions": 5,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/server_cell.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -108,10 +108,17 @@ async def start_engines(self, port_allocator: PortAllocator) -> None:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "        global_ranks = [self.rank_offset + local_index for local_index in range(self.num_nodes)]"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "        node_ips = ["
+              ],
+              [
+                "+",
+                "            node_ip"
+              ],
+              [
+                "+",
+                "            for node_ip, _ in await asyncio.gather("
+              ],
+              [
+                "+",
+                "                *[actor._get_current_node_ip_and_free_port.remote() for actor in actor_handles]"
+              ],
+              [
+                "+",
+                "            )"
+              ],
+              [
+                "+",
+                "        ]"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                "        addr_and_ports: dict[int, dict[str, Any]] = {}"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:08:54.777746+00:00"
+    },
+    {
+      "id": "radixark/miles#1890",
+      "repo": "radixark/miles",
+      "pr_number": 1890,
+      "title": "Update the mechanical-refactor-verify skill to the latest sglang version",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:03Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1890",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "将 mechanical-refactor-verify 技能工具更新以适配最新版 sglang，包括脚本、工具函数及测试用例的同步升级",
+      "reason": "该 PR 修改的是仓库内部 .claude/skills 目录下的自定义重构验证工具，依赖 sglang 版本的适配属于该仓库特有的开发辅助基础设施，与 RL 训练框架的核心组件无关",
+      "value": 1,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".claude/skills/mechanical-refactor-verify/SKILL.md",
+        ".claude/skills/mechanical-refactor-verify/guide-construct-proof.md",
+        ".claude/skills/mechanical-refactor-verify/guide-modify-skill.md",
+        ".claude/skills/mechanical-refactor-verify/guide-split.md",
+        ".claude/skills/mechanical-refactor-verify/guide-verify-proof.md",
+        ".claude/skills/mechanical-refactor-verify/mechanical_refactor_verify_utils.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/mechanical_refactor_proof_generator.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/mechanical_refactor_reproduction_cli.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/mechanical_refactor_reproduction_utils.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/proof_generator/conftest.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/proof_generator/generator_testlib.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/proof_generator/test_infer_extract_functions.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/proof_generator/test_infer_extracts.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/proof_generator/test_infer_imports.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/proof_generator/test_infer_moves.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/proof_generator/test_main_single_commit.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/proof_generator/test_script_and_diff.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/reproduction_cli/cli_testlib.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/reproduction_cli/conftest.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/reproduction_cli/test_classification.py"
+      ],
+      "diff_preview": {
+        "additions": 7055,
+        "deletions": 227,
+        "hunks": [
+          {
+            "file": ".claude/skills/mechanical-refactor-verify/SKILL.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -1,152 +1,82 @@"
+              ],
+              [
+                " ",
+                "---"
+              ],
+              [
+                " ",
+                "name: mechanical-refactor-verify"
+              ],
+              [
+                "-",
+                "description: Verify mechanical refactoring commits by requiring a reproducible transform script (gist) in the PR description. Use when doing or reviewing file splits, function moves, or module extractions."
+              ],
+              [
+                "+",
+                "description: Make mechanical refactoring (file splits, function moves, module extractions, renames) machine-checkable instead of eyeballed. Reproduce a relocation commit byte-for-byte from faithful primitives, and split an extraction into a verifiable prepare + move + postpare. Use when doing or reviewing such changes."
+              ],
+              [
+                " ",
+                "user_invocable: true"
+              ],
+              [
+                "-",
+                "argument: \"[verify <pr_url_or_commit>] — verify an existing PR, or omit to see the workflow guide\""
+              ],
+              [
+                "+",
+                "argument: \"split <base>..<tip> | construct <base>..<tip> [--match REGEX] [--out DIR] | verify --base <base> --branch <branch> --proof <folder> [--jobs N] [--skip-passed]\""
+              ],
+              [
+                " ",
+                "---"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "# Mechanical Refactor — Reproducible Verification"
+              ],
+              [
+                "-",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:08:49.247730+00:00"
+    },
+    {
+      "id": "radixark/miles#1891",
+      "repo": "radixark/miles",
+      "pr_number": 1891,
+      "title": "Store per-token weight version spans per generation call on Sample",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:06Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1891",
+      "category": "feature",
+      "scope": "universal",
+      "summary": "在 Sample 对象上存储每次生成调用的 per-token 权重版本区间，以支持异步 rollout 场景下精确追踪每个 token 对应的模型版本",
+      "reason": "per-token 权重版本追踪是异步 rollout 训练中的通用需求——当 rollout 与训练并发进行、模型权重在生成过程中被更新时，任何框架都需要记录每个 token 由哪个版本的模型生成，以便正确计算重要性采样权重或过滤过时样本；该机制与具体仓库的路由/调度实现无关",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "infra",
+        "logging"
+      ],
+      "rl_concepts": [
+        "importance-sampling",
+        "off-policy",
+        "async-rollout",
+        "weight-sync",
+        "PPO"
+      ],
+      "files": [
+        "examples/random_async/random_async_rollout.py",
+        "miles/backends/training_utils/mm_data.py",
+        "miles/dashboard/dump_reader.py",
+        "miles/dashboard/hooks.py",
+        "miles/ray/rollout/metrics.py",
+        "miles/rollout/generate_hub/agentic_tool_call.py",
+        "miles/rollout/session/samples/merge.py",
+        "miles/utils/test_utils/mock_sglang_server.py",
+        "miles/utils/types.py",
+        "tests/fast/dashboard/dummy_dump.py",
+        "tests/fast/dashboard/test_dump_reader_views.py",
+        "tests/fast/dashboard/test_trajectory_sink.py",
+        "tests/fast/ray/rollout/test_metrics.py",
+        "tests/fast/rollout/generate_hub/test_multi_turn.py",
+        "tests/fast/rollout/generate_hub/test_single_turn.py",
+        "tests/fast/rollout/generate_utils/test_sample_utils.py",
+        "tests/fast/rollout/inference_rollout/integration/utils.py",
+        "tests/fast/rollout/session/test_samples.py",
+        "tests/fast/utils/test_types.py"
+      ],
+      "diff_preview": {
+        "additions": 476,
+        "deletions": 36,
+        "hunks": [
+          {
+            "file": "examples/random_async/random_async_rollout.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -40,7 +40,7 @@"
+              ],
+              [
+                " ",
+                "from miles.rollout.data_source import DataSource"
+              ],
+              [
+                " ",
+                "from miles.utils.async_utils import run"
+              ],
+              [
+                " ",
+                "from miles.utils.http_utils import post as http_post"
+              ],
+              [
+                "-",
+                "from miles.utils.types import Sample"
+              ],
+              [
+                "+",
+                "from miles.utils.types import Sample, WeightVersionsPerCall"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "logger = logging.getLogger(__name__)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -194,8 +194,9 @@ async def _generate_one_random_sample(args, sample: Sample) -> Sample:"
+              ],
+              [
+                " ",
+                "        current_ids.extend(segment)"
+              ],
+              [
+                " ",
+                "        sample.prefix_cache_info.add(meta)"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:08:42.827587+00:00"
+    },
+    {
+      "id": "radixark/miles#1892",
+      "repo": "radixark/miles",
+      "pr_number": 1892,
+      "title": "Load rollout dumps written before per-call weight version spans",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:09Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1892",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复 dashboard 的 dump reader，使其能正确读取在引入 per-call 权重版本区间功能之前写入的旧格式 rollout dump 文件",
+      "reason": "该 PR 修复的是 miles 仓库特有的 dashboard dump reader 工具对旧版本数据文件的兼容性问题，涉及的 per-call weight version span 是该仓库内部的特定数据结构设计，不属于通用训练组件（如 rollout 引擎、PPO 算法、权重同步等）的改动，其他框架不会遇到相同的兼容性问题",
+      "value": 2,
+      "subsystems": [
+        "logging",
+        "checkpoint"
+      ],
+      "rl_concepts": [
+        "rollout"
+      ],
+      "files": [
+        "miles/dashboard/dump_reader.py",
+        "miles/utils/types.py",
+        "tests/fast/dashboard/test_dump_reader_views.py",
+        "tests/fast/utils/test_types.py"
+      ],
+      "diff_preview": {
+        "additions": 95,
+        "deletions": 6,
+        "hunks": [
+          {
+            "file": "miles/dashboard/dump_reader.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -26,7 +26,7 @@"
+              ],
+              [
+                " ",
+                "import polars as pl"
+              ],
+              [
+                " ",
+                "import torch"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "from miles.utils.types import Sample, WeightVersionsPerCall"
+              ],
+              [
+                "+",
+                "from miles.utils.types import LEGACY_WEIGHT_VERSIONS_KEY, Sample, WeightVersionsPerCall"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "class DumpStillWriting(Exception):"
+              ],
+              [
+                "h",
+                "@@ -48,7 +48,10 @@ class DumpStillWriting(Exception):"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:08:33.580507+00:00"
+    },
+    {
+      "id": "radixark/miles#1893",
+      "repo": "radixark/miles",
+      "pr_number": 1893,
+      "title": "Temporarily publish the weight version when no weight update can carry it",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:13Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1893",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "当没有权重更新时，临时发布权重版本号以避免版本同步阻塞",
+      "reason": "权重版本同步是所有基于rollout-trainer分离架构的RL训练框架的通用问题，任何使用类似weight_version机制协调rollout引擎与trainer之间权重一致性的框架都会遇到相同问题",
+      "value": 4,
+      "subsystems": [
+        "weight-sync",
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [
+        "权重同步",
+        "rollout",
+        "Megatron"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/update_weight/update_weight_from_distributed/delta.py",
+        "miles/backends/sglang_utils/sglang_api_client.py",
+        "tests/fast/backends/megatron_utils/test_disk_delta_weight_version.py"
+      ],
+      "diff_preview": {
+        "additions": 108,
+        "deletions": 2,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/update_weight/update_weight_from_distributed/delta.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -176,6 +176,9 @@ def seed_bucket(converted_named_tensors: list[tuple[str, torch.Tensor]], pbar: t"
+              ],
+              [
+                " ",
+                "                    ]"
+              ],
+              [
+                " ",
+                "                )"
+              ],
+              [
+                " ",
+                "                _check_weight_sync_results(results, is_lora=False)"
+              ],
+              [
+                "+",
+                "            else:"
+              ],
+              [
+                "+",
+                "                # TODO: temporarily weaken checkers; should enhance and fix related logics"
+              ],
+              [
+                "+",
+                "                _update_weight_version_if_unset(self.rollout_engines, str(self.weight_version))"
+              ],
+              [
+                " ",
+                "            logger.info("
+              ],
+              [
+                " ",
+                "                \"[disk delta] captured baseline snapshot of %d tensors from %s\","
+              ],
+              [
+                " ",
+                "                len(self._snapshot),"
+              ],
+              [
+                "h",
+                "@@ -408,3 +411,21 @@ def _atomic_write(path: str, data: bytes) -> None:"
+              ],
+              [
+                " ",
+                "        f.flush()"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:08:26.206903+00:00"
+    },
+    {
+      "id": "radixark/miles#1894",
+      "repo": "radixark/miles",
+      "pr_number": 1894,
+      "title": "Add assertions to reject training data generated under the sglang default weight version",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:17Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1894",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "在 rollout 执行器中添加断言，拒绝使用 sglang 默认权重版本生成的训练数据，防止权重版本不一致导致的静默错误",
+      "reason": "权重版本校验是 rollout 引擎与训练器之间权重同步正确性的通用问题，任何使用异步 rollout 引擎（如 sglang、vllm）的 RL 训练框架都面临相同风险：若 rollout 时模型权重未正确更新而使用默认/旧版本，生成数据会静默污染训练，这类防御性断言对所有同类框架具有参考价值",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "weight-sync",
+        "infra"
+      ],
+      "rl_concepts": [
+        "rollout",
+        "weight-sync"
+      ],
+      "files": [
+        "miles/ray/rollout/rollout_executor.py",
+        "miles/utils/weight_version.py",
+        "tests/fast/ray/rollout/conftest.py",
+        "tests/fast/ray/rollout/real_ray/test_rollout_executor.py",
+        "tests/fast/utils/test_weight_version.py"
+      ],
+      "diff_preview": {
+        "additions": 123,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/rollout_executor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -27,6 +27,7 @@"
+              ],
+              [
+                " ",
+                "from miles.utils.ray_utils import Box"
+              ],
+              [
+                " ",
+                "from miles.utils.timer import timer"
+              ],
+              [
+                " ",
+                "from miles.utils.tracking_utils.tracking import init_tracking"
+              ],
+              [
+                "+",
+                "from miles.utils.weight_version import assert_samples_weight_version_sane"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "logging.getLogger(\"httpx\").setLevel(logging.WARNING)"
+              ],
+              [
+                " ",
+                "logging.getLogger(\"httpcore\").setLevel(logging.WARNING)"
+              ],
+              [
+                "h",
+                "@@ -149,6 +150,7 @@ async def _get_rollout_data(self, rollout_id):"
+              ],
+              [
+                " ",
+                "            data, metadata = postprocess_rollout_data("
+              ],
+              [
+                " ",
+                "                self.args, data, train_parallel_config=self.train_parallel_config"
+              ],
+              [
+                " ",
+                "            )"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:08:20.778703+00:00"
+    },
+    {
+      "id": "radixark/miles#1895",
+      "repo": "radixark/miles",
+      "pr_number": 1895,
+      "title": "Fix typo environment variable and unbuffer python outputs",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:20Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1895",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复环境变量拼写错误并为 Python 进程添加无缓冲输出设置，覆盖大量示例脚本",
+      "reason": "此 PR 仅涉及该仓库各示例脚本中的环境变量名拼写修正和 PYTHONUNBUFFERED 设置，属于该仓库特有的脚本配置问题，不涉及任何通用 RL 训练算法或框架组件逻辑",
+      "value": 1,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docker/npu_patch/miles.patch",
+        "examples/eval/scripts/run-qwen3-32B.sh",
+        "examples/eval/scripts/run-qwen3-4B.sh",
+        "examples/eval_multi_task/multi_task.sh",
+        "examples/experimental/swe-agent/run-qwen3-4b-instruct.sh",
+        "examples/formal_math/single_round/run_minimal.py",
+        "examples/fully_async/run-qwen3-4b-fully_async.sh",
+        "examples/geo3k_vlm/run_geo3k_vlm.sh",
+        "examples/geo3k_vlm/run_geo3k_vlm_sft.sh",
+        "examples/lora/dev.sh",
+        "examples/lora/run-gpt-oss-20B-megatron-moe-lora.sh",
+        "examples/lora/run-kimi-k25-megatron-lora.sh",
+        "examples/lora/run-qwen2.5-0.5B-megatron-lora.sh",
+        "examples/lora/run-qwen2.5-3B-megatron-lora-disaggregated-multi-node.sh",
+        "examples/lora/run-qwen2.5-3B-megatron-lora-disaggregated.sh",
+        "examples/lora/run-qwen3-4B-megatron-lora.sh",
+        "examples/lora/run-qwen3-4b-megatron-lora-result.sh",
+        "examples/low_precision/run-kimi-k2-Thinking-int4.sh",
+        "examples/low_precision/run-moonlight-16B-A3B-int4.sh",
+        "examples/low_precision/run-qwen3-235B-A22B-int4.sh"
+      ],
+      "diff_preview": {
+        "additions": 32,
+        "deletions": 31,
+        "hunks": [
+          {
+            "file": "docker/npu_patch/miles.patch",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -383,7 +383,7 @@ index d016e01ac..08b4d6eff 100644"
+              ],
+              [
+                " ",
+                "+    if not external_ray:"
+              ],
+              [
+                " ",
+                "+        exec_command("
+              ],
+              [
+                " ",
+                "+            # will prevent ray from buffering stdout/stderr"
+              ],
+              [
+                "-",
+                "+            f\"export PYTHONBUFFERED=16 && \""
+              ],
+              [
+                "+",
+                "+            f\"export PYTHONUNBUFFERED=1 && \""
+              ],
+              [
+                " ",
+                "+            f\"ray start --head --node-ip-address {master_addr} --disable-usage-stats \""
+              ],
+              [
+                " ",
+                "+        )"
+              ],
+              [
+                " ",
+                "+"
+              ],
+              [
+                "h",
+                "@@ -440,7 +440,7 @@ index d016e01ac..08b4d6eff 100644"
+              ],
+              [
+                " ",
+                "+            else \"\""
+              ],
+              [
+                " ",
+                "+        )"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:08:13.406857+00:00"
+    },
+    {
+      "id": "radixark/miles#1896",
+      "repo": "radixark/miles",
+      "pr_number": 1896,
+      "title": "Add a shell launch script test harness for future protection",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:23Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1896",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为 shell 启动脚本添加测试框架，支持对 launch script 进行未来保护性测试",
+      "reason": "这是针对该仓库自身 shell launch script 的测试基础设施，属于仓库内部 CI/测试工具，不涉及通用 RL 训练算法或组件，其他框架不会直接复用",
+      "value": 2,
+      "subsystems": [
+        "ci",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "tests/fast/launch_scripts/__init__.py",
+        "tests/fast/launch_scripts/sh_harness.py",
+        "tests/fast/launch_scripts/test_sh_harness.py"
+      ],
+      "diff_preview": {
+        "additions": 326,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "tests/fast/launch_scripts/sh_harness.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,182 @@"
+              ],
+              [
+                "+",
+                "import json"
+              ],
+              [
+                "+",
+                "import os"
+              ],
+              [
+                "+",
+                "import signal"
+              ],
+              [
+                "+",
+                "import subprocess"
+              ],
+              [
+                "+",
+                "import time"
+              ],
+              [
+                "+",
+                "from dataclasses import dataclass"
+              ],
+              [
+                "+",
+                "from pathlib import Path"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "REPO_ROOT = Path(__file__).resolve().parents[3]"
+              ],
+              [
+                "+",
+                "REPO_ROOT_PLACEHOLDER = \"<REPO_ROOT>\""
+              ],
+              [
+                "+",
+                "SANDBOX_PLACEHOLDER = \"<SANDBOX>\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:08:06.239211+00:00"
+    },
+    {
+      "id": "radixark/miles#1897",
+      "repo": "radixark/miles",
+      "pr_number": 1897,
+      "title": "Fix various launch scripts errors about missing line concatenations or paths",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:26Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1897",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复多个启动脚本中缺少行连接符或路径错误，并修复相关命令工具函数的 bug",
+      "reason": "改动集中在该仓库特有的 shell 启动脚本（针对 Qwen3、Kimi-K2 等模型）和内部命令工具 command_utils.py，属于仓库自身脚本维护问题，不涉及通用 RL 算法或训练框架核心逻辑",
+      "value": 1,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "examples/experimental/swe-agent/run-qwen3-4b-instruct.sh",
+        "examples/lora/run-qwen3-4B-megatron-lora.sh",
+        "examples/low_precision/run-kimi-k2-Thinking-int4.sh",
+        "examples/low_precision/run-moonlight-16B-A3B-int4.sh",
+        "examples/low_precision/run-qwen3-235B-A22B-int4.sh",
+        "examples/low_precision/run-qwen3-30B-A3B-int4.sh",
+        "miles/utils/external_utils/command_utils.py",
+        "scripts/run-kimi-k2-Instruct.sh",
+        "scripts/run-kimi-k2-Thinking.sh",
+        "tests/fast/utils/test_command_utils.py"
+      ],
+      "diff_preview": {
+        "additions": 34,
+        "deletions": 12,
+        "hunks": [
+          {
+            "file": "examples/experimental/swe-agent/run-qwen3-4b-instruct.sh",
+            "lang": "bash",
+            "lines": [
+              [
+                "h",
+                "@@ -27,7 +27,7 @@ SCRIPT_DIR=\"$(cd -- \"$(dirname -- \"${BASH_SOURCE[0]}\")\" &>/dev/null && pwd)\""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "export SWE_AGENT_GYM_URL=\"${SWE_AGENT_GYM_URL:-http://swe_env:11000}\""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "source \"${SCRIPT_DIR}/../../scripts/models/qwen3-4B-Instruct-2507.sh\""
+              ],
+              [
+                "+",
+                "source \"${SCRIPT_DIR}/../../../scripts/models/qwen3-4B-Instruct-2507.sh\""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "CKPT_ARGS=("
+              ],
+              [
+                " ",
+                "    --hf-checkpoint /root/qwen3-4B-Instruct-2507"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:08:00.607796+00:00"
+    },
+    {
+      "id": "radixark/miles#1898",
+      "repo": "radixark/miles",
+      "pr_number": 1898,
+      "title": "Derive the miles checkout location instead of hardcoding it in launch scripts",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:29Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1898",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "将启动脚本中硬编码的 miles 仓库路径改为动态推导，避免路径写死带来的可移植性问题",
+      "reason": "该改动仅涉及 miles 仓库自身的示例启动脚本路径处理逻辑，属于该仓库特有的运行环境配置问题，其他框架不会受益于此变更",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "examples/experimental/swe-agent/run-qwen3-4b-instruct.sh",
+        "examples/lora/run-qwen3-4b-megatron-lora-result.sh",
+        "examples/multi_agent/run-qwen3-30B-A3B-multi-agent.sh",
+        "examples/on_policy_distillation/qwen3_5_35b_selfdistill/convert_gb200.sh",
+        "examples/on_policy_distillation/qwen3_5_35b_selfdistill/phase1_rlvr_teacher.sh",
+        "examples/on_policy_distillation/qwen3_5_35b_selfdistill/phase2_gb200.sh",
+        "examples/on_policy_distillation/qwen3_5_35b_selfdistill/phase2_opd_selfdistill.sh",
+        "examples/on_policy_distillation/run-qwen3-8B-opd-megatron.sh",
+        "examples/on_policy_distillation/run-qwen3-8B-opd.sh",
+        "examples/p2p_weight_transfer/run-glm4.5-air-8node-profile.sh",
+        "examples/p2p_weight_transfer/run-glm4.7-flash-2node-profile.sh",
+        "examples/p2p_weight_transfer/run-glm5-disagg-profile.sh",
+        "examples/p2p_weight_transfer/run-kimi-k2-64node-profile.sh",
+        "examples/p2p_weight_transfer/run-qwen3-235B-A22B-16node-profile.sh",
+        "examples/p2p_weight_transfer/run-qwen3-30B-A3B-4node-profile.sh",
+        "examples/retool/retool_qwen3_4b_rl.sh",
+        "examples/retool/retool_qwen3_4b_sft.sh",
+        "examples/strands_sglang/strands_qwen3_8b.sh",
+        "examples/train_infer_mismatch_helper/run-qwen3-4b-mis.sh",
+        "scripts/run-qwen3-4B_4xgpu.sh"
+      ],
+      "diff_preview": {
+        "additions": 47,
+        "deletions": 25,
+        "hunks": [
+          {
+            "file": "examples/experimental/swe-agent/run-qwen3-4b-instruct.sh",
+            "lang": "bash",
+            "lines": [
+              [
+                "h",
+                "@@ -24,6 +24,7 @@ fi"
+              ],
+              [
+                " ",
+                "echo \"HAS_NVLINK: $HAS_NVLINK (detected $NVLINK_COUNT NVLink references)\""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "SCRIPT_DIR=\"$(cd -- \"$(dirname -- \"${BASH_SOURCE[0]}\")\" &>/dev/null && pwd)\""
+              ],
+              [
+                "+",
+                "MILES_ROOT=\"$(cd -- \"$(dirname -- \"${BASH_SOURCE[0]}\")/../../..\" &>/dev/null && pwd)\""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "export SWE_AGENT_GYM_URL=\"${SWE_AGENT_GYM_URL:-http://swe_env:11000}\""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -135,7 +136,7 @@ ray start --head --node-ip-address ${MASTER_ADDR} --num-gpus 4 --disable-usage-s"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "RUNTIME_ENV_JSON=\"{"
+              ],
+              [
+                " ",
+                "  \\\"env_vars\\\": {"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:07:53.334331+00:00"
+    },
+    {
+      "id": "radixark/miles#1899",
+      "repo": "radixark/miles",
+      "pr_number": 1899,
+      "title": "Snapshot the external commands of every shell launch script",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:33Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1899",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为每个 shell 启动脚本的外部命令调用添加快照测试，防止脚本行为意外变更",
+      "reason": "该 PR 是针对该仓库自身 examples 目录下各类启动脚本的快照测试基础设施建设，测试内容（qwen3、kimi-k2、lora、megatron 等脚本的命令快照）与该仓库特有的脚本组织方式强绑定，其他框架不会直接复用这套测试机制",
+      "value": 2,
+      "subsystems": [
+        "ci",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "pyproject.toml",
+        "tests/fast/launch_scripts/sh_harness.py",
+        "tests/fast/launch_scripts/test_sh_launch_scripts.py",
+        "tests/snapshots/README.md",
+        "tests/snapshots/launch_scripts/sh/examples/eval/scripts/run-qwen3-32B.sh.txt",
+        "tests/snapshots/launch_scripts/sh/examples/eval/scripts/run-qwen3-4B.sh.txt",
+        "tests/snapshots/launch_scripts/sh/examples/eval_multi_task/multi_task.sh.txt",
+        "tests/snapshots/launch_scripts/sh/examples/experimental/swe-agent/run-qwen3-4b-instruct.sh.txt",
+        "tests/snapshots/launch_scripts/sh/examples/fully_async/run-qwen3-4b-fully_async.sh.txt",
+        "tests/snapshots/launch_scripts/sh/examples/geo3k_vlm/run_geo3k_vlm.sh.txt",
+        "tests/snapshots/launch_scripts/sh/examples/geo3k_vlm/run_geo3k_vlm_sft.sh.txt",
+        "tests/snapshots/launch_scripts/sh/examples/lora/dev.sh.txt",
+        "tests/snapshots/launch_scripts/sh/examples/lora/run-gpt-oss-20B-megatron-moe-lora.sh.txt",
+        "tests/snapshots/launch_scripts/sh/examples/lora/run-kimi-k25-megatron-lora.sh.txt",
+        "tests/snapshots/launch_scripts/sh/examples/lora/run-qwen2.5-0.5B-megatron-lora.sh.txt",
+        "tests/snapshots/launch_scripts/sh/examples/lora/run-qwen2.5-3B-megatron-lora-disaggregated-multi-node.sh.txt",
+        "tests/snapshots/launch_scripts/sh/examples/lora/run-qwen2.5-3B-megatron-lora-disaggregated.sh.txt",
+        "tests/snapshots/launch_scripts/sh/examples/lora/run-qwen3-4B-megatron-lora.sh.txt",
+        "tests/snapshots/launch_scripts/sh/examples/lora/run-qwen3-4b-megatron-lora-result.sh.txt",
+        "tests/snapshots/launch_scripts/sh/examples/low_precision/run-kimi-k2-Thinking-int4.sh.txt"
+      ],
+      "diff_preview": {
+        "additions": 5924,
+        "deletions": 5,
+        "hunks": [
+          {
+            "file": "pyproject.toml",
+            "lang": "toml",
+            "lines": [
+              [
+                "h",
+                "@@ -43,6 +43,7 @@ testpaths = [\"./tests\"]  # must be an explicit path to avoid importing another \""
+              ],
+              [
+                " ",
+                "# directories to ignore when discovering tests"
+              ],
+              [
+                " ",
+                "norecursedirs = ["
+              ],
+              [
+                " ",
+                "    \"external\","
+              ],
+              [
+                "+",
+                "    \"snapshots\","
+              ],
+              [
+                " ",
+                "    \"examples\","
+              ],
+              [
+                " ",
+                "    \"docs\","
+              ],
+              [
+                " ",
+                "    \"scripts\","
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:07:46.885360+00:00"
+    },
+    {
+      "id": "radixark/miles#1900",
+      "repo": "radixark/miles",
+      "pr_number": 1900,
+      "title": "Read the slurm allocation when the train config is built",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:37Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1900",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "在构建训练配置时读取 Slurm 分配信息，以便自动感知集群资源",
+      "reason": "Slurm 作业调度集成属于该仓库特定的基础设施工具层（command_utils/typer_utils），与 RL 训练核心逻辑无关，其他框架未必使用相同的 Slurm 集成方式",
+      "value": 2,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/external_utils/command_utils.py",
+        "miles/utils/typer_utils.py",
+        "tests/fast/utils/test_command_utils.py",
+        "tests/fast/utils/test_typer_utils.py"
+      ],
+      "diff_preview": {
+        "additions": 37,
+        "deletions": 3,
+        "hunks": [
+          {
+            "file": "miles/utils/external_utils/command_utils.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -8,7 +8,7 @@"
+              ],
+              [
+                " ",
+                "import random"
+              ],
+              [
+                " ",
+                "import shlex"
+              ],
+              [
+                " ",
+                "import time"
+              ],
+              [
+                "-",
+                "from dataclasses import dataclass"
+              ],
+              [
+                "+",
+                "from dataclasses import dataclass, field"
+              ],
+              [
+                " ",
+                "from functools import partial"
+              ],
+              [
+                " ",
+                "from pathlib import Path"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -101,7 +101,7 @@ def fp8_cast_bf16(path_src, path_dst):"
+              ],
+              [
+                " ",
+                "@dataclass"
+              ],
+              [
+                " ",
+                "class ExecuteTrainConfig:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:07:39.878340+00:00"
+    },
+    {
+      "id": "radixark/miles#1901",
+      "repo": "radixark/miles",
+      "pr_number": 1901,
+      "title": "Snapshot the commands and generated configs of every python launch script",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:40Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1901",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为每个 Python 启动脚本自动快照其执行命令和生成的配置内容，纳入测试体系以防止意外变更",
+      "reason": "该 PR 的核心是为 miles 仓库自身的 launch scripts（如 run_deepseek_v4.py、run_qwen3_30b_a3b.py 等）建立快照测试机制，快照内容与该仓库特有的脚本结构、模型命名和硬件配置强绑定，其他框架无法直接复用此机制或快照文件",
+      "value": 2,
+      "subsystems": [
+        "ci",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "tests/fast/launch_scripts/py_harness.py",
+        "tests/fast/launch_scripts/sh_harness.py",
+        "tests/fast/launch_scripts/test_py_launch_scripts.py",
+        "tests/fast/utils/command_recorder.py",
+        "tests/snapshots/README.md",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_deepseek_v4.py/full_train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_deepseek_v4.py/prepare_cp.txt",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_deepseek_v4.py/prepare_download.txt",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_deepseek_v4.py/prepare_single.txt",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_deepseek_v4.py/prepare_spmd.txt",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_deepseek_v4.py/train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_qwen3_30b_a3b.py/execute.txt",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_qwen3_30b_a3b.py/prepare.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek.py/train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v32.py/full_train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v32.py/prepare.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v32.py/prepare_cp.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v32.py/prepare_megatron_ckpt.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v32.py/train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v4.py/full_train.txt"
+      ],
+      "diff_preview": {
+        "additions": 1746,
+        "deletions": 4,
+        "hunks": [
+          {
+            "file": "tests/fast/launch_scripts/py_harness.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,124 @@"
+              ],
+              [
+                "+",
+                "import ast"
+              ],
+              [
+                "+",
+                "import importlib.util"
+              ],
+              [
+                "+",
+                "import inspect"
+              ],
+              [
+                "+",
+                "import re"
+              ],
+              [
+                "+",
+                "import sys"
+              ],
+              [
+                "+",
+                "from dataclasses import dataclass"
+              ],
+              [
+                "+",
+                "from pathlib import Path"
+              ],
+              [
+                "+",
+                "from types import ModuleType"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "from tests.fast.launch_scripts.sh_harness import REPO_ROOT, sanitize"
+              ],
+              [
+                "+",
+                "from tests.fast.utils.command_recorder import record_commands"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:07:34.494828+00:00"
+    },
+    {
+      "id": "radixark/miles#1902",
+      "repo": "radixark/miles",
+      "pr_number": 1902,
+      "title": "Cover the public surface of command_utils with unit tests",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:43Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1902",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为 command_utils 模块的公开接口添加单元测试覆盖",
+      "reason": "这是针对该仓库内部工具模块 command_utils 的测试补充，属于仓库特有的内部工具测试，不涉及通用 RL 训练组件，其他框架不会共享此模块",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "tests/fast/utils/test_command_utils.py"
+      ],
+      "diff_preview": {
+        "additions": 509,
+        "deletions": 74,
+        "hunks": [
+          {
+            "file": "tests/fast/utils/test_command_utils.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -3,106 +3,541 @@"
+              ],
+              [
+                " ",
+                "import shlex"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "import pytest"
+              ],
+              [
+                "+",
+                "from tests.fast.utils.command_recorder import record_commands"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "import miles.utils.external_utils.command_utils as command_utils"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "def test_convert_checkpoint_preserves_source_paths(monkeypatch, tmp_path):"
+              ],
+              [
+                "-",
+                "    commands = []"
+              ],
+              [
+                "-",
+                "    monkeypatch.setenv(\"PYTHONPATH\", \"/sglang:/existing\")"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:07:27.941897+00:00"
+    },
+    {
+      "id": "radixark/miles#1903",
+      "repo": "radixark/miles",
+      "pr_number": 1903,
+      "title": "Rename exec_command by the resource its command needs",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:46Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1903",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将内部命令执行工具函数按其所需资源类型重命名，并批量更新所有调用处",
+      "reason": "这是对该仓库内部工具函数（command_utils.py）的命名重构，改动范围虽广但仅涉及该仓库自身的目录结构和命名约定，不涉及任何通用RL训练算法或跨框架共用的基础设施逻辑",
+      "value": 1,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docker/npu_patch/miles.patch",
+        "examples/experimental/openenv/openenv_agent_function.py",
+        "examples/experimental/openenv/openenv_launch_common.py",
+        "examples/experimental/swe-agent-v2/run-glm47-reasoning-async.py",
+        "examples/experimental/swe-agent-v2/run-glm47-reasoning.py",
+        "examples/formal_math/single_round/kimina_wrapper.py",
+        "examples/formal_math/single_round/run.py",
+        "examples/formal_math/single_round/run_sft.py",
+        "examples/fully_async/run_qwen3_30b_a3b_fully_async.py",
+        "examples/geo3k_vlm_multi_turn/run_geo3k_vlm_multi_turn.py",
+        "examples/multi_lora/run_multi_lora.py",
+        "examples/random_async/run_random_async_3node.py",
+        "examples/retool_v2/run_retool_multi_turn.py",
+        "examples/true_on_policy/run_simple.py",
+        "examples/true_on_policy/run_simple_amd_triton.py",
+        "examples/true_on_policy_vlm/run_simple.py",
+        "miles/utils/debug_utils/run_megatron/cli/commands/compare.py",
+        "miles/utils/debug_utils/run_megatron/cli/commands/run.py",
+        "miles/utils/external_utils/command_utils.py",
+        "miles/utils/misc.py"
+      ],
+      "diff_preview": {
+        "additions": 101,
+        "deletions": 85,
+        "hunks": [
+          {
+            "file": "docker/npu_patch/miles.patch",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -364,7 +364,7 @@ index d016e01ac..08b4d6eff 100644"
+              ],
+              [
+                " ",
+                "+    train_backend_fsdp = \"--train-backend fsdp\" in train_args"
+              ],
+              [
+                " ",
+                "+    assert train_backend_fsdp == (megatron_model_type is None)"
+              ],
+              [
+                " ",
+                "+"
+              ],
+              [
+                "-",
+                "+    exec_command("
+              ],
+              [
+                "+",
+                "+    exec_command_cpu("
+              ],
+              [
+                " ",
+                "+        \"pkill -9 sglang; \""
+              ],
+              [
+                " ",
+                "+        \"sleep 3; \""
+              ],
+              [
+                " ",
+                "+        f\"{'' if external_ray else 'ray stop --force; '}\""
+              ],
+              [
+                "h",
+                "@@ -381,7 +381,7 @@ index d016e01ac..08b4d6eff 100644"
+              ],
+              [
+                " ",
+                "+    )"
+              ],
+              [
+                " ",
+                "+"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:07:21.182869+00:00"
+    },
+    {
+      "id": "radixark/miles#1904",
+      "repo": "radixark/miles",
+      "pr_number": 1904,
+      "title": "Move the shell exec helpers next to their only consumers",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:50Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1904",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将 shell 命令执行辅助函数移动到其唯一使用者附近，整理内部工具模块结构",
+      "reason": "这是对该仓库内部工具函数的目录/模块重组，涉及的 command_utils、exec_command 等路径调整仅在该仓库自身的命名和目录结构下有意义，不涉及通用训练算法或基础设施改动",
+      "value": 1,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "examples/formal_math/single_round/kimina_wrapper.py",
+        "examples/geo3k_vlm_multi_turn/run_geo3k_vlm_multi_turn.py",
+        "examples/true_on_policy_vlm/run_simple.py",
+        "miles/utils/debug_utils/run_megatron/cli/commands/compare.py",
+        "miles/utils/debug_utils/run_megatron/cli/commands/run.py",
+        "miles/utils/external_utils/command_utils.py",
+        "miles/utils/external_utils/exec_command.py",
+        "miles/utils/misc.py",
+        "scripts/run_qwen3_4b_npu.py",
+        "tests/e2e/short/test_run_megatron.py",
+        "tests/fast/utils/command_recorder.py"
+      ],
+      "diff_preview": {
+        "additions": 107,
+        "deletions": 104,
+        "hunks": [
+          {
+            "file": "examples/formal_math/single_round/kimina_wrapper.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -8,7 +8,8 @@"
+              ],
+              [
+                " ",
+                "from kimina_client import AsyncKiminaClient, CheckResponse"
+              ],
+              [
+                " ",
+                "from ray.util.scheduling_strategies import NodeAffinitySchedulingStrategy"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "from miles.utils.misc import exec_command_cpu, get_free_port"
+              ],
+              [
+                "+",
+                "from miles.utils.external_utils.exec_command import exec_command_cpu"
+              ],
+              [
+                "+",
+                "from miles.utils.misc import get_free_port"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# TODO handle docker stop more gracefully later"
+              ],
+              [
+                " ",
+                "_KILL_PREVIOUS_KIMINA_DOCKER = bool(int(os.environ.get(\"MILES_KILL_PREVIOUS_KIMINA_DOCKER\", \"1\")))"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:07:14.932989+00:00"
+    },
+    {
+      "id": "radixark/miles#1905",
+      "repo": "radixark/miles",
+      "pr_number": 1905,
+      "title": "Remove non-reproducible file arguments by supporting inline base64 payloads",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:53Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1905",
+      "category": "infra",
+      "scope": "universal",
+      "summary": "通过支持内联 base64 编码的参数负载，移除命令行中不可复现的文件路径参数，提升训练脚本的可复现性",
+      "reason": "命令行参数序列化与可复现性是所有 RL 训练框架共同面临的工程问题，base64 内联 payload 替代临时文件路径的思路对其他框架同样有参考价值",
+      "value": 3,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "examples/eval/eval_delegate_rollout.py",
+        "miles/utils/arguments.py",
+        "miles/utils/external_utils/command_utils.py",
+        "miles/utils/file_arg_utils.py",
+        "scripts/amd/run_qwen3_30b_a3b.py",
+        "scripts/run_deepseek_v32.py",
+        "scripts/run_deepseek_v4.py",
+        "scripts/run_glm45_355b_a32b.py",
+        "scripts/run_joy_ai_llm_flash.py",
+        "scripts/run_mcore_fsdp.py",
+        "scripts/run_qwen3_30b_a3b.py",
+        "scripts/run_qwen3_4b.py",
+        "tests/e2e/megatron/model_scripts/test_deepseek_v32_5layer_mxfp8.py",
+        "tests/e2e/megatron/test_glm5_2_744b_a40b_5layer_nvfp4.py",
+        "tests/fast/examples/eval/__init__.py",
+        "tests/fast/examples/eval/test_eval_delegate_rollout.py",
+        "tests/fast/launch_scripts/py_harness.py",
+        "tests/fast/utils/test_command_utils.py",
+        "tests/fast/utils/test_file_arg_utils.py",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v4.py/full_train.txt"
+      ],
+      "diff_preview": {
+        "additions": 157,
+        "deletions": 42,
+        "hunks": [
+          {
+            "file": "examples/eval/eval_delegate_rollout.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -10,6 +10,7 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from miles.rollout.base_types import RolloutFnEvalOutput, RolloutFnTrainOutput"
+              ],
+              [
+                " ",
+                "from miles.rollout.sglang_rollout import generate_rollout as base_generate_rollout"
+              ],
+              [
+                "+",
+                "from miles.utils.file_arg_utils import PSEUDO_FILE_PREFIX, resolve_file_arg"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "logger = logging.getLogger(__name__)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -37,19 +38,22 @@ def _get_delegate_client(args) -> EvalDelegateClient | None:"
+              ],
+              [
+                " ",
+                "    if not config_path:"
+              ],
+              [
+                " ",
+                "        return None"
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:07:09.304043+00:00"
+    },
+    {
+      "id": "radixark/miles#1906",
+      "repo": "radixark/miles",
+      "pr_number": 1906,
+      "title": "Snapshot the launchers that build their own command line",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:56Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1906",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为能自行构建命令行的 launcher 脚本添加快照测试，防止命令行参数意外变更",
+      "reason": "该 PR 新增的是针对 miles 仓库内部 launcher 脚本（如 p2p_weight_transfer、formal_math 示例）的快照测试基础设施，测试内容与 miles 特有的启动脚本结构、GLM/Qwen/Kimi 等特定模型配置强绑定，不具备跨框架通用性",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "ci",
+        "weight-sync"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "tests/fast/launch_scripts/py_harness.py",
+        "tests/fast/launch_scripts/test_self_executing_launchers.py",
+        "tests/snapshots/launch_scripts/self_executing/examples/formal_math/single_round/run_minimal.py/import.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/GLM-4.5-Air/broadcast.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/GLM-4.5-Air/p2p.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/GLM-4.7-Flash/broadcast.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/GLM-4.7-Flash/p2p.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/GLM-5/broadcast.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/GLM-5/p2p.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/GLM-5_20layer/broadcast.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/GLM-5_20layer/p2p.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/GLM-5_4layer/broadcast.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/GLM-5_4layer/p2p.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/GLM-Z1-9B-0414/broadcast.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/GLM-Z1-9B-0414/p2p.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/Kimi-K2-Instruct/broadcast.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/Kimi-K2-Instruct/p2p.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/Moonlight-16B-A3B-Instruct/broadcast.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/Moonlight-16B-A3B-Instruct/p2p.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/Qwen3-235B-A22B-Instruct-2507/broadcast.txt"
+      ],
+      "diff_preview": {
+        "additions": 2574,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "tests/fast/launch_scripts/py_harness.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -1,8 +1,11 @@"
+              ],
+              [
+                " ",
+                "import ast"
+              ],
+              [
+                " ",
+                "import importlib.util"
+              ],
+              [
+                " ",
+                "import inspect"
+              ],
+              [
+                "+",
+                "import os"
+              ],
+              [
+                " ",
+                "import re"
+              ],
+              [
+                "+",
+                "import subprocess"
+              ],
+              [
+                " ",
+                "import sys"
+              ],
+              [
+                "+",
+                "import time"
+              ],
+              [
+                " ",
+                "from dataclasses import dataclass"
+              ],
+              [
+                " ",
+                "from pathlib import Path"
+              ],
+              [
+                " ",
+                "from types import ModuleType"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:07:03.568955+00:00"
+    },
+    {
+      "id": "radixark/miles#1907",
+      "repo": "radixark/miles",
+      "pr_number": 1907,
+      "title": "Fix p2p profile's rotary_base not reaching the model script it configures",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:52:59Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1907",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复 p2p 权重传输配置中 rotary_base 参数未能正确传递到模型脚本的问题",
+      "reason": "此 bug 涉及该仓库特有的 p2p 权重传输示例脚本及其 profile 配置机制，rotary_base 参数的传递路径是 miles 框架内部的配置系统设计，其他框架不共享这套 p2p profile 抽象，因此属于 repo-specific",
+      "value": 2,
+      "subsystems": [
+        "weight-sync",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "examples/p2p_weight_transfer/run.py",
+        "tests/fast/examples/__init__.py",
+        "tests/fast/examples/p2p_weight_transfer/__init__.py",
+        "tests/fast/examples/p2p_weight_transfer/test_run.py",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/GLM-4.5-Air/broadcast.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/GLM-4.5-Air/p2p.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/Qwen3-235B-A22B-Instruct-2507/broadcast.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/Qwen3-235B-A22B-Instruct-2507/p2p.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/Qwen3-30B-A3B/broadcast.txt",
+        "tests/snapshots/launch_scripts/self_executing/examples/p2p_weight_transfer/run.py/run/Qwen3-30B-A3B/p2p.txt"
+      ],
+      "diff_preview": {
+        "additions": 87,
+        "deletions": 11,
+        "hunks": [
+          {
+            "file": "examples/p2p_weight_transfer/run.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -18,6 +18,7 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "import json"
+              ],
+              [
+                " ",
+                "import os"
+              ],
+              [
+                "+",
+                "import shlex"
+              ],
+              [
+                " ",
+                "import subprocess"
+              ],
+              [
+                " ",
+                "import sys"
+              ],
+              [
+                " ",
+                "import time"
+              ],
+              [
+                "h",
+                "@@ -778,7 +779,8 @@ def cmd_run("
+              ],
+              [
+                " ",
+                "    run_cmd(\"pkill -9 redis || true\", check=False)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    # --- Source model args ---"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:06:56.810079+00:00"
+    },
+    {
+      "id": "radixark/miles#1908",
+      "repo": "radixark/miles",
+      "pr_number": 1908,
+      "title": "Snapshot test the argv of all model scripts",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:53:03Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1908",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为所有模型脚本的启动参数（argv）添加快照测试，覆盖多种模型配置",
+      "reason": "快照测试内容全部是该仓库特有的模型配置文件（deepseek、gemma、glm等），测试的是该仓库自身的模型脚本参数，与其他RL框架无直接复用价值",
+      "value": 2,
+      "subsystems": [
+        "ci",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "tests/fast/launch_scripts/model_args_harness.py",
+        "tests/fast/launch_scripts/test_model_args.py",
+        "tests/snapshots/model_args/deepseek-v3-20layer.txt",
+        "tests/snapshots/model_args/deepseek-v3-5layer.txt",
+        "tests/snapshots/model_args/deepseek-v3.txt",
+        "tests/snapshots/model_args/deepseek-v32-5layer.txt",
+        "tests/snapshots/model_args/deepseek-v32.txt",
+        "tests/snapshots/model_args/deepseek-v4-flash-4layer.txt",
+        "tests/snapshots/model_args/deepseek-v4-flash.txt",
+        "tests/snapshots/model_args/deepseek-v4-pro.txt",
+        "tests/snapshots/model_args/gemma-4-26b-a4b-it.txt",
+        "tests/snapshots/model_args/gemma-4-31b-it.txt",
+        "tests/snapshots/model_args/glm4-32B.txt",
+        "tests/snapshots/model_args/glm4-9B.txt",
+        "tests/snapshots/model_args/glm4.5-106B-A12B.txt",
+        "tests/snapshots/model_args/glm4.5-355B-A32B.txt",
+        "tests/snapshots/model_args/glm4.7-flash.txt",
+        "tests/snapshots/model_args/glm5-744B-A40B.txt",
+        "tests/snapshots/model_args/glm5-744B-A40B_20layer.txt",
+        "tests/snapshots/model_args/glm5-744B-A40B_4layer.txt"
+      ],
+      "diff_preview": {
+        "additions": 2037,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "tests/fast/launch_scripts/model_args_harness.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,31 @@"
+              ],
+              [
+                "+",
+                "import subprocess"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "from tests.fast.launch_scripts.sh_harness import REPO_ROOT"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "MODEL_SCRIPT_DIR = REPO_ROOT / \"scripts\" / \"models\""
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "_ENV_WITHOUT_THE_MODEL_ARGS_KNOBS = {"
+              ],
+              [
+                "+",
+                "    \"PATH\": \"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\","
+              ],
+              [
+                "+",
+                "    \"HOME\": \"/root\","
+              ],
+              [
+                "+",
+                "    \"LANG\": \"C\","
+              ],
+              [
+                "+",
+                "    \"LC_ALL\": \"C\","
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:06:50.612055+00:00"
+    },
+    {
+      "id": "radixark/miles#1909",
+      "repo": "radixark/miles",
+      "pr_number": 1909,
+      "title": "Expand the model args in python before building the command",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:53:06Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1909",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "在构建命令字符串之前先在 Python 层展开 model args，避免参数未展开导致的命令构建错误",
+      "reason": "命令参数展开是通用的训练启动基础设施问题，任何使用 Python 脚本动态构建训练命令的框架（slime、verl 等）都可能遇到相同的参数未展开 bug",
+      "value": 3,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/external_utils/command_utils.py",
+        "tests/fast/launch_scripts/py_harness.py",
+        "tests/fast/launch_scripts/test_py_launch_scripts.py",
+        "tests/fast/utils/test_command_utils.py",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_deepseek_v4.py/full_train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_deepseek_v4.py/prepare_spmd.txt",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_deepseek_v4.py/train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_qwen3_30b_a3b.py/execute.txt",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_qwen3_30b_a3b.py/prepare.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek.py/train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v32.py/full_train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v32.py/prepare.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v32.py/prepare_megatron_ckpt.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v32.py/train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v4.py/full_train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v4.py/prepare_spmd.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v4.py/train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_gemma_4_26b_a4b.py/full_train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_gemma_4_26b_a4b.py/train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_gemma_4_31b.py/full_train.txt"
+      ],
+      "diff_preview": {
+        "additions": 1416,
+        "deletions": 87,
+        "hunks": [
+          {
+            "file": "miles/utils/external_utils/command_utils.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -8,6 +8,7 @@"
+              ],
+              [
+                " ",
+                "import os"
+              ],
+              [
+                " ",
+                "import random"
+              ],
+              [
+                " ",
+                "import shlex"
+              ],
+              [
+                "+",
+                "import subprocess"
+              ],
+              [
+                " ",
+                "from dataclasses import dataclass, field"
+              ],
+              [
+                " ",
+                "from functools import partial"
+              ],
+              [
+                " ",
+                "from pathlib import Path"
+              ],
+              [
+                "h",
+                "@@ -29,6 +30,18 @@ def _pythonpath_with_sources(megatron_path: str, *additional_pythonpaths: str |"
+              ],
+              [
+                " ",
+                "    return os.pathsep.join(dict.fromkeys(entries))"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:06:44.727406+00:00"
+    },
+    {
+      "id": "radixark/miles#1910",
+      "repo": "radixark/miles",
+      "pr_number": 1910,
+      "title": "Replace the model config shell scripts with python",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:53:09Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1910",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将模型配置从 shell 脚本替换为 Python 脚本，并更新相关文档和示例",
+      "reason": "改动内容主要是该仓库自身的模型配置脚本形式变更（shell→python）以及对应的文档/示例更新，涉及的模型适配文件（Qwen、GLM、Kimi、Nemotron 等）和文档结构均为该仓库特有，其他框架不会直接复用这套配置机制",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "logging"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docker/npu_patch/miles.patch",
+        "docs/advanced/on-policy-distillation.md",
+        "docs/examples/openhermes-sft.md",
+        "docs/examples/reproducibility.md",
+        "docs/examples/retool.md",
+        "docs/examples/search-r1.md",
+        "docs/getting-started/quick-start.md",
+        "docs/models/deepseek/deepseek-v4-flash.md",
+        "docs/models/deepseek/deepseek.md",
+        "docs/models/glm/glm4-5.md",
+        "docs/models/glm/glm4-7-flash.md",
+        "docs/models/glm/glm4.md",
+        "docs/models/kimi/kimi-k2.5.md",
+        "docs/models/kimi/kimi-k2.md",
+        "docs/models/kimi/moonlight.md",
+        "docs/models/mimo/mimo.md",
+        "docs/models/nemotron/nemotron-3-nano-moe.md",
+        "docs/models/nemotron/nemotron-3-nano.md",
+        "docs/models/qwen/qwen3-5-moe.md",
+        "docs/models/qwen/qwen3-5.md"
+      ],
+      "diff_preview": {
+        "additions": 73,
+        "deletions": 51,
+        "hunks": [
+          {
+            "file": "docker/npu_patch/miles.patch",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -340,7 +340,7 @@ diff --git a/miles/utils/external_utils/command_utils.py b/miles/utils/external_"
+              ],
+              [
+                " ",
+                "index d016e01ac..08b4d6eff 100644"
+              ],
+              [
+                " ",
+                "--- a/miles/utils/external_utils/command_utils.py"
+              ],
+              [
+                " ",
+                "+++ b/miles/utils/external_utils/command_utils.py"
+              ],
+              [
+                "-",
+                "@@ -193,6 +193,112 @@ def execute_train("
+              ],
+              [
+                "+",
+                "@@ -193,6 +193,107 @@ def execute_train("
+              ],
+              [
+                " ",
+                "         )"
+              ],
+              [
+                " ",
+                " "
+              ],
+              [
+                " ",
+                " "
+              ],
+              [
+                "h",
+                "@@ -434,18 +434,13 @@ index d016e01ac..08b4d6eff 100644"
+              ],
+              [
+                " ",
+                "+    )"
+              ],
+              [
+                " ",
+                "+"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:06:38.891336+00:00"
+    },
+    {
+      "id": "radixark/miles#1911",
+      "repo": "radixark/miles",
+      "pr_number": 1911,
+      "title": "Quote the model args miles inlines into the launch command",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-07-28T13:53:12Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1911",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "对模型启动命令中内联的模型参数进行正确的 shell 引号转义，避免含空格或特殊字符的参数被错误解析",
+      "reason": "命令行参数引号转义是所有通过 subprocess/shell 方式启动模型进程的 RL 训练框架都会遇到的通用问题，与具体模型或硬件无关",
+      "value": 3,
+      "subsystems": [
+        "infra",
+        "rollout"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docker/npu_patch/miles.patch",
+        "examples/formal_math/single_round/run_minimal.py",
+        "miles/utils/external_utils/command_utils.py",
+        "miles/utils/external_utils/model_args_utils.py",
+        "tests/fast/utils/external_utils/test_model_args_utils.py",
+        "tests/fast/utils/test_command_utils.py",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_deepseek_v4.py/full_train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_deepseek_v4.py/prepare_spmd.txt",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_deepseek_v4.py/train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_qwen3_30b_a3b.py/execute.txt",
+        "tests/snapshots/launch_scripts/py/scripts/amd/run_qwen3_30b_a3b.py/prepare.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek.py/train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v32.py/full_train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v32.py/prepare.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v32.py/prepare_megatron_ckpt.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v32.py/train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v4.py/full_train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v4.py/prepare_spmd.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_deepseek_v4.py/train.txt",
+        "tests/snapshots/launch_scripts/py/scripts/run_glm45_355b_a32b.py/train.txt"
+      ],
+      "diff_preview": {
+        "additions": 90,
+        "deletions": 38,
+        "hunks": [
+          {
+            "file": "docker/npu_patch/miles.patch",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -434,7 +434,7 @@ index d016e01ac..08b4d6eff 100644"
+              ],
+              [
+                " ",
+                "+    )"
+              ],
+              [
+                " ",
+                "+"
+              ],
+              [
+                " ",
+                "+    if get_bool_env_var(\"SLIME_SCRIPT_ENABLE_RAY_SUBMIT\", \"1\"):"
+              ],
+              [
+                "-",
+                "+        model_args = load_model_args(megatron_model_type) if megatron_model_type is not None else \"\""
+              ],
+              [
+                "+",
+                "+        model_args = shell_safe_model_args(megatron_model_type)"
+              ],
+              [
+                " ",
+                "+        exec_command_cpu("
+              ],
+              [
+                " ",
+                "+            f\"export no_proxy=127.0.0.1 && export PYTHONUNBUFFERED=1 && \""
+              ],
+              [
+                " ",
+                "+            f'ray job submit --address=\"http://127.0.0.1:8265\" '"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:06:32.542073+00:00"
+    },
+    {
+      "id": "radixark/miles#1912",
+      "repo": "radixark/miles",
+      "pr_number": 1912,
+      "title": "[DSV4 TOP 1/N] Add fixed-tree reduction primitive",
+      "state": "open",
+      "author": "kaixih",
+      "created_at": "2026-07-28T14:46:33Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1912",
+      "category": "algo",
+      "scope": "repo-specific",
+      "summary": "为 DeepSeek-V4 真实在线策略（TOP）数值一致性需求，添加固定二叉树结构的最后维度均值归约原语，确保 prefill 重计算与训练前向的 log-prob 数值完全一致",
+      "reason": "该 primitive 专为 DeepSeek-V4 模型的特定数值契约（prefill-recompute vs training-forward log-prob 精确对齐）而设计，依赖该仓库对 DSV4 的专属适配路径（miles_plugins/models/deepseek_v4），其他框架不会直接复用此实现，属于特定模型适配",
+      "value": 3,
+      "subsystems": [
+        "algo",
+        "objective",
+        "infra"
+      ],
+      "rl_concepts": [
+        "on-policy",
+        "log-prob",
+        "GRPO"
+      ],
+      "files": [
+        "miles_plugins/models/deepseek_v4/ops/utils.py",
+        "tests/fast/true_on_policy/test_dsv4_fixed_tree_mean.py"
+      ],
+      "diff_preview": {
+        "additions": 76,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "miles_plugins/models/deepseek_v4/ops/utils.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -6,6 +6,31 @@"
+              ],
+              [
+                " ",
+                "    hadamard_transform = None"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "def fixed_tree_mean_last_dim(x: torch.Tensor) -> torch.Tensor:"
+              ],
+              [
+                "+",
+                "    \"\"\"Mean over the last dimension with a fixed binary reduction tree."
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "    This keeps the floating-point association independent of all outer tensor"
+              ],
+              [
+                "+",
+                "    dimensions. The input must be a non-scalar floating-point tensor whose dtype"
+              ],
+              [
+                "+",
+                "    supports addition and division and whose last dimension is a nonzero power"
+              ],
+              [
+                "+",
+                "    of two. A later DeepSeek-V4 TOP change will use this for the 512-wide query"
+              ],
+              [
+                "+",
+                "    RMS in batch-invariant mode."
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:06:26.090361+00:00"
+    },
+    {
+      "id": "radixark/miles#1913",
+      "repo": "radixark/miles",
+      "pr_number": 1913,
+      "title": "openenv/tbench2: E2B sandbox backend — the per-episode recipe on E2B Cloud or self-hosted AgentENV",
+      "state": "open",
+      "author": "nblintao",
+      "created_at": "2026-07-28T16:16:28Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1913",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "新增 E2B/AgentENV 沙箱后端，支持每个 episode 在独立的 Firecracker 微虚拟机中运行 openenv tbench2 任务",
+      "reason": "该 PR 实现的是 miles 仓库 openenv 实验性环境模块特有的沙箱后端接入（E2B API / AgentENV），与 RL 训练核心组件（rollout、trainer、算法等）无关，属于该仓库特定的环境基础设施扩展，其他框架不会共享此沙箱调度架构",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "rollout"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docs/user-guide/environments.md",
+        "docs/user-guide/openenv.md",
+        "examples/experimental/openenv/README.md",
+        "examples/experimental/openenv/openenv_e2b_agent_function.py",
+        "examples/experimental/openenv/openenv_launch_common.py",
+        "examples/experimental/openenv/run-openenv-tbench2.py",
+        "examples/experimental/openenv/tb2_sandbox_daytona.py",
+        "examples/experimental/openenv/tb2_sandbox_e2b.py",
+        "examples/experimental/openenv/tb2_sandbox_recipe.py",
+        "examples/experimental/openenv/tests/test_openenv_e2b_agent_function.py",
+        "examples/experimental/openenv/tests/test_tb2_sandbox_e2b.py"
+      ],
+      "diff_preview": {
+        "additions": 1130,
+        "deletions": 92,
+        "hunks": [
+          {
+            "file": "docs/user-guide/environments.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -29,6 +29,8 @@ Sandbox providers are a different axis: they provision the task containers"
+              ],
+              [
+                " ",
+                "| Sandbox provider | Used within |"
+              ],
+              [
+                " ",
+                "|---|---|"
+              ],
+              [
+                " ",
+                "| [Daytona](https://www.daytona.io/) | OpenEnv, Harbor |"
+              ],
+              [
+                "+",
+                "| [E2B](https://e2b.dev/) | OpenEnv, Harbor |"
+              ],
+              [
+                "+",
+                "| [AgentENV](https://github.com/kvcache-ai/AgentENV) — self-hosted Firecracker microVMs, reached through its E2B-compatible API | OpenEnv, Harbor |"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "All external ecosystem support is experimental."
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:06:17.591856+00:00"
+    },
+    {
+      "id": "radixark/miles#1914",
+      "repo": "radixark/miles",
+      "pr_number": 1914,
+      "title": "fix: apply config-file overrides before argument validation",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-07-28T16:30:02Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1914",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "将 custom config 文件的参数覆盖逻辑移至参数验证函数最前端，确保 use_critic、rollout_num_gpus、offload 等派生字段基于正确值计算",
+      "reason": "配置文件覆盖在验证前生效的问题是通用模式：所有使用 YAML/JSON config 覆盖 CLI 参数的 RL 框架（verl、openrlhf 等）都可能存在相同缺陷，尤其是 advantage_estimator 决定 use_critic 进而影响 critic worker group 和 GPU 分配的逻辑在多个框架中高度相似",
+      "value": 4,
+      "subsystems": [
+        "trainer",
+        "infra",
+        "parallel"
+      ],
+      "rl_concepts": [
+        "advantage",
+        "PPO",
+        "critic"
+      ],
+      "files": [
+        "miles/utils/arguments.py",
+        "tests/fast/utils/test_arguments.py"
+      ],
+      "diff_preview": {
+        "additions": 49,
+        "deletions": 9,
+        "hunks": [
+          {
+            "file": "miles/utils/arguments.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -2265,7 +2265,9 @@ def add_user_provided_function_arguments(parser):"
+              ],
+              [
+                " ",
+                "            \"--custom-config-path\","
+              ],
+              [
+                " ",
+                "            type=str,"
+              ],
+              [
+                " ",
+                "            default=None,"
+              ],
+              [
+                "-",
+                "            help=\"Path to the YAML config for custom function arguments.\","
+              ],
+              [
+                "+",
+                "            help=\"Path to the YAML config for custom function arguments. Entries are applied onto \""
+              ],
+              [
+                "+",
+                "            \"the parsed args before validation, so overriding a core argument behaves like \""
+              ],
+              [
+                "+",
+                "            \"passing it on the command line.\","
+              ],
+              [
+                " ",
+                "        )"
+              ],
+              [
+                " ",
+                "        reset_arg(parser, \"--padded-vocab-size\", type=int, default=None)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -2414,6 +2416,11 @@ def _resolve_ft_components(args: argparse.Namespace) -> list[str]:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:06:10.423363+00:00"
+    },
+    {
+      "id": "radixark/miles#1915",
+      "repo": "radixark/miles",
+      "pr_number": 1915,
+      "title": "fix(lora): honor --attention-backend in the bridge LoRA path",
+      "state": "closed",
+      "author": "yushengsu-thu",
+      "created_at": "2026-07-28T18:31:49Z",
+      "merged_at": "2026-07-28T23:30:44Z",
+      "url": "https://github.com/radixark/miles/pull/1915",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 LoRA 桥接路径未将 --attention-backend 参数传递给 provider，导致 TransformerEngine 自行选择后端而非遵从调用方配置，从而修复 fused-attention backward 崩溃问题",
+      "reason": "Megatron + LoRA + TransformerEngine 的 attention backend 配置传递问题是所有使用相同技术栈的框架（slime、verl 等）均可能遇到的隐蔽 bug，与仓库特有逻辑无关",
+      "value": 4,
+      "subsystems": [
+        "parallel",
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [
+        "LoRA",
+        "Megatron",
+        "TransformerEngine",
+        "FlashAttention"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/bridge_lora_helpers.py",
+        "tests/e2e/megatron/model_scripts/test_gpt_oss_20b_moe_lora_ci.py"
+      ],
+      "diff_preview": {
+        "additions": 2,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/bridge_lora_helpers.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -101,6 +101,7 @@ def _setup_lora_model_via_bridge(args: Namespace) -> list:"
+              ],
+              [
+                " ",
+                "    provider.recompute_num_layers = args.recompute_num_layers"
+              ],
+              [
+                " ",
+                "    provider.recompute_modules = args.recompute_modules"
+              ],
+              [
+                " ",
+                "    provider.distribute_saved_activations = args.distribute_saved_activations"
+              ],
+              [
+                "+",
+                "    provider.attention_backend = args.attention_backend"
+              ],
+              [
+                " ",
+                "    provider.variable_seq_lengths = True"
+              ],
+              [
+                " ",
+                "    provider.moe_token_dispatcher_type = \"alltoall\""
+              ],
+              [
+                " ",
+                "    provider.moe_router_load_balancing_type = \"none\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:06:03.256203+00:00"
+    },
+    {
+      "id": "radixark/miles#1916",
+      "repo": "radixark/miles",
+      "pr_number": 1916,
+      "title": "(1/2) refactor(rollout): drop --generate-multi-samples and its per-turn sample semantics",
+      "state": "open",
+      "author": "guapisolo",
+      "created_at": "2026-07-28T19:08:14Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1916",
+      "category": "refactor",
+      "scope": "universal",
+      "summary": "移除 --generate-multi-samples 标志，统一 rollout 输出契约为标量 Sample，避免将 turn 当作独立样本导致 group baseline 污染",
+      "reason": "多轮 rollout 的采样粒度设计（turn vs trajectory）是所有 RL 训练框架的通用问题，group_index 污染和 advantage 基线计算错误会影响任何实现了 multi-turn rollout 的框架",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "algo",
+        "objective"
+      ],
+      "rl_concepts": [
+        "GRPO",
+        "advantage",
+        "group baseline",
+        "multi-turn rollout",
+        "trajectory"
+      ],
+      "files": [
+        "docs/user-guide/rollout-endpoints.md",
+        "miles/rollout/filter_hub/dynamic_sampling_filters.py",
+        "miles/rollout/generate_hub/agentic_tool_call.py",
+        "miles/rollout/generate_hub/multi_turn.py",
+        "tests/fast/fixtures/generation_fixtures.py",
+        "tests/fast/rollout/generate_hub/test_multi_turn.py",
+        "tests/fast/rollout/generate_hub/test_single_turn.py",
+        "tests/fast/rollout/inference_rollout/integration/test_agent_metadata.py",
+        "tests/fast/rollout/inference_rollout/integration/test_multi_turn.py",
+        "tests/manual/session/bench_session_server_overhead.py"
+      ],
+      "diff_preview": {
+        "additions": 104,
+        "deletions": 246,
+        "hunks": [
+          {
+            "file": "docs/user-guide/rollout-endpoints.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -86,14 +86,14 @@ Helpers:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "- `compute_prompt_ids_from_sample` and `compute_request_payload` from"
+              ],
+              [
+                " ",
+                "  `miles/rollout/generate_utils/generate_endpoint_utils.py` build `/generate` requests."
+              ],
+              [
+                "-",
+                "- For multi-sample outputs, set `--generate-multi-samples` and return a list."
+              ],
+              [
+                "+",
+                "- A generate function can set `GenerateFnOutput.samples` to a `Sample` or `list[Sample]`."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "### Reference generators"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "- **`single_turn.py`**: single-turn generation via `/generate`. Text or multimodal prompts."
+              ],
+              [
+                " ",
+                "- **`multi_turn.py`**: multi-turn tool calling via `/generate`. Adds CLI flags"
+              ],
+              [
+                " ",
+                "  `--generate-max-turns`, `--generate-tool-specs-path`, `--generate-tool-call-parser`,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:05:56.906016+00:00"
+    },
+    {
+      "id": "radixark/miles#1917",
+      "repo": "radixark/miles",
+      "pr_number": 1917,
+      "title": "test(gpt-oss): request auto attention backend instead of an unsatisfiable fused",
+      "state": "closed",
+      "author": "yushengsu-thu",
+      "created_at": "2026-07-28T20:38:59Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1917",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "将 gpt-oss LoRA CI 测试中无法满足的 `--attention-backend fused` 参数替换为 `auto`，以修复因 learnable softmax 和 window attention 导致 FusedAttention 无法生效的问题",
+      "reason": "该改动针对此仓库 CI 测试脚本中特定模型（gpt-oss 20B MoE）的配置修复，涉及仓库内部测试脚本路径和特定模型参数组合，不具备跨框架复用价值",
+      "value": 1,
+      "subsystems": [
+        "ci"
+      ],
+      "rl_concepts": [
+        "LoRA"
+      ],
+      "files": [
+        "tests/e2e/megatron/model_scripts/test_gpt_oss_20b_moe_lora_ci.py"
+      ],
+      "diff_preview": {
+        "additions": 1,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "tests/e2e/megatron/model_scripts/test_gpt_oss_20b_moe_lora_ci.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -94,7 +94,7 @@ def execute(shared_outer: bool, virtual_experts: bool):"
+              ],
+              [
+                " ",
+                "        \"--attention-dropout 0.0 \""
+              ],
+              [
+                " ",
+                "        \"--hidden-dropout 0.0 \""
+              ],
+              [
+                " ",
+                "        \"--qkv-format bshd \""
+              ],
+              [
+                "-",
+                "        \"--attention-backend fused \""
+              ],
+              [
+                "+",
+                "        \"--attention-backend auto \""
+              ],
+              [
+                " ",
+                "        \"--update-weight-buffer-size 536870912 \""
+              ],
+              [
+                " ",
+                "        \"--actor-num-nodes 1 \""
+              ],
+              [
+                " ",
+                "        f\"--actor-num-gpus-per-node {NUM_GPUS} \""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:05:50.659995+00:00"
+    },
+    {
+      "id": "radixark/miles#1918",
+      "repo": "radixark/miles",
+      "pr_number": 1918,
+      "title": "Remove the experimental swe-agent examples",
+      "state": "closed",
+      "author": "Shi-Dong",
+      "created_at": "2026-07-28T20:50:43Z",
+      "merged_at": "2026-07-28T21:53:09Z",
+      "url": "https://github.com/radixark/miles/pull/1918",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "删除 examples/experimental/ 下三个废弃的 swe-agent 示例目录及 .gitmodules，并更新相关文档链接指向正式示例路径",
+      "reason": "该 PR 纯粹是清理该仓库特有的实验性示例目录和 git submodule 配置，与 RL 训练核心组件无关，对其他框架没有参考意义",
+      "value": 1,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".gitmodules",
+        "docs/user-guide/agentic-chat-template.md",
+        "docs/user-guide/harbor.md",
+        "docs/user-guide/rollout-endpoints.md",
+        "examples/experimental/openenv/openenv_generate.py",
+        "examples/experimental/swe-agent-v2-amd/README.md",
+        "examples/experimental/swe-agent-v2-amd/generate.py",
+        "examples/experimental/swe-agent-v2-amd/run-qwen3-swe.py",
+        "examples/experimental/swe-agent-v2-amd/run.py",
+        "examples/experimental/swe-agent-v2-amd/server.py",
+        "examples/experimental/swe-agent-v2-amd/swe_agent_function.py",
+        "examples/experimental/swe-agent-v2/README.md",
+        "examples/experimental/swe-agent-v2/download_and_process_data.py",
+        "examples/experimental/swe-agent-v2/generate.py",
+        "examples/experimental/swe-agent-v2/run-glm47-flash-agentic-async.py",
+        "examples/experimental/swe-agent-v2/run-glm47-reasoning-async.py",
+        "examples/experimental/swe-agent-v2/run-glm47-reasoning.py",
+        "examples/experimental/swe-agent-v2/run.py",
+        "examples/experimental/swe-agent-v2/swe_agent_function.py",
+        "examples/experimental/swe-agent-v2/train-tb2-via-harbor-private-server/README.md"
+      ],
+      "diff_preview": {
+        "additions": 8,
+        "deletions": 3852,
+        "hunks": [
+          {
+            "file": ".gitmodules",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -1,8 +0,0 @@"
+              ],
+              [
+                "-",
+                "[submodule \"examples/swe-agent/nemo-gym\"]"
+              ],
+              [
+                "-",
+                "\tpath = examples/experimental/swe-agent/nemo-gym"
+              ],
+              [
+                "-",
+                "\turl = https://github.com/yueming-yuan/Gym"
+              ],
+              [
+                "-",
+                "\tbranch = miles-swe-agent"
+              ],
+              [
+                "-",
+                "[submodule \"examples/swe-agent/mini-swe-agent\"]"
+              ],
+              [
+                "-",
+                "\tpath = examples/experimental/swe-agent/mini-swe-agent"
+              ],
+              [
+                "-",
+                "\turl = https://github.com/yueming-yuan/nv-mini-swe-agent"
+              ],
+              [
+                "-",
+                "\tbranch = miles-swe-agent"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:05:44.311041+00:00"
+    },
+    {
+      "id": "radixark/miles#1919",
+      "repo": "radixark/miles",
+      "pr_number": 1919,
+      "title": "examples: add swe-agent-harbor-daytona (Harbor sandboxes on Daytona)",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-07-28T21:10:11Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1919",
+      "category": "feature",
+      "scope": "repo-specific",
+      "summary": "新增 swe-agent-harbor-daytona 示例，支持在 Daytona 云沙箱中运行任务而非本地 Docker，适用于无法运行 Docker-in-Docker 的 GPU 节点",
+      "reason": "该 PR 是针对特定云沙箱平台（Daytona）的示例集成，属于仓库特有的部署示例和外部工具适配，不涉及通用 RL 训练算法、rollout 引擎或训练基础设施的改动",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "rollout"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "examples/README.md",
+        "examples/swe-agent-harbor-daytona/README.md",
+        "examples/swe-agent-harbor-daytona/launch_agent_server.sh",
+        "examples/swe-agent-harbor-daytona/run.py"
+      ],
+      "diff_preview": {
+        "additions": 502,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "examples/README.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -19,6 +19,7 @@ These examples provide concrete examples to leverage miles in your own RL workfl"
+              ],
+              [
+                " ",
+                "- **[search-r1](./search-r1)**: A minimal reproduction of Search-R1, featuring multi-turn conversation and tool-calling."
+              ],
+              [
+                " ",
+                "- **[strands-agents](./strands-agents)**: Integration example with the Strands-Agents scaffolding framework."
+              ],
+              [
+                " ",
+                "- **[swe-agent](./swe-agent)**: Trains coding and terminal agents with Harbor-managed sandboxes and verifier rewards."
+              ],
+              [
+                "+",
+                "- **[swe-agent-harbor-daytona](./swe-agent-harbor-daytona)**: The same Harbor pipeline with task sandboxes hosted on Daytona instead of local Docker."
+              ],
+              [
+                " ",
+                "- **[tau-bench](./tau-bench)**: Training in an agentic multi-turn tool use environment (Tau-bench)."
+              ],
+              [
+                " ",
+                "- **[train_infer_mismatch_helper](./train_infer_mismatch_helper)**: Algorithmic methods for rollout correction (e.g., TIS, MIS)."
+              ],
+              [
+                " ",
+                "- **[true_on_policy](./true_on_policy)**: Ensures strictly equal log probabilities between inference (SGLang) and training engines."
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:05:38.167304+00:00"
+    },
+    {
+      "id": "radixark/miles#1920",
+      "repo": "radixark/miles",
+      "pr_number": 1920,
+      "title": "fix(ci): stabilize SGLang and FSDP E2E",
+      "state": "open",
+      "author": "guapisolo",
+      "created_at": "2026-07-28T21:25:08Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1920",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "修复 SGLang 启动失败时错误被掩盖的问题，并将耗时较长的 FSDP 端到端测试归类为 long 任务以避免超时",
+      "reason": "改动均为该仓库自身的 CI 流水线配置、测试注册策略和测试工具脚本，不涉及 rollout、trainer、算法等通用训练组件，对其他框架无直接参考价值",
+      "value": 2,
+      "subsystems": [
+        "ci",
+        "infra"
+      ],
+      "rl_concepts": [
+        "FSDP"
+      ],
+      "files": [
+        ".github/workflows/pr-test.yml",
+        "docs/ci/00-stage.md",
+        "docs/ci/01-label.md",
+        "tests/ci/ci_policy.py",
+        "tests/ci/test/test_run_suite.py",
+        "tests/e2e/fsdp/test_qwen3_0.6B_fsdp_distributed.py",
+        "tests/e2e/sglang/test_chat_input_ids_equivalence.py",
+        "tests/e2e/sglang/utils/sglang_server.py",
+        "tests/e2e/short/test_qwen3_0.6B_fsdp_colocated_2xGPU.py"
+      ],
+      "diff_preview": {
+        "additions": 43,
+        "deletions": 30,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -6,7 +6,7 @@ on:"
+              ],
+              [
+                " ",
+                "  pull_request:"
+              ],
+              [
+                " ",
+                "    types: [opened, synchronize, reopened, ready_for_review, labeled]"
+              ],
+              [
+                " ",
+                "  schedule:"
+              ],
+              [
+                "-",
+                "    # Nightly CI on main runs every enabled tag except ft-long, with fast-fail disabled."
+              ],
+              [
+                "+",
+                "    # Nightly CI on main runs every enabled tag except long and ft-long, with fast-fail disabled."
+              ],
+              [
+                " ",
+                "    # 15:00 UTC = 08:00 PDT / 07:00 PST (cron is UTC, no DST)."
+              ],
+              [
+                " ",
+                "    - cron: '0 15 * * *'"
+              ],
+              [
+                " ",
+                "  workflow_dispatch:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:05:32.426087+00:00"
+    },
+    {
+      "id": "radixark/miles#1921",
+      "repo": "radixark/miles",
+      "pr_number": 1921,
+      "title": "Add NeMo-Gym integration: mini_swe_agent_2 via the agent function",
+      "state": "open",
+      "author": "nblintao",
+      "created_at": "2026-07-28T23:13:13Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1921",
+      "category": "feature",
+      "scope": "repo-specific",
+      "summary": "新增 NeMo-Gym 集成示例，通过 agent function 层接入 mini_swe_agent_2 环境，实现基于 SWE-bench 沙箱的 agentic RL 训练闭环",
+      "reason": "该 PR 是针对 miles 仓库特有的 agent function 连接器架构（与 Harbor/OpenEnv 同层）的具体外部环境接入实现，依赖 miles 的 session server 机制和特定 URL 路由方式，属于仓库专有的环境生态集成，而非通用 RL 算法或训练基础设施改动",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra",
+        "logging"
+      ],
+      "rl_concepts": [
+        "reward-model",
+        "agentic-RL",
+        "SWE-bench"
+      ],
+      "files": [
+        "docs/docs.json",
+        "docs/user-guide/environments.md",
+        "docs/user-guide/nemo-gym.md",
+        "examples/experimental/nemo-gym/README.md",
+        "examples/experimental/nemo-gym/download_and_process_data.py",
+        "examples/experimental/nemo-gym/eval_nemogym_via_api.py",
+        "examples/experimental/nemo-gym/nemogym_agent_function.py",
+        "examples/experimental/nemo-gym/nemogym_generate.py",
+        "examples/experimental/nemo-gym/run-qwen3-4b-instruct.sh",
+        "examples/experimental/nemo-gym/tests/test_nemogym_agent_function.py"
+      ],
+      "diff_preview": {
+        "additions": 1010,
+        "deletions": 2,
+        "hunks": [
+          {
+            "file": "docs/docs.json",
+            "lang": "json",
+            "lines": [
+              [
+                "h",
+                "@@ -179,7 +179,8 @@"
+              ],
+              [
+                " ",
+                "      \"root\": \"user-guide/environments\","
+              ],
+              [
+                " ",
+                "      \"pages\": ["
+              ],
+              [
+                " ",
+                "       \"user-guide/harbor\","
+              ],
+              [
+                "-",
+                "       \"user-guide/openenv\""
+              ],
+              [
+                "+",
+                "       \"user-guide/openenv\","
+              ],
+              [
+                "+",
+                "       \"user-guide/nemo-gym\""
+              ],
+              [
+                " ",
+                "      ]"
+              ],
+              [
+                " ",
+                "     }"
+              ],
+              [
+                " ",
+                "    ]"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:05:26.390648+00:00"
+    },
+    {
+      "id": "radixark/miles#1922",
+      "repo": "radixark/miles",
+      "pr_number": 1922,
+      "title": "Kimi K3: --colocate-memory-peak-device — overlap the trainer/rollout handoff on the GPU",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-07-29T00:28:12Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1922",
+      "category": "infra",
+      "scope": "universal",
+      "summary": "新增 `--colocate-memory-peak-device` 选项，通过重排 trainer/rollout 切换顺序，将 colocated RL 握手期间的内存峰值从 CPU（Host）转移到 GPU，避免两份 Host 副本同时存在导致的内存超限。",
+      "reason": "Colocated RL 中 trainer 与 rollout 引擎切换时的双份 CPU 内存峰值问题是所有采用 colocate 模式的 RL 训练框架（如 slime、verl 等）都会遇到的通用架构挑战，该 PR 提出的重排握手顺序、以 GPU 内存换 CPU 内存的思路对其他框架同样具有参考价值。",
+      "value": 4,
+      "subsystems": [
+        "memory",
+        "rollout",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "colocated RL",
+        "LoRA",
+        "weight-sync",
+        "KV cache",
+        "CUDA IPC"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/actor.py",
+        "miles/ray/actor_group.py",
+        "miles/ray/placement_group.py",
+        "miles/ray/rollout/rollout_manager.py",
+        "miles/ray/train/group.py",
+        "miles/utils/arguments.py",
+        "scripts/run_kimi_k3_lora.py",
+        "train.py"
+      ],
+      "diff_preview": {
+        "additions": 100,
+        "deletions": 7,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -253,10 +253,31 @@ def init("
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "        return start_rollout_id"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "    # Make sleep()/wake_up() idempotent: gpu peak mode wakes the trainer early."
+              ],
+              [
+                "+",
+                "    _train_offloaded = False"
+              ],
+              [
+                "+",
+                "    _grad_buffer_offloaded = False"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "    @with_logs"
+              ],
+              [
+                "+",
+                "    @timer"
+              ],
+              [
+                "+",
+                "    def offload_grad_buffer(self) -> None:"
+              ],
+              [
+                "+",
+                "        \"\"\"Release the no-backup grad buffers ahead of the engine weight"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:05:19.532521+00:00"
+    },
+    {
+      "id": "radixark/miles#1923",
+      "repo": "radixark/miles",
+      "pr_number": 1923,
+      "title": "Kimi K3: ship LoRA chunks through a persistent CUDA-IPC transfer buffer",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-07-29T00:50:00Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/1923",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "通过持久化 CUDA-IPC 传输缓冲区替代每块临时分配，修复 LoRA 分块推送时的竞态条件导致的句柄失效和 SIGABRT 崩溃",
+      "reason": "CUDA-IPC 共享内存句柄的生命周期竞态问题是所有使用 CUDA-IPC 进行权重/参数传输的 RL 训练框架都会面临的通用问题，修复思路（持久化单一缓冲区替代频繁分配释放）对 slime 等同类框架同样具有参考价值",
+      "value": 4,
+      "subsystems": [
+        "weight-sync",
+        "memory",
+        "infra"
+      ],
+      "rl_concepts": [
+        "LoRA",
+        "Megatron",
+        "权重同步"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/update_weight/update_weight_from_tensor.py"
+      ],
+      "diff_preview": {
+        "additions": 26,
+        "deletions": 4,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/update_weight/update_weight_from_tensor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -366,6 +366,30 @@ def _send_lora_params("
+              ],
+              [
+                " ",
+                "            return refs or [], long_lived_tensors"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "# One persistent CUDA-IPC storage per device for all LoRA chunks: fresh"
+              ],
+              [
+                "+",
+                "# per-chunk buckets rotate IPC handles/ref-counter files and race the"
+              ],
+              [
+                "+",
+                "# consumers' release lag (premature reap, stale handles, limbo pile-up)."
+              ],
+              [
+                "+",
+                "_LORA_TRANSFER_BUFFERS: dict[int, torch.Tensor] = {}"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "def _lora_transfer_view(flat: torch.Tensor) -> torch.Tensor:"
+              ],
+              [
+                "+",
+                "    dev = flat.device.index"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-07-29T01:05:11.259749+00:00"
+    },
+    {
       "id": "radixark/miles#1808",
       "repo": "radixark/miles",
       "pr_number": 1808,
@@ -38724,452 +43348,502 @@
     }
   ],
   "analyzed_ids": [
-    "THUDM/slime#1848",
-    "THUDM/slime#2184",
-    "radixark/miles#1753",
-    "radixark/miles#1224",
-    "radixark/miles#1019",
-    "THUDM/slime#2221",
-    "THUDM/slime#1917",
-    "radixark/miles#1785",
-    "THUDM/slime#2205",
-    "radixark/miles#971",
-    "THUDM/slime#1928",
-    "radixark/miles#1814",
-    "radixark/miles#1183",
-    "radixark/miles#1701",
-    "radixark/miles#1804",
-    "THUDM/slime#1916",
-    "THUDM/slime#1961",
-    "radixark/miles#1211",
-    "THUDM/slime#2169",
-    "radixark/miles#946",
-    "THUDM/slime#2237",
-    "radixark/miles#1214",
-    "radixark/miles#966",
-    "THUDM/slime#2240",
-    "radixark/miles#973",
-    "radixark/miles#1788",
-    "radixark/miles#1758",
-    "radixark/miles#957",
-    "radixark/miles#1716",
-    "radixark/miles#1203",
-    "THUDM/slime#1799",
-    "radixark/miles#997",
-    "THUDM/slime#1801",
-    "THUDM/slime#1960",
-    "radixark/miles#1226",
-    "radixark/miles#1215",
-    "THUDM/slime#2223",
-    "THUDM/slime#1770",
-    "THUDM/slime#2219",
-    "radixark/miles#1202",
-    "radixark/miles#1039",
-    "radixark/miles#1775",
-    "radixark/miles#1811",
-    "radixark/miles#1693",
-    "THUDM/slime#2236",
-    "radixark/miles#1828",
-    "THUDM/slime#1926",
-    "radixark/miles#1767",
-    "radixark/miles#1031",
-    "radixark/miles#1766",
-    "THUDM/slime#2213",
-    "radixark/miles#996",
-    "radixark/miles#1027",
-    "radixark/miles#1181",
-    "radixark/miles#1230",
-    "radixark/miles#1717",
-    "radixark/miles#1008",
-    "radixark/miles#935",
-    "THUDM/slime#1781",
-    "THUDM/slime#2197",
-    "radixark/miles#998",
-    "radixark/miles#1017",
-    "THUDM/slime#2177",
-    "radixark/miles#1185",
-    "THUDM/slime#1927",
-    "THUDM/slime#1777",
-    "radixark/miles#1190",
-    "THUDM/slime#1924",
-    "radixark/miles#1707",
-    "radixark/miles#1205",
-    "radixark/miles#1028",
-    "THUDM/slime#1773",
-    "radixark/miles#1796",
-    "radixark/miles#1037",
-    "radixark/miles#1732",
-    "THUDM/slime#1956",
-    "radixark/miles#1045",
-    "THUDM/slime#1819",
     "radixark/miles#1213",
-    "radixark/miles#1790",
-    "radixark/miles#1694",
-    "radixark/miles#1209",
-    "radixark/miles#1761",
-    "radixark/miles#1710",
-    "THUDM/slime#2166",
-    "THUDM/slime#2195",
-    "radixark/miles#1044",
-    "radixark/miles#1762",
-    "THUDM/slime#1806",
-    "THUDM/slime#1827",
-    "radixark/miles#1730",
-    "radixark/miles#1805",
-    "radixark/miles#1727",
-    "radixark/miles#1740",
-    "radixark/miles#1042",
-    "radixark/miles#1688",
-    "THUDM/slime#1791",
-    "THUDM/slime#1776",
-    "radixark/miles#990",
-    "THUDM/slime#1923",
-    "THUDM/slime#2234",
-    "THUDM/slime#1817",
-    "THUDM/slime#1934",
-    "radixark/miles#1812",
-    "radixark/miles#1826",
-    "radixark/miles#1035",
-    "radixark/miles#1204",
-    "radixark/miles#967",
-    "THUDM/slime#1915",
-    "THUDM/slime#1942",
-    "radixark/miles#968",
-    "radixark/miles#944",
-    "radixark/miles#1192",
-    "radixark/miles#1777",
-    "THUDM/slime#1812",
-    "radixark/miles#1197",
-    "radixark/miles#989",
-    "THUDM/slime#1807",
-    "radixark/miles#984",
-    "radixark/miles#1739",
-    "THUDM/slime#2164",
-    "radixark/miles#937",
-    "radixark/miles#1182",
-    "radixark/miles#1713",
-    "radixark/miles#1824",
-    "radixark/miles#1779",
-    "radixark/miles#1720",
-    "THUDM/slime#1959",
-    "radixark/miles#1038",
-    "radixark/miles#1703",
-    "radixark/miles#1715",
-    "radixark/miles#1010",
-    "radixark/miles#994",
-    "THUDM/slime#2178",
-    "radixark/miles#1200",
-    "radixark/miles#1041",
-    "radixark/miles#939",
-    "radixark/miles#1220",
-    "radixark/miles#1194",
-    "THUDM/slime#1832",
-    "radixark/miles#1794",
-    "radixark/miles#1218",
-    "radixark/miles#948",
-    "radixark/miles#1699",
-    "radixark/miles#1018",
-    "radixark/miles#1207",
-    "THUDM/slime#2193",
-    "radixark/miles#1013",
-    "THUDM/slime#1953",
-    "radixark/miles#1782",
-    "radixark/miles#1216",
-    "radixark/miles#940",
-    "THUDM/slime#1775",
-    "radixark/miles#1820",
-    "THUDM/slime#1921",
-    "THUDM/slime#1929",
-    "radixark/miles#972",
-    "radixark/miles#1705",
-    "THUDM/slime#1825",
+    "radixark/miles#1773",
     "THUDM/slime#1768",
-    "THUDM/slime#2218",
-    "THUDM/slime#2170",
-    "radixark/miles#1033",
-    "radixark/miles#1754",
-    "THUDM/slime#2220",
-    "radixark/miles#1023",
-    "THUDM/slime#1855",
-    "THUDM/slime#1949",
-    "THUDM/slime#2227",
-    "THUDM/slime#1816",
-    "radixark/miles#1821",
-    "radixark/miles#958",
-    "radixark/miles#943",
-    "radixark/miles#1043",
-    "radixark/miles#976",
-    "radixark/miles#1729",
-    "THUDM/slime#2203",
-    "radixark/miles#1802",
-    "radixark/miles#1757",
-    "radixark/miles#982",
-    "radixark/miles#1227",
-    "THUDM/slime#1965",
-    "radixark/miles#1830",
-    "radixark/miles#1801",
-    "radixark/miles#1831",
-    "THUDM/slime#1938",
-    "THUDM/slime#1955",
-    "THUDM/slime#1798",
-    "radixark/miles#1210",
-    "THUDM/slime#1824",
-    "radixark/miles#1787",
-    "radixark/miles#1797",
-    "radixark/miles#985",
-    "radixark/miles#1825",
-    "THUDM/slime#2226",
-    "radixark/miles#1034",
-    "THUDM/slime#1846",
-    "THUDM/slime#1940",
-    "radixark/miles#1217",
-    "THUDM/slime#2175",
-    "radixark/miles#1689",
-    "radixark/miles#1032",
-    "radixark/miles#1702",
-    "radixark/miles#1009",
-    "THUDM/slime#1950",
-    "radixark/miles#1747",
-    "radixark/miles#1225",
-    "radixark/miles#1760",
-    "radixark/miles#1695",
-    "radixark/miles#1765",
-    "THUDM/slime#2224",
+    "radixark/miles#988",
+    "radixark/miles#1722",
+    "THUDM/slime#1928",
+    "radixark/miles#1750",
+    "THUDM/slime#1769",
+    "radixark/miles#1735",
+    "radixark/miles#1781",
+    "radixark/miles#1893",
+    "radixark/miles#1698",
+    "THUDM/slime#1919",
+    "THUDM/slime#1953",
+    "radixark/miles#1791",
+    "radixark/miles#1761",
+    "radixark/miles#1759",
+    "THUDM/slime#1922",
+    "radixark/miles#935",
+    "radixark/miles#1898",
     "THUDM/slime#2182",
+    "radixark/miles#973",
     "radixark/miles#1036",
-    "radixark/miles#1007",
-    "radixark/miles#961",
-    "THUDM/slime#1828",
-    "radixark/miles#1755",
-    "THUDM/slime#1805",
-    "THUDM/slime#2185",
-    "THUDM/slime#1849",
-    "radixark/miles#1189",
-    "radixark/miles#1012",
-    "radixark/miles#959",
-    "radixark/miles#1751",
-    "radixark/miles#963",
-    "THUDM/slime#2171",
-    "radixark/miles#1827",
-    "THUDM/slime#1788",
-    "THUDM/slime#2206",
-    "radixark/miles#942",
-    "radixark/miles#1789",
+    "radixark/miles#1219",
+    "THUDM/slime#1846",
+    "radixark/miles#991",
+    "radixark/miles#1034",
+    "THUDM/slime#2196",
+    "radixark/miles#1195",
+    "THUDM/slime#1913",
+    "radixark/miles#1894",
+    "radixark/miles#1771",
+    "radixark/miles#1887",
     "THUDM/slime#2167",
-    "THUDM/slime#1932",
-    "THUDM/slime#1813",
-    "THUDM/slime#2181",
-    "radixark/miles#1829",
-    "radixark/miles#987",
-    "THUDM/slime#1946",
-    "radixark/miles#1198",
-    "radixark/miles#952",
-    "radixark/miles#1711",
-    "THUDM/slime#1842",
-    "radixark/miles#964",
+    "radixark/miles#1876",
+    "radixark/miles#1815",
+    "THUDM/slime#2195",
+    "THUDM/slime#1797",
+    "radixark/miles#1805",
+    "THUDM/slime#2236",
+    "radixark/miles#1006",
+    "THUDM/slime#2193",
+    "radixark/miles#958",
+    "THUDM/slime#1817",
     "THUDM/slime#2172",
+    "radixark/miles#1748",
+    "radixark/miles#1215",
+    "THUDM/slime#1848",
+    "THUDM/slime#1926",
+    "radixark/miles#1182",
+    "radixark/miles#1692",
+    "radixark/miles#942",
+    "THUDM/slime#1938",
+    "THUDM/slime#2221",
+    "radixark/miles#1899",
+    "THUDM/slime#1819",
+    "radixark/miles#957",
+    "radixark/miles#1216",
+    "THUDM/slime#1781",
+    "THUDM/slime#1773",
+    "THUDM/slime#1777",
+    "THUDM/slime#1772",
+    "radixark/miles#1718",
+    "radixark/miles#1754",
+    "radixark/miles#1808",
+    "radixark/miles#1039",
+    "radixark/miles#1713",
+    "radixark/miles#1721",
+    "THUDM/slime#2164",
+    "radixark/miles#1755",
+    "THUDM/slime#1944",
+    "radixark/miles#1891",
+    "THUDM/slime#1965",
+    "radixark/miles#1688",
+    "radixark/miles#1711",
+    "THUDM/slime#2177",
+    "radixark/miles#1014",
+    "radixark/miles#1774",
+    "radixark/miles#1902",
+    "THUDM/slime#1842",
+    "radixark/miles#1767",
+    "THUDM/slime#1834",
+    "radixark/miles#985",
+    "THUDM/slime#1836",
+    "radixark/miles#1904",
+    "radixark/miles#1005",
+    "radixark/miles#1769",
+    "radixark/miles#1799",
+    "radixark/miles#951",
+    "radixark/miles#1020",
+    "THUDM/slime#1858",
+    "THUDM/slime#1823",
+    "radixark/miles#943",
+    "THUDM/slime#1916",
+    "THUDM/slime#2240",
+    "radixark/miles#1703",
+    "THUDM/slime#2235",
+    "THUDM/slime#2233",
+    "THUDM/slime#1945",
+    "radixark/miles#1824",
+    "radixark/miles#1183",
+    "THUDM/slime#2166",
+    "THUDM/slime#2241",
+    "THUDM/slime#2189",
+    "radixark/miles#1222",
+    "radixark/miles#1828",
+    "THUDM/slime#1816",
+    "radixark/miles#1690",
+    "radixark/miles#1192",
+    "THUDM/slime#1914",
+    "radixark/miles#1196",
+    "radixark/miles#1201",
+    "radixark/miles#1001",
+    "THUDM/slime#1776",
+    "radixark/miles#1729",
+    "radixark/miles#948",
+    "radixark/miles#964",
+    "radixark/miles#1813",
+    "THUDM/slime#2204",
+    "THUDM/slime#2226",
+    "radixark/miles#1029",
+    "radixark/miles#1211",
+    "radixark/miles#1715",
+    "radixark/miles#1747",
+    "THUDM/slime#1925",
+    "radixark/miles#1756",
+    "radixark/miles#1018",
+    "THUDM/slime#1849",
+    "radixark/miles#1011",
+    "THUDM/slime#1954",
+    "radixark/miles#965",
+    "radixark/miles#1831",
+    "radixark/miles#1817",
+    "radixark/miles#1763",
+    "radixark/miles#1784",
+    "radixark/miles#996",
+    "radixark/miles#1693",
+    "radixark/miles#1792",
+    "radixark/miles#1197",
+    "radixark/miles#1821",
+    "THUDM/slime#2174",
+    "radixark/miles#1230",
+    "radixark/miles#1768",
+    "radixark/miles#1883",
+    "radixark/miles#1010",
+    "THUDM/slime#1947",
+    "radixark/miles#994",
+    "radixark/miles#1798",
+    "radixark/miles#1714",
+    "radixark/miles#1793",
+    "radixark/miles#1009",
+    "radixark/miles#1727",
+    "radixark/miles#1916",
+    "radixark/miles#1801",
+    "THUDM/slime#1917",
+    "THUDM/slime#1950",
+    "radixark/miles#959",
+    "radixark/miles#982",
+    "radixark/miles#1032",
+    "radixark/miles#1710",
+    "THUDM/slime#2227",
+    "THUDM/slime#1807",
+    "THUDM/slime#1924",
+    "radixark/miles#1702",
+    "radixark/miles#992",
+    "radixark/miles#1786",
+    "radixark/miles#938",
+    "radixark/miles#1227",
+    "radixark/miles#1914",
+    "radixark/miles#1802",
+    "radixark/miles#1778",
+    "radixark/miles#1741",
+    "THUDM/slime#1856",
+    "THUDM/slime#1798",
+    "radixark/miles#1804",
+    "radixark/miles#1829",
+    "radixark/miles#1739",
+    "radixark/miles#1191",
+    "radixark/miles#1765",
+    "radixark/miles#1896",
+    "THUDM/slime#2175",
+    "radixark/miles#1210",
     "THUDM/slime#1835",
-    "THUDM/slime#2198",
-    "radixark/miles#1737",
-    "radixark/miles#1816",
-    "radixark/miles#980",
+    "radixark/miles#967",
+    "THUDM/slime#1956",
+    "THUDM/slime#1921",
+    "THUDM/slime#1958",
+    "THUDM/slime#2184",
+    "THUDM/slime#2228",
+    "radixark/miles#1229",
+    "radixark/miles#1038",
+    "THUDM/slime#1930",
+    "radixark/miles#1874",
+    "radixark/miles#1707",
+    "radixark/miles#1900",
+    "radixark/miles#1810",
+    "radixark/miles#961",
+    "THUDM/slime#1933",
+    "radixark/miles#1920",
+    "radixark/miles#990",
+    "radixark/miles#1699",
+    "radixark/miles#1734",
+    "radixark/miles#1031",
+    "THUDM/slime#1813",
+    "radixark/miles#1705",
+    "radixark/miles#1915",
+    "THUDM/slime#2187",
+    "radixark/miles#1819",
+    "radixark/miles#1892",
+    "radixark/miles#1789",
+    "radixark/miles#987",
+    "THUDM/slime#1949",
+    "radixark/miles#940",
+    "radixark/miles#1028",
+    "radixark/miles#1689",
+    "THUDM/slime#1791",
+    "radixark/miles#1209",
+    "radixark/miles#1044",
+    "radixark/miles#1720",
+    "THUDM/slime#2206",
+    "THUDM/slime#2162",
+    "THUDM/slime#2217",
+    "THUDM/slime#1927",
+    "THUDM/slime#2169",
+    "radixark/miles#1758",
+    "radixark/miles#1827",
+    "radixark/miles#1740",
+    "radixark/miles#1007",
+    "radixark/miles#1184",
+    "THUDM/slime#1805",
+    "radixark/miles#1764",
+    "radixark/miles#1042",
+    "radixark/miles#947",
+    "radixark/miles#995",
+    "radixark/miles#1188",
+    "radixark/miles#1790",
+    "radixark/miles#1772",
+    "radixark/miles#1880",
+    "radixark/miles#1205",
+    "radixark/miles#1027",
+    "radixark/miles#1003",
+    "THUDM/slime#1855",
+    "radixark/miles#1226",
+    "THUDM/slime#2181",
+    "THUDM/slime#1774",
+    "radixark/miles#1185",
+    "radixark/miles#1015",
+    "radixark/miles#1877",
+    "THUDM/slime#1934",
+    "THUDM/slime#1814",
     "radixark/miles#1712",
     "THUDM/slime#1935",
-    "radixark/miles#1756",
-    "radixark/miles#1024",
-    "THUDM/slime#2241",
-    "THUDM/slime#1836",
-    "THUDM/slime#1945",
-    "radixark/miles#999",
-    "radixark/miles#1728",
-    "radixark/miles#1690",
-    "radixark/miles#1786",
-    "radixark/miles#1741",
-    "THUDM/slime#1948",
-    "THUDM/slime#2163",
-    "THUDM/slime#1772",
-    "THUDM/slime#1822",
-    "radixark/miles#1778",
-    "THUDM/slime#1922",
-    "radixark/miles#1748",
-    "radixark/miles#1022",
-    "radixark/miles#1040",
-    "radixark/miles#1773",
-    "THUDM/slime#2217",
-    "THUDM/slime#2190",
-    "THUDM/slime#1774",
-    "THUDM/slime#2235",
-    "THUDM/slime#2189",
-    "radixark/miles#950",
-    "THUDM/slime#1958",
-    "THUDM/slime#2243",
-    "THUDM/slime#1925",
-    "radixark/miles#1791",
-    "radixark/miles#1025",
-    "radixark/miles#1817",
-    "radixark/miles#1222",
-    "radixark/miles#1793",
-    "radixark/miles#1719",
-    "radixark/miles#1180",
-    "radixark/miles#992",
-    "radixark/miles#1219",
-    "THUDM/slime#2174",
-    "radixark/miles#1771",
-    "THUDM/slime#1931",
-    "THUDM/slime#2200",
-    "radixark/miles#1003",
-    "THUDM/slime#1947",
-    "radixark/miles#949",
-    "THUDM/slime#1814",
-    "THUDM/slime#1769",
-    "radixark/miles#951",
-    "radixark/miles#1229",
-    "radixark/miles#1781",
-    "THUDM/slime#1797",
-    "radixark/miles#1769",
-    "radixark/miles#986",
-    "radixark/miles#1004",
-    "radixark/miles#1188",
-    "radixark/miles#1706",
-    "radixark/miles#1792",
-    "THUDM/slime#2208",
-    "THUDM/slime#1841",
-    "radixark/miles#1736",
-    "THUDM/slime#2187",
-    "radixark/miles#988",
-    "radixark/miles#1752",
-    "THUDM/slime#2242",
-    "radixark/miles#1011",
-    "radixark/miles#1692",
-    "radixark/miles#1726",
-    "radixark/miles#1722",
-    "THUDM/slime#1809",
-    "radixark/miles#1818",
-    "radixark/miles#1021",
-    "radixark/miles#1798",
-    "radixark/miles#1001",
-    "radixark/miles#1015",
-    "THUDM/slime#1939",
-    "radixark/miles#1800",
-    "radixark/miles#1819",
-    "THUDM/slime#2207",
-    "radixark/miles#1810",
-    "radixark/miles#1708",
-    "radixark/miles#1764",
-    "radixark/miles#1721",
-    "radixark/miles#1223",
-    "radixark/miles#995",
-    "radixark/miles#1735",
-    "THUDM/slime#2239",
-    "radixark/miles#975",
-    "radixark/miles#1000",
-    "THUDM/slime#1954",
-    "THUDM/slime#1943",
-    "radixark/miles#1823",
-    "radixark/miles#945",
-    "radixark/miles#1221",
-    "radixark/miles#1228",
-    "radixark/miles#1014",
-    "THUDM/slime#1937",
-    "radixark/miles#1784",
-    "radixark/miles#953",
-    "THUDM/slime#2183",
-    "radixark/miles#1733",
-    "radixark/miles#1806",
     "radixark/miles#1691",
-    "THUDM/slime#2180",
-    "radixark/miles#1822",
-    "radixark/miles#1195",
-    "radixark/miles#1783",
-    "radixark/miles#1807",
-    "THUDM/slime#2210",
-    "THUDM/slime#1823",
-    "radixark/miles#1734",
-    "radixark/miles#1184",
-    "THUDM/slime#1857",
-    "radixark/miles#1718",
-    "THUDM/slime#1918",
-    "radixark/miles#1193",
-    "THUDM/slime#1930",
-    "THUDM/slime#1858",
-    "THUDM/slime#1933",
-    "radixark/miles#977",
-    "THUDM/slime#1952",
-    "radixark/miles#941",
-    "radixark/miles#1709",
-    "THUDM/slime#1941",
-    "radixark/miles#1768",
-    "radixark/miles#1191",
-    "radixark/miles#1772",
-    "THUDM/slime#1920",
-    "radixark/miles#965",
-    "radixark/miles#1208",
-    "radixark/miles#1714",
-    "radixark/miles#1206",
-    "radixark/miles#1030",
-    "radixark/miles#1196",
-    "THUDM/slime#1944",
-    "radixark/miles#954",
-    "THUDM/slime#2238",
-    "THUDM/slime#1913",
-    "radixark/miles#991",
-    "radixark/miles#960",
-    "radixark/miles#1799",
-    "radixark/miles#947",
-    "radixark/miles#1750",
-    "radixark/miles#1696",
-    "radixark/miles#1020",
-    "radixark/miles#974",
-    "radixark/miles#1808",
-    "radixark/miles#1815",
-    "radixark/miles#1803",
-    "radixark/miles#1759",
-    "THUDM/slime#2233",
-    "THUDM/slime#2196",
-    "radixark/miles#1738",
-    "THUDM/slime#2199",
-    "THUDM/slime#1957",
-    "THUDM/slime#1856",
-    "THUDM/slime#2211",
-    "radixark/miles#1212",
-    "radixark/miles#1776",
-    "THUDM/slime#1834",
+    "radixark/miles#1901",
     "radixark/miles#1809",
+    "THUDM/slime#1961",
+    "radixark/miles#1181",
+    "THUDM/slime#1940",
+    "radixark/miles#950",
+    "radixark/miles#1830",
+    "radixark/miles#1723",
+    "radixark/miles#949",
+    "radixark/miles#1008",
+    "THUDM/slime#2238",
+    "THUDM/slime#2210",
+    "radixark/miles#1224",
+    "radixark/miles#1030",
+    "radixark/miles#1908",
+    "radixark/miles#954",
+    "radixark/miles#1013",
+    "radixark/miles#1019",
+    "THUDM/slime#2239",
+    "radixark/miles#937",
+    "radixark/miles#1701",
+    "radixark/miles#1878",
+    "radixark/miles#1189",
+    "radixark/miles#1695",
+    "radixark/miles#1903",
+    "radixark/miles#1822",
+    "radixark/miles#1694",
+    "radixark/miles#1797",
+    "THUDM/slime#2185",
+    "THUDM/slime#1931",
+    "radixark/miles#1776",
+    "THUDM/slime#1942",
+    "radixark/miles#941",
+    "radixark/miles#1795",
+    "THUDM/slime#1770",
+    "radixark/miles#1751",
+    "THUDM/slime#2203",
+    "radixark/miles#1912",
+    "radixark/miles#1017",
+    "THUDM/slime#1832",
+    "radixark/miles#1907",
+    "THUDM/slime#1923",
+    "radixark/miles#1179",
+    "radixark/miles#1221",
+    "radixark/miles#1787",
+    "radixark/miles#1814",
+    "radixark/miles#1202",
+    "radixark/miles#968",
+    "radixark/miles#1806",
+    "radixark/miles#1696",
+    "radixark/miles#984",
+    "THUDM/slime#1812",
+    "radixark/miles#977",
+    "radixark/miles#976",
+    "radixark/miles#1919",
+    "THUDM/slime#2223",
+    "THUDM/slime#1948",
+    "radixark/miles#1884",
+    "radixark/miles#1812",
+    "THUDM/slime#1932",
+    "radixark/miles#1199",
+    "radixark/miles#1198",
+    "radixark/miles#1760",
+    "radixark/miles#1753",
+    "THUDM/slime#2207",
+    "radixark/miles#1220",
+    "radixark/miles#1905",
+    "THUDM/slime#1939",
+    "radixark/miles#1021",
+    "radixark/miles#1717",
+    "radixark/miles#1762",
+    "radixark/miles#1923",
+    "radixark/miles#1882",
+    "THUDM/slime#2224",
+    "THUDM/slime#1857",
+    "THUDM/slime#1920",
+    "radixark/miles#944",
+    "radixark/miles#1766",
+    "radixark/miles#1886",
+    "THUDM/slime#2190",
+    "radixark/miles#1738",
+    "THUDM/slime#2219",
+    "THUDM/slime#1788",
+    "radixark/miles#1752",
+    "radixark/miles#1909",
+    "radixark/miles#1033",
+    "THUDM/slime#2211",
+    "radixark/miles#974",
+    "THUDM/slime#2198",
+    "radixark/miles#1782",
+    "radixark/miles#999",
+    "radixark/miles#1035",
+    "THUDM/slime#1844",
+    "radixark/miles#972",
+    "radixark/miles#1719",
+    "THUDM/slime#2234",
+    "radixark/miles#1889",
+    "radixark/miles#1023",
+    "THUDM/slime#1963",
+    "THUDM/slime#2178",
+    "radixark/miles#1016",
+    "radixark/miles#1716",
+    "radixark/miles#1785",
+    "radixark/miles#1203",
+    "radixark/miles#1800",
+    "radixark/miles#1223",
+    "radixark/miles#1012",
+    "radixark/miles#1228",
+    "THUDM/slime#2183",
+    "THUDM/slime#2199",
+    "radixark/miles#1826",
+    "THUDM/slime#1943",
+    "radixark/miles#953",
+    "THUDM/slime#2205",
+    "THUDM/slime#1822",
+    "THUDM/slime#1962",
+    "radixark/miles#1026",
+    "radixark/miles#975",
+    "THUDM/slime#1808",
+    "radixark/miles#1217",
+    "radixark/miles#1803",
+    "radixark/miles#1214",
+    "THUDM/slime#1915",
+    "radixark/miles#1890",
+    "radixark/miles#1000",
+    "radixark/miles#1190",
+    "radixark/miles#1709",
+    "radixark/miles#1818",
+    "THUDM/slime#1801",
+    "THUDM/slime#2200",
+    "THUDM/slime#1824",
+    "radixark/miles#1910",
+    "radixark/miles#1737",
+    "THUDM/slime#2197",
+    "radixark/miles#1732",
+    "radixark/miles#1879",
+    "radixark/miles#1726",
+    "THUDM/slime#2237",
+    "radixark/miles#1783",
+    "radixark/miles#1206",
+    "radixark/miles#1025",
+    "radixark/miles#1911",
+    "radixark/miles#963",
+    "radixark/miles#1708",
+    "radixark/miles#1917",
+    "THUDM/slime#1828",
+    "THUDM/slime#2242",
+    "radixark/miles#1200",
+    "THUDM/slime#1825",
+    "radixark/miles#986",
+    "THUDM/slime#2213",
+    "radixark/miles#1704",
+    "THUDM/slime#2163",
+    "radixark/miles#1736",
+    "THUDM/slime#1941",
+    "radixark/miles#1725",
+    "radixark/miles#1757",
+    "radixark/miles#993",
+    "radixark/miles#1823",
+    "radixark/miles#1875",
+    "radixark/miles#946",
+    "THUDM/slime#2218",
+    "THUDM/slime#1955",
+    "radixark/miles#1004",
+    "radixark/miles#1779",
+    "radixark/miles#1794",
+    "THUDM/slime#1809",
+    "THUDM/slime#1833",
+    "THUDM/slime#1827",
+    "radixark/miles#1733",
+    "radixark/miles#1922",
+    "radixark/miles#1218",
+    "radixark/miles#1706",
+    "THUDM/slime#2243",
+    "THUDM/slime#2220",
+    "radixark/miles#1225",
+    "radixark/miles#1820",
+    "radixark/miles#1918",
+    "THUDM/slime#1806",
+    "radixark/miles#939",
+    "THUDM/slime#1952",
+    "radixark/miles#1728",
+    "radixark/miles#1730",
+    "radixark/miles#989",
+    "radixark/miles#1825",
+    "radixark/miles#997",
+    "radixark/miles#1921",
+    "radixark/miles#1777",
+    "radixark/miles#980",
+    "radixark/miles#1770",
+    "radixark/miles#1193",
+    "radixark/miles#1041",
+    "THUDM/slime#1937",
+    "radixark/miles#1897",
+    "radixark/miles#1888",
+    "radixark/miles#1906",
+    "radixark/miles#1885",
+    "radixark/miles#1207",
+    "radixark/miles#1913",
+    "radixark/miles#960",
+    "radixark/miles#971",
+    "radixark/miles#1881",
+    "radixark/miles#1022",
+    "THUDM/slime#1799",
+    "radixark/miles#998",
+    "radixark/miles#1816",
+    "THUDM/slime#1959",
+    "radixark/miles#1775",
+    "THUDM/slime#1946",
+    "radixark/miles#1895",
+    "THUDM/slime#2192",
+    "radixark/miles#1180",
+    "THUDM/slime#1775",
+    "THUDM/slime#1957",
+    "radixark/miles#1204",
+    "radixark/miles#1037",
+    "THUDM/slime#2171",
+    "radixark/miles#1788",
+    "THUDM/slime#2208",
+    "THUDM/slime#1795",
+    "radixark/miles#1796",
+    "radixark/miles#945",
+    "radixark/miles#1043",
+    "THUDM/slime#1918",
+    "radixark/miles#1807",
+    "THUDM/slime#1841",
+    "THUDM/slime#1960",
+    "THUDM/slime#2180",
     "THUDM/slime#2173",
     "THUDM/slime#2216",
-    "radixark/miles#1029",
-    "radixark/miles#1698",
-    "radixark/miles#1723",
-    "radixark/miles#993",
-    "THUDM/slime#1914",
-    "radixark/miles#1026",
-    "radixark/miles#1725",
-    "radixark/miles#1199",
-    "radixark/miles#1774",
-    "radixark/miles#1179",
-    "radixark/miles#1005",
-    "THUDM/slime#1833",
-    "radixark/miles#1770",
-    "radixark/miles#1704",
-    "THUDM/slime#2204",
-    "THUDM/slime#1808",
-    "radixark/miles#1006",
-    "THUDM/slime#1795",
-    "THUDM/slime#1963",
-    "radixark/miles#1016",
-    "THUDM/slime#2192",
-    "radixark/miles#1763",
-    "THUDM/slime#1962",
-    "radixark/miles#1813",
-    "THUDM/slime#1919",
-    "THUDM/slime#2162",
-    "radixark/miles#1201",
-    "THUDM/slime#1844",
-    "THUDM/slime#2228",
-    "radixark/miles#938",
-    "radixark/miles#1795"
+    "radixark/miles#1194",
+    "radixark/miles#966",
+    "radixark/miles#952",
+    "radixark/miles#1024",
+    "THUDM/slime#1929",
+    "radixark/miles#1045",
+    "radixark/miles#1212",
+    "THUDM/slime#2170",
+    "radixark/miles#1040",
+    "radixark/miles#1208",
+    "radixark/miles#1811"
   ],
   "weekly_note": "<p>本周多框架聚焦<em>Context Parallelism</em>正确性：<b>#slime#2235</b>修复CP下<em>advantage归一化</em>进程组错误，<b>#miles#1720</b>解决CP>1时<em>PPO终端奖励</em>写入位置偏移；<b>#miles#1788</b>引入<em>true-on-policy</em>数值一致性合约，<b>#slime#2238</b>堵住异步rollout双重泄漏。</p>",
   "weekly_note_week": "2026-W31",
-  "last_updated": "2026-07-28T01:07:46.046391+00:00"
+  "last_updated": "2026-07-29T01:10:32.260514+00:00"
 }
