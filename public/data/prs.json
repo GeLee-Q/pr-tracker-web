@@ -1,6 +1,4803 @@
 {
   "prs": [
     {
+      "id": "radixark/miles#2154",
+      "repo": "radixark/miles",
+      "pr_number": 2154,
+      "title": "Make the cell based train group the only trainer implementation",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:16:10Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2154",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将基于 cell 的 train group 设为唯一的 trainer 实现，移除旧有的 trainer 路径",
+      "reason": "此 PR 是对 miles 仓库内部 trainer 架构的整合重构，涉及该仓库特有的 cell-based train group 设计和内部 actor group/placement group 机制，其命名、目录结构和设计决策均与 miles 自身架构强绑定，不具备跨框架参考价值",
+      "value": 2,
+      "subsystems": [
+        "trainer",
+        "infra",
+        "parallel"
+      ],
+      "rl_concepts": [
+        "PPO"
+      ],
+      "files": [
+        "docs/advanced/fp8-low-precision.md",
+        "miles/backends/megatron_utils/ft/indep_dp.py",
+        "miles/ray/actor_group.py",
+        "miles/ray/placement_group.py",
+        "miles/utils/arguments.py",
+        "miles/utils/dumper_utils.py",
+        "miles/utils/environ.py",
+        "tests/e2e/ft/conftest_ft/execution.py",
+        "tests/e2e/ft/conftest_ft/scenario_realistic_gsm8k.py",
+        "tests/fast/ray/test_actor_group_shared_ppo.py",
+        "tests/fast/ray/test_update_weights_ordering.py",
+        "tests/fast/utils/test_arguments.py"
+      ],
+      "diff_preview": {
+        "additions": 15,
+        "deletions": 279,
+        "hunks": [
+          {
+            "file": "docs/advanced/fp8-low-precision.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -96,7 +96,7 @@ Block layout is 128×128 with FP32 scales."
+              ],
+              [
+                " ",
+                "| `--use-tis` | Truncated Importance Sampling for residual precision drift. |"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "Set `NVTE_FP8_BLOCK_SCALING_FP32_SCALES=1` in the Ray runtime env to use FP32"
+              ],
+              [
+                "-",
+                "scales (`miles/ray/actor_group.py` already sets this in the actor env)."
+              ],
+              [
+                "+",
+                "scales (`miles/ray/train/actor_factory.py` already sets this in the actor env)."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "For models that already ship 128×128 block-wise FP8 weights (DeepSeek-V3,"
+              ],
+              [
+                " ",
+                "DeepSeek-R1, `Qwen/Qwen3-30B-A3B-FP8`), point `--hf-checkpoint` at the"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T02:00:08.633855+00:00"
+    },
+    {
+      "id": "radixark/miles#2155",
+      "repo": "radixark/miles",
+      "pr_number": 2155,
+      "title": "Assign the trainer master address from the driver instead of rank zero",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:16:13Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2155",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "将 trainer 的 master address 从 rank 0 节点自行获取改为由 driver 统一分配，避免分布式训练中地址获取的竞态或错误问题",
+      "reason": "分布式训练中 master address 的正确传递是所有使用 Ray + 多节点训练框架的通用问题，任何基于 Ray actor 的 RL 训练框架（如 slime、verl 等）都可能遇到同样的 rank0 地址获取不稳定问题，修复思路具有普遍参考价值",
+      "value": 4,
+      "subsystems": [
+        "trainer",
+        "infra",
+        "parallel"
+      ],
+      "rl_concepts": [
+        "分布式训练",
+        "Ray"
+      ],
+      "files": [
+        "miles/ray/train/actor_factory.py",
+        "miles/ray/train_actor.py",
+        "tests/fast/ray/train/test_actor_factory.py"
+      ],
+      "diff_preview": {
+        "additions": 89,
+        "deletions": 17,
+        "hunks": [
+          {
+            "file": "miles/ray/train/actor_factory.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -79,7 +79,6 @@ def allocate_gpus_for_actor("
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    # Create worker actors"
+              ],
+              [
+                " ",
+                "    actor_handles = []"
+              ],
+              [
+                "-",
+                "    master_addr, master_port = None, None"
+              ],
+              [
+                " ",
+                "    for rank in range(world_size):"
+              ],
+              [
+                " ",
+                "        options = dict("
+              ],
+              [
+                " ",
+                "            num_cpus=num_gpus_per_actor,"
+              ],
+              [
+                "h",
+                "@@ -96,16 +95,21 @@ def allocate_gpus_for_actor("
+              ],
+              [
+                " ",
+                "            args=args,"
+              ],
+              [
+                " ",
+                "            world_size=world_size,"
+              ],
+              [
+                " ",
+                "            rank=rank,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:10:48.330311+00:00"
+    },
+    {
+      "id": "radixark/miles#2156",
+      "repo": "radixark/miles",
+      "pr_number": 2156,
+      "title": "Extract the shared actor creation and port allocation in the worker manager",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:16:17Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2156",
+      "category": "refactor",
+      "scope": "universal",
+      "summary": "将 worker manager 中重复的 actor 创建逻辑和端口分配逻辑提取为共享方法，消除代码冗余",
+      "reason": "Worker manager 的 actor 创建与端口分配是分布式 RL 训练框架的通用基础设施模式，任何使用 Ray 进行多 worker 管理的框架（如 slime、verl 等）都有类似结构，此类重构对理解 Ray actor 生命周期管理具有参考价值",
+      "value": 2,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/workers/ray_worker_manager.py"
+      ],
+      "diff_preview": {
+        "additions": 52,
+        "deletions": 44,
+        "hunks": [
+          {
+            "file": "miles/utils/workers/ray_worker_manager.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -232,24 +232,62 @@ class _BaseActorManager(Generic[SpecT]):"
+              ],
+              [
+                " ",
+                "    async def launch_actor(self) -> None:"
+              ],
+              [
+                " ",
+                "        raise NotImplementedError"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "    async def alloc_ports(self) -> None:"
+              ],
+              [
+                "-",
+                "        raise NotImplementedError"
+              ],
+              [
+                "-",
+                ""
+              ],
+              [
+                " ",
+                "    async def post_setup(self) -> None:"
+              ],
+              [
+                " ",
+                "        raise NotImplementedError"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "    async def alloc_ports(self) -> None:"
+              ],
+              [
+                "+",
+                "        self.self_addrs = {}"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:10:41.056505+00:00"
+    },
+    {
+      "id": "radixark/miles#2157",
+      "repo": "radixark/miles",
+      "pr_number": 2157,
+      "title": "Give worker specs a launch context and serve mode scheduling options",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:16:21Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2157",
+      "category": "feature",
+      "scope": "repo-specific",
+      "summary": "为 worker spec 添加 launch context 和 serve 模式调度选项，允许在推理/服务两种模式下灵活配置 Ray worker 的启动参数",
+      "reason": "该 PR 修改的是 miles 仓库自身的 Ray worker 调度器、worker spec 抽象层及其推理引擎集成，属于该仓库特有的内部调度/路由机制，其他框架不共享这套 worker spec + launch context 设计",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "rollout"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/specs/inference.py",
+        "miles/utils/workers/ray_worker_manager.py",
+        "miles/utils/workers/worker_spec.py",
+        "tests/fast/utils/workers/real_ray/conftest.py",
+        "tests/fast/utils/workers/test_ray_worker_manager.py",
+        "tests/fast/utils/workers/test_worker_spec.py"
+      ],
+      "diff_preview": {
+        "additions": 78,
+        "deletions": 25,
+        "hunks": [
+          {
+            "file": "miles/ray/specs/inference.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -56,7 +56,7 @@ def _compute_launch_command(ctx: LaunchCommandContext) -> str:"
+              ],
+              [
+                " ",
+                "            PortInfo(name=\"primary\", static_port=8000, allow_dynamic=True),"
+              ],
+              [
+                " ",
+                "            PortInfo(name=\"prometheus\", static_port=9000, allow_dynamic=True),"
+              ],
+              [
+                " ",
+                "        ],"
+              ],
+              [
+                "-",
+                "        env_var=lambda: {},"
+              ],
+              [
+                "+",
+                "        env_var=lambda _ctx: {},"
+              ],
+              [
+                " ",
+                "        scheduling=SchedulingSpec.single("
+              ],
+              [
+                " ",
+                "            num_gpus_per_worker=0,"
+              ],
+              [
+                " ",
+                "            # TODO: refactor the flag"
+              ],
+              [
+                "h",
+                "@@ -86,7 +86,7 @@ def _compute_launch_command(ctx: LaunchCommandContext) -> str:"
+              ],
+              [
+                " ",
+                "        port_infos=["
+              ],
+              [
+                " ",
+                "            PortInfo(name=\"primary\", static_port=8000, allow_dynamic=True),"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:10:34.608242+00:00"
+    },
+    {
+      "id": "radixark/miles#2158",
+      "repo": "radixark/miles",
+      "pr_number": 2158,
+      "title": "Launch serve mode workers from RayWorkerManager",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:16:24Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2158",
+      "category": "feature",
+      "scope": "repo-specific",
+      "summary": "在 RayWorkerManager 中新增从 serve 模式启动 worker 的能力，并补充对应测试",
+      "reason": "该改动围绕 miles 仓库自有的 RayWorkerManager 调度/管理组件展开，属于该仓库内部的 worker 启动机制扩展，不涉及通用的 rollout 引擎、RL 算法或通用训练基础设施，其他框架不会直接复用此逻辑",
+      "value": 2,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/workers/ray_worker_manager.py",
+        "tests/fast/utils/workers/fake_ray.py",
+        "tests/fast/utils/workers/test_ray_worker_manager_serve.py"
+      ],
+      "diff_preview": {
+        "additions": 184,
+        "deletions": 5,
+        "hunks": [
+          {
+            "file": "miles/utils/workers/ray_worker_manager.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -9,6 +9,7 @@"
+              ],
+              [
+                " ",
+                "import ray"
+              ],
+              [
+                " ",
+                "from ray.util.scheduling_strategies import PlacementGroupSchedulingStrategy"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "from miles.utils.function_registry import load_function"
+              ],
+              [
+                " ",
+                "from miles.utils.http_utils import _wrap_ipv6"
+              ],
+              [
+                " ",
+                "from miles.utils.ray_utils import compute_ray_pin_head_options"
+              ],
+              [
+                " ",
+                "from miles.utils.workers.addr_allocator import PortAllocator"
+              ],
+              [
+                "h",
+                "@@ -21,6 +22,7 @@"
+              ],
+              [
+                " ",
+                "    HostAndPort,"
+              ],
+              [
+                " ",
+                "    LaunchCommandContext,"
+              ],
+              [
+                " ",
+                "    NamedHostAndPorts,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:10:28.259181+00:00"
+    },
+    {
+      "id": "radixark/miles#2159",
+      "repo": "radixark/miles",
+      "pr_number": 2159,
+      "title": "Add worker specs for the trainer actor and critic",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:16:27Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2159",
+      "category": "infra",
+      "scope": "universal",
+      "summary": "为 trainer actor 和 critic 添加 worker specs 配置，支持在 Ray placement group 中为训练组件指定资源规格",
+      "reason": "Ray 分布式训练中为 actor/critic 配置 worker specs（CPU/GPU 资源、placement group 策略）是通用的分布式 RL 训练基础设施模式，其他使用 Ray 的 RL 框架（如 slime、verl 等）在管理 trainer/critic 资源时面临相同问题",
+      "value": 3,
+      "subsystems": [
+        "trainer",
+        "infra",
+        "parallel"
+      ],
+      "rl_concepts": [
+        "actor",
+        "critic",
+        "PPO"
+      ],
+      "files": [
+        "miles/ray/placement_group.py",
+        "miles/ray/specs/train.py",
+        "miles/ray/train/actor_factory.py",
+        "miles/ray/train/group.py",
+        "miles/utils/ft_utils/indep_dp.py",
+        "tests/fast/ray/specs/test_train.py",
+        "tests/fast/ray/test_actor_factory.py"
+      ],
+      "diff_preview": {
+        "additions": 390,
+        "deletions": 145,
+        "hunks": [
+          {
+            "file": "miles/ray/placement_group.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -1,4 +1,3 @@"
+              ],
+              [
+                "-",
+                "import copy"
+              ],
+              [
+                " ",
+                "import logging"
+              ],
+              [
+                " ",
+                "import socket"
+              ],
+              [
+                " ",
+                "from typing import NamedTuple"
+              ],
+              [
+                "h",
+                "@@ -7,6 +6,7 @@"
+              ],
+              [
+                " ",
+                "from ray.util.placement_group import PlacementGroup, placement_group"
+              ],
+              [
+                " ",
+                "from ray.util.scheduling_strategies import PlacementGroupSchedulingStrategy"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "from miles.ray.specs.train import compute_critic_args"
+              ],
+              [
+                " ",
+                "from miles.ray.train.group import RayTrainGroup"
+              ],
+              [
+                " ",
+                "from ..utils.ray_utils import compute_ray_pin_head_options"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:10:22.217810+00:00"
+    },
+    {
+      "id": "radixark/miles#2160",
+      "repo": "radixark/miles",
+      "pr_number": 2160,
+      "title": "Inline the fault-tolerance concurrency groups onto the trainer actor",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:16:30Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2160",
+      "category": "refactor",
+      "scope": "universal",
+      "summary": "将容错并发组（fault-tolerance concurrency groups）从独立配置内联到 trainer actor 上，简化并发组的管理方式",
+      "reason": "容错并发组是分布式 RL 训练框架中处理 actor 故障恢复的通用机制，Ray 生态下的训练框架普遍需要处理此类问题，该重构模式对其他使用 Ray + trainer actor 架构的框架同样有参考价值",
+      "value": 3,
+      "subsystems": [
+        "trainer",
+        "infra"
+      ],
+      "rl_concepts": [
+        "fault-tolerance",
+        "Ray"
+      ],
+      "files": [
+        "miles/ray/specs/train.py",
+        "miles/ray/train/actor_factory.py",
+        "miles/ray/train_actor.py",
+        "tests/fast/ray/specs/test_train.py"
+      ],
+      "diff_preview": {
+        "additions": 15,
+        "deletions": 27,
+        "hunks": [
+          {
+            "file": "miles/ray/specs/train.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -2,6 +2,7 @@"
+              ],
+              [
+                " ",
+                "import os"
+              ],
+              [
+                " ",
+                "from pathlib import Path"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "from miles.ray.train_actor import TRAINER_CONCURRENCY_GROUPS"
+              ],
+              [
+                " ",
+                "from miles.ray.utils import NOSET_VISIBLE_DEVICES_ENV_VARS_LIST"
+              ],
+              [
+                " ",
+                "from miles.utils.environ import default_fp8_block_scaling_fp32_scales"
+              ],
+              [
+                " ",
+                "from miles.utils.ft_utils.indep_dp import create_tcp_store"
+              ],
+              [
+                "h",
+                "@@ -98,9 +99,7 @@ def _compute_spec_trainer("
+              ],
+              [
+                " ",
+                "            role=role,"
+              ],
+              [
+                " ",
+                "            cell_index=ctx.cell_index,"
+              ],
+              [
+                " ",
+                "        ),"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:10:15.559173+00:00"
+    },
+    {
+      "id": "radixark/miles#2161",
+      "repo": "radixark/miles",
+      "pr_number": 2161,
+      "title": "Launch trainer actors through RayWorkerManager",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:16:35Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2161",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将 trainer actor 的启动方式统一迁移到 RayWorkerManager 管理，重构 Ray 训练组件的 actor 生命周期管理逻辑",
+      "reason": "该 PR 涉及 miles 仓库特有的 RayWorkerManager、placement group、cell/group 等内部调度抽象层的重构，这些组件是 miles 自身的 Ray 集群管理架构，并非通用的 RL 训练基础设施改动，其他框架不会直接复用这套内部 worker 管理机制",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "Ray"
+      ],
+      "files": [
+        "docs/advanced/fp8-low-precision.md",
+        "miles/ray/placement_group.py",
+        "miles/ray/specs/entrypoint.py",
+        "miles/ray/train/cell.py",
+        "miles/ray/train/group.py",
+        "miles/ray/train_actor.py",
+        "miles/utils/workers/worker_provider/ray.py",
+        "tests/fast/ray/rollout/conftest.py",
+        "tests/fast/ray/specs/test_entrypoint.py",
+        "tests/fast/ray/test_placement_group_shared_ppo.py",
+        "tests/fast/ray/train/conftest.py",
+        "tests/fast/ray/train/dummy_actor.py",
+        "tests/fast/ray/train/test_cell_master_addr.py",
+        "tests/fast/ray/train/test_group.py"
+      ],
+      "diff_preview": {
+        "additions": 169,
+        "deletions": 165,
+        "hunks": [
+          {
+            "file": "docs/advanced/fp8-low-precision.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -96,7 +96,7 @@ Block layout is 128×128 with FP32 scales."
+              ],
+              [
+                " ",
+                "| `--use-tis` | Truncated Importance Sampling for residual precision drift. |"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "Set `NVTE_FP8_BLOCK_SCALING_FP32_SCALES=1` in the Ray runtime env to use FP32"
+              ],
+              [
+                "-",
+                "scales (`miles/ray/train/actor_factory.py` already sets this in the actor env)."
+              ],
+              [
+                "+",
+                "scales (`compute_trainer_env_vars` in `miles/ray/specs/train.py` already sets this in the actor env)."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "For models that already ship 128×128 block-wise FP8 weights (DeepSeek-V3,"
+              ],
+              [
+                " ",
+                "DeepSeek-R1, `Qwen/Qwen3-30B-A3B-FP8`), point `--hf-checkpoint` at the"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:10:08.914404+00:00"
+    },
+    {
+      "id": "radixark/miles#2162",
+      "repo": "radixark/miles",
+      "pr_number": 2162,
+      "title": "Delete the trainer actor factory and the placement group plumbing",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:16:38Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2162",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "删除 trainer actor factory 及相关 placement group 管道代码，简化 Ray 训练组件的初始化与编排逻辑",
+      "reason": "此 PR 移除的是该仓库自有的 Ray actor 工厂抽象（actor_factory.py）和 placement group 配置管道（placement_group.py、wiring.py），属于该仓库特有的调度与编排层实现，其他框架不会直接复用这套内部抽象，因此属于 repo-specific",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "trainer"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/placement_group.py",
+        "miles/ray/train/actor_factory.py",
+        "miles/ray/wiring.py",
+        "tests/fast/ray/test_placement_group_shared_ppo.py",
+        "tests/fast/ray/train/test_actor_factory.py",
+        "train.py",
+        "train_async.py",
+        "train_multi_lora_async.py"
+      ],
+      "diff_preview": {
+        "additions": 8,
+        "deletions": 161,
+        "hunks": [
+          {
+            "file": "miles/ray/placement_group.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -124,7 +124,7 @@ def create_placement_groups(args) -> dict[str, PlacementGroupInfo]:"
+              ],
+              [
+                " ",
+                "    return ans"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "async def create_training_models(args, pgs, inference_controller, rollout_executor):"
+              ],
+              [
+                "+",
+                "async def create_training_models(args, inference_controller, rollout_executor):"
+              ],
+              [
+                " ",
+                "    actor_model = RayTrainGroup("
+              ],
+              [
+                " ",
+                "        args=args,"
+              ],
+              [
+                " ",
+                "        role=\"actor\","
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:10:02.044889+00:00"
+    },
+    {
+      "id": "radixark/miles#2163",
+      "repo": "radixark/miles",
+      "pr_number": 2163,
+      "title": "Restart trainer cells through RayWorkerManager",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:16:42Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2163",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "通过 RayWorkerManager 实现 trainer cell 的重启功能，支持训练过程中故障恢复",
+      "reason": "该 PR 实现的是 miles 框架特有的 RayWorkerManager 和 cell/group 抽象层上的重启机制，属于该仓库内部调度和容错架构的扩展，虽然容错训练是通用需求，但具体实现强依赖 miles 特有的 cell/group/worker 命名与管理体系",
+      "value": 3,
+      "subsystems": [
+        "infra",
+        "trainer",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/train/cell.py",
+        "miles/ray/train/group.py",
+        "miles/utils/ft_utils/api_server/handles.py",
+        "miles/utils/test_utils/ft_test_actions.py",
+        "miles/utils/workers/naming.py",
+        "miles/utils/workers/ray_worker_manager.py",
+        "tests/fast/ray/train/conftest.py",
+        "tests/fast/ray/train/fake_worker_manager.py",
+        "tests/fast/ray/train/test_cell.py",
+        "tests/fast/ray/train/test_cell_restart.py",
+        "tests/fast/ray/train/test_group.py",
+        "tests/fast/ray/train/test_group_failure_reporting.py",
+        "tests/fast/ray/train/test_train_external_data.py",
+        "tests/fast/ray/train/test_train_return_value.py",
+        "tests/fast/utils/api_server/test_handles.py",
+        "tests/fast/utils/test_utils/test_ft_test_actions.py"
+      ],
+      "diff_preview": {
+        "additions": 245,
+        "deletions": 165,
+        "hunks": [
+          {
+            "file": "miles/ray/train/cell.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -19,6 +19,8 @@"
+              ],
+              [
+                " ",
+                "from miles.utils.ft_utils.health_checker import BaseHealthChecker"
+              ],
+              [
+                " ",
+                "from miles.utils.ft_utils.indep_dp import IndepDPInfo"
+              ],
+              [
+                " ",
+                "from miles.utils.tracking_utils.structured_log import log_structured"
+              ],
+              [
+                "+",
+                "from miles.utils.workers.naming import compute_cell_id"
+              ],
+              [
+                "+",
+                "from miles.utils.workers.ray_worker_manager import RayWorkerManager"
+              ],
+              [
+                " ",
+                "from miles.utils.workers.worker_provider.ray import RayWorkerProvider"
+              ],
+              [
+                " ",
+                "from miles.utils.workers.worker_spec import HostAndPort"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -50,7 +52,7 @@ def __init__("
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "        # NOTE: do *NOT* directly modify `self._state`, but instead use `self._change_state`"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:09:55.806113+00:00"
+    },
+    {
+      "id": "radixark/miles#2164",
+      "repo": "radixark/miles",
+      "pr_number": 2164,
+      "title": "Drive trainer cell bookkeeping from the worker provider",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:16:45Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2164",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将 trainer cell 的簿记逻辑从 trainer 自身迁移到 worker provider 驱动，理清组件职责边界",
+      "reason": "该 PR 涉及的是 miles 框架内部特有的 trainer cell、worker provider、Ray placement group 等概念及其协作方式，属于该仓库自身调度与 worker 管理架构的重构，其他框架不共享这套抽象",
+      "value": 2,
+      "subsystems": [
+        "trainer",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/placement_group.py",
+        "miles/ray/train/group.py",
+        "miles/utils/workers/naming.py",
+        "tests/fast/ray/test_placement_group_shared_ppo.py",
+        "tests/fast/ray/train/test_group.py",
+        "tests/fast/ray/train/test_group_failure_reporting.py",
+        "tests/fast/ray/train/test_group_reconcile.py",
+        "tests/fast/ray/train/test_group_reconcile_adapters.py",
+        "tests/fast/ray/train/test_train_external_data.py",
+        "tests/fast/ray/train/test_train_return_value.py",
+        "tests/fast/utils/api_server/conftest.py",
+        "tests/fast/utils/api_server/test_handles.py"
+      ],
+      "diff_preview": {
+        "additions": 182,
+        "deletions": 46,
+        "hunks": [
+          {
+            "file": "miles/ray/placement_group.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -125,7 +125,7 @@ def create_placement_groups(args) -> dict[str, PlacementGroupInfo]:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "async def create_training_models(args, inference_controller, rollout_executor):"
+              ],
+              [
+                "-",
+                "    actor_model = RayTrainGroup("
+              ],
+              [
+                "+",
+                "    actor_model = await RayTrainGroup.create("
+              ],
+              [
+                " ",
+                "        args=args,"
+              ],
+              [
+                " ",
+                "        role=\"actor\","
+              ],
+              [
+                " ",
+                "        with_ref=args.kl_coef != 0 or args.use_kl_loss,"
+              ],
+              [
+                "h",
+                "@@ -136,7 +136,7 @@ async def create_training_models(args, inference_controller, rollout_executor):"
+              ],
+              [
+                " ",
+                "    actor_start_rollout_ids = await actor_model.init()"
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:09:49.449963+00:00"
+    },
+    {
+      "id": "radixark/miles#2165",
+      "repo": "radixark/miles",
+      "pr_number": 2165,
+      "title": "Wait for the expected number of trainer cells at startup",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:16:50Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2165",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "在启动时等待预期数量的 trainer cells 就绪，避免因 trainer 未完全初始化导致的竞态问题",
+      "reason": "分布式 RL 训练框架普遍存在多个 trainer worker 启动时序不一致的问题，等待所有 trainer cells 就绪后再继续是通用的初始化同步模式，其他使用 Ray 的框架同样会遇到此类启动竞态",
+      "value": 4,
+      "subsystems": [
+        "trainer",
+        "infra"
+      ],
+      "rl_concepts": [
+        "PPO",
+        "GRPO"
+      ],
+      "files": [
+        "miles/ray/train/group.py",
+        "tests/fast/ray/train/test_group_reconcile.py"
+      ],
+      "diff_preview": {
+        "additions": 35,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "miles/ray/train/group.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -21,7 +21,7 @@"
+              ],
+              [
+                " ",
+                "from miles.utils.audit_utils.witness.allocator import WitnessIdAllocator, read_persisted_witness_counter"
+              ],
+              [
+                " ",
+                "from miles.utils.ft_utils.health_checker import NoopHealthChecker, SimpleHealthCheckerConfig"
+              ],
+              [
+                " ",
+                "from miles.utils.ft_utils.indep_dp import IndepDPInfo"
+              ],
+              [
+                "-",
+                "from miles.utils.retry_utils import NonRetryableError, retry"
+              ],
+              [
+                "+",
+                "from miles.utils.retry_utils import NonRetryableError, retry, retry_until_deadline"
+              ],
+              [
+                " ",
+                "from miles.utils.test_utils.ft_test_actions import FTTestActionGroupExecutor"
+              ],
+              [
+                " ",
+                "from miles.utils.tracking_utils.structured_log import log_structured"
+              ],
+              [
+                " ",
+                "from miles.utils.workers.naming import parse_cell_id"
+              ],
+              [
+                "h",
+                "@@ -32,6 +32,7 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:09:43.306270+00:00"
+    },
+    {
+      "id": "radixark/miles#2166",
+      "repo": "radixark/miles",
+      "pr_number": 2166,
+      "title": "Serve trainer cells over the api server like the rollout cells",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:16:53Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2166",
+      "category": "feature",
+      "scope": "repo-specific",
+      "summary": "通过 API server 将 trainer cells 以与 rollout cells 相同的方式暴露出来，统一两者的服务接口",
+      "reason": "该 PR 改动的是 miles 框架自有的 API server 基础设施（handles、server、group.py），属于该仓库内部的调度/路由机制扩展，其他框架不共享这套 API server 设计，因此属于 repo-specific",
+      "value": 2,
+      "subsystems": [
+        "trainer",
+        "infra",
+        "rollout"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/train/group.py",
+        "miles/utils/ft_utils/api_server/handles.py",
+        "miles/utils/ft_utils/api_server/server.py",
+        "tests/fast/utils/api_server/conftest.py",
+        "tests/fast/utils/api_server/test_handles.py"
+      ],
+      "diff_preview": {
+        "additions": 142,
+        "deletions": 183,
+        "hunks": [
+          {
+            "file": "miles/ray/train/group.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -19,12 +19,13 @@"
+              ],
+              [
+                " ",
+                "    WitnessAllocateIdEvent,"
+              ],
+              [
+                " ",
+                ")"
+              ],
+              [
+                " ",
+                "from miles.utils.audit_utils.witness.allocator import WitnessIdAllocator, read_persisted_witness_counter"
+              ],
+              [
+                "+",
+                "from miles.utils.ft_utils.api_server.models import CellStatus"
+              ],
+              [
+                " ",
+                "from miles.utils.ft_utils.health_checker import NoopHealthChecker, SimpleHealthCheckerConfig"
+              ],
+              [
+                " ",
+                "from miles.utils.ft_utils.indep_dp import IndepDPInfo"
+              ],
+              [
+                " ",
+                "from miles.utils.retry_utils import NonRetryableError, retry, retry_until_deadline"
+              ],
+              [
+                " ",
+                "from miles.utils.test_utils.ft_test_actions import FTTestActionGroupExecutor"
+              ],
+              [
+                " ",
+                "from miles.utils.tracking_utils.structured_log import log_structured"
+              ],
+              [
+                "-",
+                "from miles.utils.workers.naming import parse_cell_id"
+              ],
+              [
+                "+",
+                "from miles.utils.workers.naming import compute_cell_id, parse_cell_id"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:09:37.366267+00:00"
+    },
+    {
+      "id": "radixark/miles#2167",
+      "repo": "radixark/miles",
+      "pr_number": 2167,
+      "title": "Key the trainer cells by cell id instead of cell index",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:16:57Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2167",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将 trainer 的 cell 管理从基于索引（index）改为基于 cell ID 进行键值映射，以修复 #1837 中与 cell 标识相关的问题",
+      "reason": "此 PR 涉及 miles 框架内部特有的 trainer cell 管理架构（cell/group/worker_manager 等组件），是对该仓库自身调度与监控系统内部数据结构的重构，不涉及通用的 RL 算法、rollout、权重同步或并行训练等跨框架共享的核心组件",
+      "value": 2,
+      "subsystems": [
+        "trainer",
+        "infra",
+        "logging"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/dashboard/hooks.py",
+        "miles/ray/train/cell.py",
+        "miles/ray/train/cell_monitor.py",
+        "miles/ray/train/group.py",
+        "miles/utils/ft_utils/api_server/handles.py",
+        "miles/utils/test_utils/ft_test_actions.py",
+        "miles/utils/workers/ray_worker_manager.py",
+        "miles/utils/workers/worker_provider/ray.py",
+        "tests/fast/dashboard/test_hooks.py",
+        "tests/fast/ray/train/conftest.py",
+        "tests/fast/ray/train/fake_worker_manager.py",
+        "tests/fast/ray/train/test_group.py",
+        "tests/fast/ray/train/test_group_failure_reporting.py",
+        "tests/fast/ray/train/test_group_reconcile.py",
+        "tests/fast/ray/train/test_group_reconcile_adapters.py",
+        "tests/fast/ray/train/test_train_external_data.py",
+        "tests/fast/ray/train/test_train_return_value.py",
+        "tests/fast/utils/api_server/conftest.py",
+        "tests/fast/utils/api_server/test_handles.py",
+        "tests/fast/utils/test_utils/test_ft_test_actions.py"
+      ],
+      "diff_preview": {
+        "additions": 98,
+        "deletions": 105,
+        "hunks": [
+          {
+            "file": "miles/dashboard/hooks.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -27,7 +27,6 @@"
+              ],
+              [
+                " ",
+                ")"
+              ],
+              [
+                " ",
+                "from miles.utils.lifecycle import TrajectoryLifecycle"
+              ],
+              [
+                " ",
+                "from miles.utils.timer import Timer"
+              ],
+              [
+                "-",
+                "from miles.utils.workers.naming import parse_worker_name"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "logger = logging.getLogger(__name__)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -389,8 +388,7 @@ def _collect_worker_infos(cells) -> list[list]:"
+              ],
+              [
+                " ",
+                "    manager_handle = RayWorkerManager.get_handle()"
+              ],
+              [
+                " ",
+                "    futures = []"
+              ],
+              [
+                " ",
+                "    for cell in cells:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:09:30.608086+00:00"
+    },
+    {
+      "id": "radixark/miles#2168",
+      "repo": "radixark/miles",
+      "pr_number": 2168,
+      "title": "Suspend trainer cells through the worker manager like the rollout cells",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:01Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2168",
+      "category": "infra",
+      "scope": "universal",
+      "summary": "通过 worker manager 统一管理 trainer cells 的挂起（suspend）操作，与 rollout cells 的挂起机制保持一致",
+      "reason": "trainer 挂起/恢复机制是 RL 训练框架中 rollout 与 trainer 协同调度的通用问题，所有采用类似 worker manager 架构的框架（如 slime 等）都面临相同的设计需求，具有跨仓库的参考价值",
+      "value": 3,
+      "subsystems": [
+        "trainer",
+        "infra",
+        "rollout"
+      ],
+      "rl_concepts": [
+        "rollout",
+        "trainer"
+      ],
+      "files": [
+        "miles/ray/train/group.py",
+        "miles/utils/ft_utils/api_server/handles.py",
+        "miles/utils/test_utils/ft_test_actions.py",
+        "tests/fast/ray/train/test_group.py",
+        "tests/fast/utils/api_server/test_handles.py",
+        "tests/fast/utils/test_utils/test_ft_test_actions.py"
+      ],
+      "diff_preview": {
+        "additions": 98,
+        "deletions": 79,
+        "hunks": [
+          {
+            "file": "miles/ray/train/group.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -370,13 +370,6 @@ async def set_rollout_executor(self):"
+              ],
+              [
+                " ",
+                "    def get_cell_statuses(self) -> dict[str, CellStatus]:"
+              ],
+              [
+                " ",
+                "        return {cell_id: cell.cell_status() for cell_id, cell in self._cells_by_id.items()}"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "    async def stop_cell(self, cell_id: str) -> None:"
+              ],
+              [
+                "-",
+                "        await self._cells_by_id[cell_id].stop()"
+              ],
+              [
+                "-",
+                ""
+              ],
+              [
+                "-",
+                "    def start_cell(self, cell_id: str) -> None:"
+              ],
+              [
+                "-",
+                "        \"\"\"Mark a stopped cell as pending. Actual startup happens in train().\"\"\""
+              ],
+              [
+                "-",
+                "        self._cells_by_id[cell_id].mark_as_pending()"
+              ],
+              [
+                "-",
+                ""
+              ],
+              [
+                " ",
+                "    # ------------------------ utils to forward calls to cells ------------------------"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:09:23.747057+00:00"
+    },
+    {
+      "id": "radixark/miles#2169",
+      "repo": "radixark/miles",
+      "pr_number": 2169,
+      "title": "Remove trainer cells that the provider stops reporting",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:06Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2169",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "当 worker provider 停止上报某些 trainer cell 时，自动将其从训练组中移除，避免僵尸 cell 导致训练卡死",
+      "reason": "worker 生命周期管理与动态成员变更是所有基于 Ray 的分布式 RL 训练框架的共性问题，任何使用 actor pool 或 worker provider 模式的框架都可能遇到 provider 停止上报部分 worker 的情况",
+      "value": 4,
+      "subsystems": [
+        "trainer",
+        "infra",
+        "rollout"
+      ],
+      "rl_concepts": [
+        "PPO",
+        "GRPO"
+      ],
+      "files": [
+        "miles/ray/rollout/inference_controller.py",
+        "miles/ray/train/cell.py",
+        "miles/ray/train/group.py",
+        "miles/utils/workers/worker_provider/utils.py",
+        "tests/fast/ray/train/conftest.py",
+        "tests/fast/ray/train/test_group.py",
+        "tests/fast/ray/train/test_group_reconcile.py",
+        "tests/fast/utils/workers/worker_provider/test_utils.py"
+      ],
+      "diff_preview": {
+        "additions": 175,
+        "deletions": 23,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/inference_controller.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -3,7 +3,6 @@"
+              ],
+              [
+                " ",
+                "import time"
+              ],
+              [
+                " ",
+                "from dataclasses import dataclass"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "import ray"
+              ],
+              [
+                " ",
+                "from sglang.srt.constants import GPU_MEMORY_TYPE_CUDA_GRAPH, GPU_MEMORY_TYPE_KV_CACHE, GPU_MEMORY_TYPE_WEIGHTS"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from miles.backends.sglang_utils.sglang_api_client import SGLangApiClient"
+              ],
+              [
+                "h",
+                "@@ -25,6 +24,7 @@"
+              ],
+              [
+                " ",
+                "from miles.utils.misc import SimpleTicker"
+              ],
+              [
+                " ",
+                "from miles.utils.workers.worker_provider.base import BaseWorkerProvider, CellInfo, StopWatchFn"
+              ],
+              [
+                " ",
+                "from miles.utils.workers.worker_provider.ray import RayWorkerProvider"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:09:17.602933+00:00"
+    },
+    {
+      "id": "radixark/miles#2170",
+      "repo": "radixark/miles",
+      "pr_number": 2170,
+      "title": "Remove the now-unused stopped trainer cell state",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:09Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2170",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "移除训练器 cell 状态机中已不再使用的 stopped 状态及相关逻辑",
+      "reason": "该 PR 涉及的是 miles 仓库特有的 Ray 训练 cell/group 调度与状态机架构（stopped trainer cell state），属于该仓库内部调度器和生命周期管理的具体实现，其他框架不共享这套 cell/group 抽象，因此为 repo-specific",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "trainer"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/train/cell.py",
+        "miles/ray/train/cell_monitor.py",
+        "miles/ray/train/cell_state.py",
+        "miles/ray/train/group.py",
+        "tests/fast/ray/train/test_cell.py",
+        "tests/fast/ray/train/test_cell_monitor.py",
+        "tests/fast/ray/train/test_cell_restart.py",
+        "tests/fast/ray/train/test_group.py",
+        "tests/fast/ray/train/test_group_failure_reporting.py",
+        "tests/fast/utils/api_server/conftest.py"
+      ],
+      "diff_preview": {
+        "additions": 149,
+        "deletions": 321,
+        "hunks": [
+          {
+            "file": "miles/ray/train/cell.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -13,7 +13,6 @@"
+              ],
+              [
+                " ",
+                "    StateAllocatedErrored,"
+              ],
+              [
+                " ",
+                "    StateAllocatedUninitialized,"
+              ],
+              [
+                " ",
+                "    StatePending,"
+              ],
+              [
+                "-",
+                "    StateStopped,"
+              ],
+              [
+                " ",
+                ")"
+              ],
+              [
+                " ",
+                "from miles.utils.ft_utils.api_server.models import CellStatus"
+              ],
+              [
+                " ",
+                "from miles.utils.ft_utils.health_checker import BaseHealthChecker"
+              ],
+              [
+                "h",
+                "@@ -138,26 +137,9 @@ async def prepare_indep_dp_mode_healing("
+              ],
+              [
+                " ",
+                "    # ------------------------ state transition ------------------------"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    async def stop(self) -> None:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:09:11.357397+00:00"
+    },
+    {
+      "id": "radixark/miles#2171",
+      "repo": "radixark/miles",
+      "pr_number": 2171,
+      "title": "Remove the pending state in trainer cells",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:12Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2171",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "移除 trainer cell 状态机中的 pending 状态，简化 cell 生命周期管理逻辑",
+      "reason": "该改动针对 miles 仓库自有的 Ray 训练 cell 调度与监控系统（cell.py/cell_monitor.py/cell_state.py），属于仓库特有的内部调度器和状态机实现，其他框架不共享此抽象",
+      "value": 2,
+      "subsystems": [
+        "trainer",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/train/cell.py",
+        "miles/ray/train/cell_monitor.py",
+        "miles/ray/train/cell_state.py",
+        "miles/utils/ft_utils/api_server/handles.py",
+        "tests/fast/ray/train/test_cell_monitor.py",
+        "tests/fast/utils/api_server/test_handles.py"
+      ],
+      "diff_preview": {
+        "additions": 15,
+        "deletions": 56,
+        "hunks": [
+          {
+            "file": "miles/ray/train/cell.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -12,7 +12,6 @@"
+              ],
+              [
+                " ",
+                "    StateAllocatedBase,"
+              ],
+              [
+                " ",
+                "    StateAllocatedErrored,"
+              ],
+              [
+                " ",
+                "    StateAllocatedUninitialized,"
+              ],
+              [
+                "-",
+                "    StatePending,"
+              ],
+              [
+                " ",
+                ")"
+              ],
+              [
+                " ",
+                "from miles.utils.ft_utils.api_server.models import CellStatus"
+              ],
+              [
+                " ",
+                "from miles.utils.ft_utils.health_checker import BaseHealthChecker"
+              ],
+              [
+                "h",
+                "@@ -48,11 +47,14 @@ def __init__("
+              ],
+              [
+                " ",
+                "        self.with_opd_teacher = with_opd_teacher"
+              ],
+              [
+                " ",
+                "        self.rollout_executor = rollout_executor"
+              ],
+              [
+                " ",
+                "        self.health_checker = health_checker"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:09:03.598848+00:00"
+    },
+    {
+      "id": "radixark/miles#2172",
+      "repo": "radixark/miles",
+      "pr_number": 2172,
+      "title": "Merge the now duplicated actor and rollout cell handlers",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:15Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2172",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将重复的 actor 和 rollout cell handler 合并为统一实现，消除代码冗余",
+      "reason": "此 PR 针对 miles 仓库内部 API server 中特有的 handler 架构进行重构，合并的是该仓库自己设计的 actor/rollout cell 路由处理器，属于仓库特有的内部工具和调度器修改，其他框架不会有相同的 handler 分层结构",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "rollout"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/ft_utils/api_server/handles.py",
+        "miles/utils/ft_utils/api_server/server.py",
+        "tests/fast/utils/api_server/conftest.py",
+        "tests/fast/utils/api_server/test_handles.py"
+      ],
+      "diff_preview": {
+        "additions": 63,
+        "deletions": 149,
+        "hunks": [
+          {
+            "file": "miles/utils/ft_utils/api_server/handles.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -1,131 +1,52 @@"
+              ],
+              [
+                " ",
+                "from __future__ import annotations"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "import abc"
+              ],
+              [
+                "-",
+                "import asyncio"
+              ],
+              [
+                "+",
+                "from typing import Protocol"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "import ray"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from miles.ray.rollout.server_cell import compute_pending_rollout_cell_status"
+              ],
+              [
+                "-",
+                "from miles.ray.train.group import RayTrainGroup"
+              ],
+              [
+                " ",
+                "from miles.utils.ft_utils.api_server.models import Cell, CellCondition, CellMetadata, CellSpec, CellStatus, TriState"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:08:57.944308+00:00"
+    },
+    {
+      "id": "radixark/miles#2173",
+      "repo": "radixark/miles",
+      "pr_number": 2173,
+      "title": "Kill failed trainer workers through their own RPC channel instead of the manager",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:18Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2173",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "通过 worker 自身的 RPC 通道而非 manager 来终止失败的 trainer worker，避免因 manager 异常导致清理流程卡死",
+      "reason": "分布式训练 worker 的故障清理机制是通用问题，所有使用 Ray 进行多节点训练的框架（如 slime、verl 等）都面临类似的 worker 生命周期管理问题，与具体仓库无关",
+      "value": 4,
+      "subsystems": [
+        "trainer",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/train/cell.py",
+        "miles/ray/train/group.py",
+        "miles/ray/train_actor.py",
+        "tests/fast/ray/train/dummy_actor.py",
+        "tests/fast/ray/train/test_cell.py",
+        "tests/fast/ray/train/test_cell_restart.py",
+        "tests/fast/ray/train/test_group.py"
+      ],
+      "diff_preview": {
+        "additions": 89,
+        "deletions": 50,
+        "hunks": [
+          {
+            "file": "miles/ray/train/cell.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -17,7 +17,6 @@"
+              ],
+              [
+                " ",
+                "from miles.utils.ft_utils.health_checker import BaseHealthChecker"
+              ],
+              [
+                " ",
+                "from miles.utils.ft_utils.indep_dp import IndepDPInfo"
+              ],
+              [
+                " ",
+                "from miles.utils.tracking_utils.structured_log import log_structured"
+              ],
+              [
+                "-",
+                "from miles.utils.workers.ray_worker_manager import RayWorkerManager"
+              ],
+              [
+                " ",
+                "from miles.utils.workers.worker_provider.ray import RayWorkerProvider"
+              ],
+              [
+                " ",
+                "from miles.utils.workers.worker_spec import HostAndPort"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -138,17 +137,14 @@ async def prepare_indep_dp_mode_healing("
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    # ------------------------ state transition ------------------------"
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:08:51.668202+00:00"
+    },
+    {
+      "id": "radixark/miles#2174",
+      "repo": "radixark/miles",
+      "pr_number": 2174,
+      "title": "Add a ray worker handle with death confirmation",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:22Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2174",
+      "category": "infra",
+      "scope": "universal",
+      "summary": "为 Ray worker handle 添加死亡确认机制，确保 worker 终止后调用方能可靠感知其死亡状态",
+      "reason": "Ray worker 生命周期管理和死亡检测是分布式 RL 训练框架的通用问题，任何基于 Ray 构建 rollout/trainer worker 的框架都会面临相同挑战",
+      "value": 3,
+      "subsystems": [
+        "infra",
+        "rollout"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/workers/rpc/client/handle.py",
+        "miles/utils/workers/worker_handle.py",
+        "tests/fast/utils/workers/real_ray/test_worker_handle.py",
+        "tests/fast/utils/workers/test_worker_handle.py"
+      ],
+      "diff_preview": {
+        "additions": 316,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "miles/utils/workers/rpc/client/handle.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -78,6 +78,9 @@ async def attempt(remaining: float) -> None:"
+              ],
+              [
+                " ",
+                "                f\"{self._worker_cls_name} rpc server not ready within {timeout}s: {e!r}\""
+              ],
+              [
+                " ",
+                "            ) from e"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "    async def wait_dead(self, *, timeout: float) -> None:"
+              ],
+              [
+                "+",
+                "        raise NotImplementedError(\"RpcWorkerHandle cannot confirm worker death yet\")"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                "    async def _perform_call(self, *, spec: RpcMethodSpec, kwargs: dict[str, Any]) -> Any:"
+              ],
+              [
+                " ",
+                "        call = RpcCall("
+              ],
+              [
+                " ",
+                "            spec=spec,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:08:45.474055+00:00"
+    },
+    {
+      "id": "radixark/miles#2175",
+      "repo": "radixark/miles",
+      "pr_number": 2175,
+      "title": "Route all trainer worker calls through the worker handle instead of Ray handles",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:26Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2175",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将所有 trainer worker 调用从直接使用 Ray handle 改为通过 worker handle 统一路由，以支持更健壮的 worker 生命周期管理",
+      "reason": "此 PR 改动的是 miles 框架内部特有的 worker 管理抽象层（ray_worker_manager、cell 等），属于该仓库自定义的调度器和内部路由机制重构，其他框架不共享这套 worker handle 抽象，因此为 repo-specific",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "trainer"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/dashboard/hooks.py",
+        "miles/ray/train/cell.py",
+        "miles/ray/train/cell_monitor.py",
+        "miles/ray/train/cell_state.py",
+        "miles/utils/workers/ray_worker_manager.py",
+        "tests/fast/dashboard/test_hooks.py",
+        "tests/fast/ray/train/conftest.py",
+        "tests/fast/ray/train/fake_worker_manager.py",
+        "tests/fast/ray/train/test_cell.py",
+        "tests/fast/ray/train/test_cell_master_addr.py",
+        "tests/fast/ray/train/test_cell_monitor.py",
+        "tests/fast/ray/train/test_cell_restart.py",
+        "tests/fast/ray/train/test_group.py",
+        "tests/fast/ray/train/test_group_failure_reporting.py",
+        "tests/fast/ray/train/test_group_reconcile_adapters.py",
+        "tests/fast/ray/train/test_train_external_data.py",
+        "tests/fast/ray/train/test_train_return_value.py"
+      ],
+      "diff_preview": {
+        "additions": 125,
+        "deletions": 251,
+        "hunks": [
+          {
+            "file": "miles/dashboard/hooks.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -10,6 +10,7 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from __future__ import annotations"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "import asyncio"
+              ],
+              [
+                " ",
+                "import logging"
+              ],
+              [
+                " ",
+                "import threading"
+              ],
+              [
+                " ",
+                "import time"
+              ],
+              [
+                "h",
+                "@@ -393,12 +394,12 @@ def _collect_worker_infos(cells) -> list[list]:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "def _compute_engine_infos(cells, worker_infos_per_cell) -> list[EngineInfo]:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:08:39.911064+00:00"
+    },
+    {
+      "id": "radixark/miles#2176",
+      "repo": "radixark/miles",
+      "pr_number": 2176,
+      "title": "Rename the trainer group and cell to TrainerController and TrainerCell",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:30Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2176",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将训练器组和单元的类名从原有命名重命名为 TrainerController 和 TrainerCell，并更新所有相关引用",
+      "reason": "这是对仓库内部特定类命名的重构，涉及的是 miles 框架自身的 Ray 训练组件命名约定，其他框架不会共享这套命名体系，属于仓库特有的目录结构和命名重构",
+      "value": 1,
+      "subsystems": [
+        "trainer",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docs/developer/migration.md",
+        "miles/ray/placement_group.py",
+        "miles/ray/train/cell.py",
+        "miles/ray/train/cell_monitor.py",
+        "miles/ray/train/group.py",
+        "miles/utils/audit_utils/event_analyzer/rules/witness.py",
+        "miles/utils/ft_utils/api_server/server.py",
+        "miles/utils/test_utils/ft_test_actions.py",
+        "tests/e2e/ft/README.md",
+        "tests/fast/ray/test_placement_group_shared_ppo.py",
+        "tests/fast/ray/test_update_weights_ordering.py",
+        "tests/fast/ray/train/conftest.py",
+        "tests/fast/ray/train/dummy_actor.py",
+        "tests/fast/ray/train/test_group.py",
+        "tests/fast/ray/train/test_group_failure_reporting.py",
+        "tests/fast/ray/train/test_group_reconcile.py",
+        "tests/fast/ray/train/test_group_reconcile_adapters.py",
+        "tests/fast/ray/train/test_train_external_data.py",
+        "tests/fast/ray/train/test_train_return_value.py",
+        "tests/fast/utils/api_server/conftest.py"
+      ],
+      "diff_preview": {
+        "additions": 77,
+        "deletions": 77,
+        "hunks": [
+          {
+            "file": "docs/developer/migration.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -9,7 +9,7 @@ launch scripts."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "### What changed"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "`train.py`, `train_async.py`, and `RayTrainGroup` now use Python `async`/`await`"
+              ],
+              [
+                "+",
+                "`train.py`, `train_async.py`, and `TrainerController` now use Python `async`/`await`"
+              ],
+              [
+                " ",
+                "instead of `ray.get()`-style sync calls."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "### Why"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:08:33.059053+00:00"
+    },
+    {
+      "id": "radixark/miles#2177",
+      "repo": "radixark/miles",
+      "pr_number": 2177,
+      "title": "Add a self-provisioned Kubernetes apiserver test environment",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:32Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2177",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为 Kubernetes apiserver 添加自托管测试环境，包含环境初始化、工具函数和端到端测试用例",
+      "reason": "该 PR 是针对该仓库自身 Kubernetes 集成测试基础设施的建设，属于仓库特有的 CI/测试环境配置，与 RL 训练框架的核心组件（rollout、trainer、算法等）无关，其他框架不会共享这套 k8s apiserver 测试套件",
+      "value": 1,
+      "subsystems": [
+        "ci",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "requirements.txt",
+        "tests/e2e/k8s_apiserver/__init__.py",
+        "tests/e2e/k8s_apiserver/apiserver.py",
+        "tests/e2e/k8s_apiserver/conftest.py",
+        "tests/e2e/k8s_apiserver/environment.py",
+        "tests/e2e/k8s_apiserver/test_environment.py",
+        "tests/e2e/k8s_apiserver/utils.py"
+      ],
+      "diff_preview": {
+        "additions": 533,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "requirements.txt",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -5,6 +5,7 @@ blobfile"
+              ],
+              [
+                " ",
+                "datasets"
+              ],
+              [
+                " ",
+                "httpx[http2]"
+              ],
+              [
+                " ",
+                "hypothesis>=5.40"
+              ],
+              [
+                "+",
+                "kubernetes_asyncio"
+              ],
+              [
+                " ",
+                "mcp[cli]"
+              ],
+              [
+                " ",
+                "memray  # needed for debugging (but is lightweight), we can put it to dev mode when using pyproject.toml"
+              ],
+              [
+                " ",
+                "nvidia-resiliency-ext~=0.6.0; platform_system == \"Linux\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:08:26.911940+00:00"
+    },
+    {
+      "id": "radixark/miles#2178",
+      "repo": "radixark/miles",
+      "pr_number": 2178,
+      "title": "Add a kind cluster test environment for Kubernetes testing",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:36Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2178",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为 Kubernetes 测试添加基于 kind 的本地集群测试环境，包含集群管理、测试配置和工具函数",
+      "reason": "这是针对该仓库特定 CI/测试基础设施的改动，使用 kind（Kubernetes in Docker）搭建本地 K8s 测试环境属于仓库自身的测试工程配置，与 RL 训练框架的核心算法或通用组件无关，其他框架不会直接复用此测试基础设施",
+      "value": 2,
+      "subsystems": [
+        "ci",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "tests/e2e/k8s_kind/__init__.py",
+        "tests/e2e/k8s_kind/conftest.py",
+        "tests/e2e/k8s_kind/kind_cluster.py",
+        "tests/e2e/k8s_kind/test_environment.py",
+        "tests/e2e/k8s_kind/utils.py"
+      ],
+      "diff_preview": {
+        "additions": 213,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "tests/e2e/k8s_kind/conftest.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,51 @@"
+              ],
+              [
+                "+",
+                "# doc-dev: docs/developer/reconcile-loop.md"
+              ],
+              [
+                "+",
+                "from __future__ import annotations"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "import logging"
+              ],
+              [
+                "+",
+                "from collections.abc import AsyncIterator, Iterator"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "import pytest"
+              ],
+              [
+                "+",
+                "from kubernetes_asyncio import client as kubernetes_client"
+              ],
+              [
+                "+",
+                "from tests.e2e.k8s_apiserver.environment import existing_kubeconfig, keep_environment, new_run_id, require_docker"
+              ],
+              [
+                "+",
+                "from tests.e2e.k8s_apiserver.utils import create_namespace"
+              ],
+              [
+                "+",
+                "from tests.e2e.k8s_kind.kind_cluster import KindCluster, create_cluster, delete_cluster"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:08:20.667588+00:00"
+    },
+    {
+      "id": "radixark/miles#2179",
+      "repo": "radixark/miles",
+      "pr_number": 2179,
+      "title": "Add a level-triggered reconcile loop over a source stream",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:39Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2179",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为 source stream 添加 level-triggered 调和循环，包含对象存储、工作队列和事件处理等核心组件及其测试",
+      "reason": "该 PR 实现的是 miles 仓库特有的 worker 调和循环基础设施（reconcile loop），属于仓库内部调度/状态同步机制，与 rollout、PPO/GRPO 算法、权重同步等通用 RL 训练组件无关，其他框架不会复用此特定架构",
+      "value": 2,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/workers/reconcile/__init__.py",
+        "miles/utils/workers/reconcile/loop.py",
+        "miles/utils/workers/reconcile/object_store.py",
+        "miles/utils/workers/reconcile/source_event.py",
+        "miles/utils/workers/reconcile/work_queue.py",
+        "tests/fast/utils/workers/reconcile/__init__.py",
+        "tests/fast/utils/workers/reconcile/test_loop.py",
+        "tests/fast/utils/workers/reconcile/test_object_store.py",
+        "tests/fast/utils/workers/reconcile/test_work_queue.py",
+        "tests/fast/utils/workers/reconcile/utils.py"
+      ],
+      "diff_preview": {
+        "additions": 833,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "miles/utils/workers/reconcile/loop.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,99 @@"
+              ],
+              [
+                "+",
+                "# doc-dev: docs/developer/reconcile-loop.md"
+              ],
+              [
+                "+",
+                "from __future__ import annotations"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "import asyncio"
+              ],
+              [
+                "+",
+                "import logging"
+              ],
+              [
+                "+",
+                "from collections.abc import AsyncGenerator, Awaitable, Callable"
+              ],
+              [
+                "+",
+                "from typing import Any"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "from miles.utils.workers.reconcile.object_store import KeyMapFn, ObjectStore"
+              ],
+              [
+                "+",
+                "from miles.utils.workers.reconcile.source_event import ParentKey, SourceEvent, SourceWatchFn"
+              ],
+              [
+                "+",
+                "from miles.utils.workers.reconcile.work_queue import WorkQueue"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:08:14.216416+00:00"
+    },
+    {
+      "id": "radixark/miles#2180",
+      "repo": "radixark/miles",
+      "pr_number": 2180,
+      "title": "Synthesize deletions when a relist replaces the store",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:42Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2180",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "在 relist 操作替换 store 时，合成缺失对象的删除事件，修复 reconcile 循环中的状态同步问题",
+      "reason": "该 PR 修复的是 miles 仓库特有的 reconcile/object_store 基础设施中的 bug，涉及内部 worker 调度与状态同步机制，非通用 RL 训练组件（如 rollout、PPO、权重同步等），其他框架不共享此调度抽象层",
+      "value": 2,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/workers/reconcile/object_store.py",
+        "miles/utils/workers/reconcile/source_event.py",
+        "tests/fast/utils/workers/reconcile/test_loop.py",
+        "tests/fast/utils/workers/reconcile/test_object_store.py",
+        "tests/fast/utils/workers/reconcile/utils.py"
+      ],
+      "diff_preview": {
+        "additions": 196,
+        "deletions": 7,
+        "hunks": [
+          {
+            "file": "miles/utils/workers/reconcile/object_store.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -6,7 +6,14 @@"
+              ],
+              [
+                " ",
+                "from dataclasses import dataclass"
+              ],
+              [
+                " ",
+                "from typing import Any"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "from miles.utils.workers.reconcile.source_event import DeleteEvent, ObjectKey, ParentKey, SourceEvent, UpsertEvent"
+              ],
+              [
+                "+",
+                "from miles.utils.workers.reconcile.source_event import ("
+              ],
+              [
+                "+",
+                "    DeleteEvent,"
+              ],
+              [
+                "+",
+                "    ObjectKey,"
+              ],
+              [
+                "+",
+                "    ParentKey,"
+              ],
+              [
+                "+",
+                "    ReplaceEvent,"
+              ],
+              [
+                "+",
+                "    SourceEvent,"
+              ],
+              [
+                "+",
+                "    UpsertEvent,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:08:07.865348+00:00"
+    },
+    {
+      "id": "radixark/miles#2181",
+      "repo": "radixark/miles",
+      "pr_number": 2181,
+      "title": "Reopen a dying source stream and gate startup on the first listing",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:46Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2181",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复 source stream 异常退出时自动重开流，并在首次 listing 完成前阻塞启动，避免 worker 调度器在数据源未就绪时提前运行",
+      "reason": "该改动针对 miles 框架内部的 worker reconcile 调度子系统（source_stream_driver / reconcile loop），是该仓库特有的 worker 生命周期管理机制，其他 RL 训练框架不共享这套 source stream / reconcile 架构，因此属于 repo-specific",
+      "value": 2,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/workers/reconcile/loop.py",
+        "miles/utils/workers/reconcile/source_stream_driver.py",
+        "tests/fast/utils/workers/reconcile/test_loop.py",
+        "tests/fast/utils/workers/reconcile/test_source_stream_driver.py",
+        "tests/fast/utils/workers/reconcile/utils.py"
+      ],
+      "diff_preview": {
+        "additions": 614,
+        "deletions": 105,
+        "hunks": [
+          {
+            "file": "miles/utils/workers/reconcile/loop.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -3,11 +3,13 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "import asyncio"
+              ],
+              [
+                " ",
+                "import logging"
+              ],
+              [
+                "-",
+                "from collections.abc import AsyncGenerator, Awaitable, Callable"
+              ],
+              [
+                "+",
+                "from collections.abc import Awaitable, Callable"
+              ],
+              [
+                " ",
+                "from typing import Any"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "from miles.utils.test_utils.clock import Clock, RealClock"
+              ],
+              [
+                " ",
+                "from miles.utils.workers.reconcile.object_store import KeyMapFn, ObjectStore"
+              ],
+              [
+                "-",
+                "from miles.utils.workers.reconcile.source_event import ParentKey, SourceEvent, SourceWatchFn"
+              ],
+              [
+                "+",
+                "from miles.utils.workers.reconcile.source_event import ParentKey, SourceWatchFn"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:07:57.019942+00:00"
+    },
+    {
+      "id": "radixark/miles#2182",
+      "repo": "radixark/miles",
+      "pr_number": 2182,
+      "title": "Retry a failed key with per-key exponential backoff",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:50Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2182",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为 reconcile 循环中失败的 key 引入带指数退避的逐 key 重试调度器",
+      "reason": "该 PR 修改的是 miles 仓库内部 reconcile 工作器的调度逻辑（retry_scheduler），属于该框架自有的任务协调与容错基础设施，并非通用的 RL 训练组件（如 rollout、PPO、权重同步等），其他框架不会共享这套内部调度机制",
+      "value": 2,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/workers/reconcile/loop.py",
+        "miles/utils/workers/reconcile/retry_scheduler.py",
+        "tests/fast/utils/workers/reconcile/test_loop.py",
+        "tests/fast/utils/workers/reconcile/test_retry_scheduler.py"
+      ],
+      "diff_preview": {
+        "additions": 436,
+        "deletions": 9,
+        "hunks": [
+          {
+            "file": "miles/utils/workers/reconcile/loop.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -8,6 +8,7 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from miles.utils.test_utils.clock import Clock, RealClock"
+              ],
+              [
+                " ",
+                "from miles.utils.workers.reconcile.object_store import KeyMapFn, ObjectStore"
+              ],
+              [
+                "+",
+                "from miles.utils.workers.reconcile.retry_scheduler import RetryScheduler"
+              ],
+              [
+                " ",
+                "from miles.utils.workers.reconcile.source_event import ParentKey, SourceWatchFn"
+              ],
+              [
+                " ",
+                "from miles.utils.workers.reconcile.source_stream_driver import SourceStreamDriver"
+              ],
+              [
+                " ",
+                "from miles.utils.workers.reconcile.work_queue import WorkQueue"
+              ],
+              [
+                "h",
+                "@@ -34,6 +35,8 @@ def __init__("
+              ],
+              [
+                " ",
+                "        source: SourceWatchFn,"
+              ],
+              [
+                " ",
+                "        reconcile: ReconcileFn,"
+              ],
+              [
+                " ",
+                "        key_map: KeyMapFn | None = None,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:07:50.086834+00:00"
+    },
+    {
+      "id": "radixark/miles#2183",
+      "repo": "radixark/miles",
+      "pr_number": 2183,
+      "title": "Re-drive parents on a resync period",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:53Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2183",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "在 reconcile 循环中增加周期性重新驱动父节点的机制，修复因同步周期内父节点未被触发导致的状态不一致问题",
+      "reason": "该 PR 修改的是 miles 仓库特有的 reconcile/loop 调度器和 object_store 组件，属于该框架内部的 worker 协调机制，与 rollout、trainer、PPO 等通用 RL 训练组件无直接关联，其他框架不会有相同的 reconcile loop 设计",
+      "value": 2,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/workers/reconcile/loop.py",
+        "miles/utils/workers/reconcile/object_store.py",
+        "tests/fast/utils/workers/reconcile/test_loop.py",
+        "tests/fast/utils/workers/reconcile/test_object_store.py"
+      ],
+      "diff_preview": {
+        "additions": 173,
+        "deletions": 12,
+        "hunks": [
+          {
+            "file": "miles/utils/workers/reconcile/loop.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -17,6 +17,8 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "ReconcileFn = Callable[[ParentKey], Awaitable[None]]"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "DEFAULT_RESYNC_PERIOD = 10 * 60 * 60.0"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "class ReconcileLoop:"
+              ],
+              [
+                " ",
+                "    \"\"\"A source stream feeds a store; every changed parent key is reconciled once, level-triggered."
+              ],
+              [
+                "h",
+                "@@ -35,14 +37,17 @@ def __init__("
+              ],
+              [
+                " ",
+                "        source: SourceWatchFn,"
+              ],
+              [
+                " ",
+                "        reconcile: ReconcileFn,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:07:41.139809+00:00"
+    },
+    {
+      "id": "radixark/miles#2184",
+      "repo": "radixark/miles",
+      "pr_number": 2184,
+      "title": "Add a Kubernetes LIST/WATCH adapter",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:17:57Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2184",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为 miles 框架的 worker 调协层新增 Kubernetes LIST/WATCH 适配器，用于监听和同步 K8s 资源状态",
+      "reason": "该 PR 实现的是 miles 仓库自有的调度/编排基础设施（worker reconcile 子系统）与 Kubernetes API 的集成，属于该仓库特有的运维/调度层工具，与 RL 训练算法、rollout、Megatron/FSDP 等通用组件无关，其他框架不会复用此 K8s 适配逻辑",
+      "value": 2,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/workers/reconcile/k8s_api.py",
+        "tests/fast/utils/workers/reconcile/test_k8s_api.py",
+        "tests/fast/utils/workers/reconcile/test_k8s_reflector.py"
+      ],
+      "diff_preview": {
+        "additions": 284,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "miles/utils/workers/reconcile/k8s_api.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,90 @@"
+              ],
+              [
+                "+",
+                "# doc-dev: docs/developer/reconcile-loop.md"
+              ],
+              [
+                "+",
+                "from __future__ import annotations"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "import logging"
+              ],
+              [
+                "+",
+                "from collections.abc import AsyncGenerator"
+              ],
+              [
+                "+",
+                "from typing import Any"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "from miles.utils.pydantic_utils import FrozenStrictBaseModel"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "logger = logging.getLogger(__name__)"
+              ],
+              [
+                "+",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:07:34.687390+00:00"
+    },
+    {
+      "id": "radixark/miles#2185",
+      "repo": "radixark/miles",
+      "pr_number": 2185,
+      "title": "Track pods with a reflector that manages its cursor",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:18:01Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2185",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "引入基于 reflector 模式的 K8s Pod 追踪机制，通过维护游标（cursor/resourceVersion）替代轮询，提升 Pod 状态同步的可靠性与效率",
+      "reason": "该 PR 涉及 miles 框架自有的 K8s worker 调度与 reconcile 子系统，属于其特定的基础设施实现；其他 RL 框架（如 slime）通常不依赖 K8s reflector 模式来管理训练 Pod，该实现与 miles 的 K8s-native 架构强绑定，不具备跨框架迁移价值",
+      "value": 2,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/workers/reconcile/k8s_api.py",
+        "miles/utils/workers/reconcile/k8s_reflector.py",
+        "tests/e2e/k8s_apiserver/reflector_utils.py",
+        "tests/e2e/k8s_apiserver/test_k8s_reflector.py",
+        "tests/e2e/k8s_kind/test_k8s_reflector.py",
+        "tests/fast/utils/workers/reconcile/test_k8s_reflector.py",
+        "tests/fast/utils/workers/reconcile/utils.py"
+      ],
+      "diff_preview": {
+        "additions": 1764,
+        "deletions": 3,
+        "hunks": [
+          {
+            "file": "miles/utils/workers/reconcile/k8s_api.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -3,7 +3,7 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "import logging"
+              ],
+              [
+                " ",
+                "from collections.abc import AsyncGenerator"
+              ],
+              [
+                "-",
+                "from typing import Any"
+              ],
+              [
+                "+",
+                "from typing import Any, Protocol"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from miles.utils.pydantic_utils import FrozenStrictBaseModel"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -12,6 +12,10 @@"
+              ],
+              [
+                " ",
+                "_CURSOR_REJECTED_CODES = (410, 504)"
+              ],
+              [
+                " ",
+                "_CURSOR_REJECTED_REASONS = (\"Expired\", \"Gone\")"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:07:27.932392+00:00"
+    },
+    {
+      "id": "radixark/miles#2186",
+      "repo": "radixark/miles",
+      "pr_number": 2186,
+      "title": "Document how the reconcile loop maps onto the Kubernetes Go stack",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:18:04Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2186",
+      "category": "doc",
+      "scope": "repo-specific",
+      "summary": "新增开发者文档，说明 reconcile loop 如何映射到 Kubernetes Go 技术栈",
+      "reason": "该文档描述的是 miles 仓库特有的 Kubernetes 控制器架构（reconcile loop），与通用 RL 训练框架的 rollout/trainer/算法等核心组件无关，其他框架不使用此架构",
+      "value": 1,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docs/developer/reconcile-loop.md",
+        "docs/docs.json"
+      ],
+      "diff_preview": {
+        "additions": 116,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "docs/developer/reconcile-loop.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,115 @@"
+              ],
+              [
+                "+",
+                "---"
+              ],
+              [
+                "+",
+                "title: \"Reconcile Loop\""
+              ],
+              [
+                "+",
+                "description: \"A minimal, level-triggered controller runtime for Miles, and how it maps onto the Kubernetes Go stack.\""
+              ],
+              [
+                "+",
+                "---"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "## What this is"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "- A deliberately small port of the [client-go informer stack](https://github.com/kubernetes/client-go/tree/master/tools/cache) plus [controller-runtime](https://github.com/kubernetes-sigs/controller-runtime)."
+              ],
+              [
+                "+",
+                "- Tracks fleets of processes — SGLang engine cells, trainer cells — that appear, disappear and restart mid-run."
+              ],
+              [
+                "+",
+                "- The alignment record: **every deviation from Go must appear below with a reason.**"
+              ],
+              [
+                "+",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:07:20.455960+00:00"
+    },
+    {
+      "id": "radixark/miles#2187",
+      "repo": "radixark/miles",
+      "pr_number": 2187,
+      "title": "Add a process supervisor for running several ranks in one container",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:18:07Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2187",
+      "category": "infra",
+      "scope": "universal",
+      "summary": "新增进程监督器（ProcessSupervisor），支持在单个容器内运行多个 rank 进程并统一管理其生命周期",
+      "reason": "在单容器多进程（多 rank）部署场景下，进程监督与生命周期管理是通用需求，任何采用分布式训练（Megatron、FSDP 等）的 RL 框架都可能面临类似问题",
+      "value": 3,
+      "subsystems": [
+        "infra",
+        "parallel"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "FSDP"
+      ],
+      "files": [
+        "miles/utils/workers/process_supervisor.py",
+        "tests/fast/utils/workers/test_process_supervisor.py"
+      ],
+      "diff_preview": {
+        "additions": 1207,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "miles/utils/workers/process_supervisor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,152 @@"
+              ],
+              [
+                "+",
+                "from __future__ import annotations"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "import argparse"
+              ],
+              [
+                "+",
+                "import logging"
+              ],
+              [
+                "+",
+                "import math"
+              ],
+              [
+                "+",
+                "import os"
+              ],
+              [
+                "+",
+                "import signal"
+              ],
+              [
+                "+",
+                "import sys"
+              ],
+              [
+                "+",
+                "from types import FrameType"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "from torch.distributed.elastic.multiprocessing import DefaultLogsSpecs, Std, start_processes"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:07:15.131103+00:00"
+    },
+    {
+      "id": "radixark/miles#2188",
+      "repo": "radixark/miles",
+      "pr_number": 2188,
+      "title": "Add --cluster-backend flag to choose between Ray and Kubernetes native backend",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:18:11Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2188",
+      "category": "feature",
+      "scope": "repo-specific",
+      "summary": "新增 --cluster-backend 命令行参数，允许用户在 Ray 和 Kubernetes 原生后端之间切换集群调度方式",
+      "reason": "该 PR 涉及的是 miles 仓库自身特有的集群调度架构（Ray vs Kubernetes 后端选择），属于该框架内部基础设施的扩展，而非通用的 RL 训练算法或训练循环改动；其他框架不一定同时支持这两种后端，且具体实现与 miles 的内部调度器设计强绑定",
+      "value": 2,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docs/user-guide/cli-reference.md",
+        "miles/utils/arguments.py",
+        "miles/utils/workers/types.py",
+        "tests/fast/utils/test_arguments.py"
+      ],
+      "diff_preview": {
+        "additions": 62,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "docs/user-guide/cli-reference.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -142,6 +142,7 @@ Sections mirror the launch-script argument groups."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "| Flag | Type | Default | Notes |"
+              ],
+              [
+                " ",
+                "|---|---|---|---|"
+              ],
+              [
+                "+",
+                "| `--cluster-backend` | enum | `ray` | `ray` launches workers from the driver; `kubernetes` expects them to already exist. `kubernetes` is refused during validation until a later milestone provisions those workers. |"
+              ],
+              [
+                " ",
+                "| `--actor-num-nodes` | int | `1` | Total nodes for actor training. |"
+              ],
+              [
+                " ",
+                "| `--actor-num-gpus-per-node` | int | `8` | GPUs per actor node. |"
+              ],
+              [
+                " ",
+                "| `--rollout-num-gpus` | int | derived | Ignored under `--colocate`. |"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:07:08.987109+00:00"
+    },
+    {
+      "id": "radixark/miles#2189",
+      "repo": "radixark/miles",
+      "pr_number": 2189,
+      "title": "Read the train parallel config from the driver to avoid cross-process handle passing",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:18:14Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2189",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "将训练并行配置从 driver 端读取，避免跨进程传递句柄导致的问题",
+      "reason": "跨进程传递句柄（handle）是分布式训练框架中使用 Ray 等调度框架时的通用问题，凡是将并行配置对象跨进程序列化传递的框架都可能遇到类似问题，解决方案具有参考价值",
+      "value": 3,
+      "subsystems": [
+        "parallel",
+        "infra",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "Megatron"
+      ],
+      "files": [
+        "docs/developer/migration.md",
+        "miles/ray/placement_group.py",
+        "miles/ray/train/cell.py",
+        "miles/ray/train/group.py",
+        "miles/ray/train_actor.py",
+        "tests/fast/ray/test_placement_group_shared_ppo.py",
+        "tests/fast/ray/train/conftest.py",
+        "tests/fast/ray/train/dummy_actor.py",
+        "tests/fast/ray/train/test_group.py",
+        "tests/fast/ray/train/test_group_reconcile.py"
+      ],
+      "diff_preview": {
+        "additions": 111,
+        "deletions": 71,
+        "hunks": [
+          {
+            "file": "docs/developer/migration.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -52,8 +52,7 @@ while still letting `critic_model.train` proceed. That's hard to write with sync"
+              ],
+              [
+                " ",
+                "+ await rollout_manager.generate.remote(rollout_id)"
+              ],
+              [
+                " ",
+                "```"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "Same pattern applies to `offload`, `onload`, `clear_memory` and"
+              ],
+              [
+                "-",
+                "`set_rollout_executor`."
+              ],
+              [
+                "+",
+                "Same pattern applies to `offload`, `onload` and `clear_memory`."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "#### 3. Dispatch handles → eager tasks"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -95,9 +94,10 @@ Same pattern applies to `offload`, `onload`, `clear_memory` and"
+              ],
+              [
+                " ",
+                "```"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:07:02.433533+00:00"
+    },
+    {
+      "id": "radixark/miles#2190",
+      "repo": "radixark/miles",
+      "pr_number": 2190,
+      "title": "Skip the prometheus collector under the k8s backend",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:18:18Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2190",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "在 k8s 后端下跳过 Prometheus 指标收集器，避免相关错误或不兼容问题",
+      "reason": "Prometheus collector 与 k8s 后端的集成属于该仓库特有的部署基础设施配置，与 RL 训练核心组件无关，其他框架不会有完全相同的 k8s+Prometheus 集成路径",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "logging"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docs/user-guide/cli-reference.md",
+        "docs/user-guide/dashboard.md",
+        "miles/utils/tracking_utils/base.py",
+        "tests/fast/utils/tracking_utils/__init__.py",
+        "tests/fast/utils/tracking_utils/test_base.py"
+      ],
+      "diff_preview": {
+        "additions": 128,
+        "deletions": 7,
+        "hunks": [
+          {
+            "file": "docs/user-guide/cli-reference.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -142,7 +142,7 @@ Sections mirror the launch-script argument groups."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "| Flag | Type | Default | Notes |"
+              ],
+              [
+                " ",
+                "|---|---|---|---|"
+              ],
+              [
+                "-",
+                "| `--cluster-backend` | enum | `ray` | `ray` launches workers from the driver; `kubernetes` expects them to already exist. `kubernetes` is refused during validation until a later milestone provisions those workers. |"
+              ],
+              [
+                "+",
+                "| `--cluster-backend` | enum | `ray` | `ray` launches workers from the driver; `kubernetes` expects them to already exist. `kubernetes` is refused during validation until a later milestone provisions those workers. Under `kubernetes`, `--use-prometheus` is ignored. |"
+              ],
+              [
+                " ",
+                "| `--actor-num-nodes` | int | `1` | Total nodes for actor training. |"
+              ],
+              [
+                " ",
+                "| `--actor-num-gpus-per-node` | int | `8` | GPUs per actor node. |"
+              ],
+              [
+                " ",
+                "| `--rollout-num-gpus` | int | derived | Ignored under `--colocate`. |"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:06:56.494006+00:00"
+    },
+    {
+      "id": "radixark/miles#2191",
+      "repo": "radixark/miles",
+      "pr_number": 2191,
+      "title": "Install kubectl and helm into the training image",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:18:21Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2191",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "在训练镜像的 Dockerfile 中安装 kubectl 和 helm 工具",
+      "reason": "这是针对该仓库特定 Docker 镜像构建的配置改动，属于特定硬件/环境构建脚本范畴，其他框架不会共享相同的镜像构建流程",
+      "value": 1,
+      "subsystems": [
+        "ci",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docker/Dockerfile",
+        "docs/ci/02-docker-build.md"
+      ],
+      "diff_preview": {
+        "additions": 20,
+        "deletions": 2,
+        "hunks": [
+          {
+            "file": "docker/Dockerfile",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -38,7 +38,7 @@ WORKDIR /root/"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "RUN apt update"
+              ],
+              [
+                " ",
+                "# ethtool for network diagnostics"
+              ],
+              [
+                "-",
+                "RUN apt install -y nvtop rsync dnsutils ethtool"
+              ],
+              [
+                "+",
+                "RUN apt install -y nvtop rsync dnsutils ethtool tmux"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# nccl-tests for diagnostics"
+              ],
+              [
+                " ",
+                "RUN git clone https://github.com/NVIDIA/nccl-tests.git /tmp/nccl-tests && \\"
+              ],
+              [
+                "h",
+                "@@ -225,6 +225,23 @@ RUN if [ \"${ENABLE_CUDA_13}\" = \"1\" ]; then \\"
+              ],
+              [
+                " ",
+                "      echo \"CUDA 12 variant: keeping the base image's mooncake\"; \\"
+              ],
+              [
+                " ",
+                "    fi"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:06:50.861858+00:00"
+    },
+    {
+      "id": "radixark/miles#2192",
+      "repo": "radixark/miles",
+      "pr_number": 2192,
+      "title": "Lint every Helm chart from pre-commit and CI",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:18:25Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2192",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为所有 Helm chart 添加 pre-commit 和 CI 阶段的自动 lint 检查",
+      "reason": "Helm chart lint 是该仓库特有的部署基础设施配置检查，与 RL 训练框架的通用组件无关，属于仓库自身的 CI/CD 流程维护",
+      "value": 1,
+      "subsystems": [
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".github/workflows/_run-ci.yml",
+        ".github/workflows/pre-commit.yml",
+        ".gitignore",
+        ".pre-commit-config.yaml",
+        "tests/fast/tools/__init__.py",
+        "tests/fast/tools/test_lint_charts.py",
+        "tools/lint_charts.py"
+      ],
+      "diff_preview": {
+        "additions": 232,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": ".github/workflows/_run-ci.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -265,6 +265,11 @@ jobs:"
+              ],
+              [
+                " ",
+                "          uv pip install -r requirements.txt -r tests/ci/requirements-ci-cpu.txt"
+              ],
+              [
+                " ",
+                "          python tests/ci/verify_source_resolution.py"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "      - name: Install Helm"
+              ],
+              [
+                "+",
+                "        uses: azure/setup-helm@v4"
+              ],
+              [
+                "+",
+                "        with:"
+              ],
+              [
+                "+",
+                "          version: v4.2.3"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                "      - name: Resolve suite plan"
+              ],
+              [
+                " ",
+                "        shell: bash"
+              ],
+              [
+                " ",
+                "        run: ${{ inputs.execute_command }} --list-only"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:06:44.757334+00:00"
+    },
+    {
+      "id": "radixark/miles#2193",
+      "repo": "radixark/miles",
+      "pr_number": 2193,
+      "title": "Add the miles-common Helm library chart",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:18:28Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2193",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为 miles 项目添加 miles-common Helm library chart，提供共享的命名与基础设施模板，并附带单元测试",
+      "reason": "Helm chart 是 miles 仓库特有的部署基础设施，命名约定、模板结构均与该仓库内部架构强绑定，其他 RL 训练框架无法直接复用",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "charts/miles-common/Chart.yaml",
+        "charts/miles-common/README.md",
+        "charts/miles-common/templates/_infra.tpl",
+        "charts/miles-common/templates/_naming.tpl",
+        "charts/shared-infra.schema.json",
+        "tests/fast/charts/__init__.py",
+        "tests/fast/charts/miles_common/__init__.py",
+        "tests/fast/charts/miles_common/test_helpers.py",
+        "tests/fast/charts/miles_common/test_library_chart.py",
+        "tests/fast/charts/utils.py"
+      ],
+      "diff_preview": {
+        "additions": 427,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "charts/miles-common/Chart.yaml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,8 @@"
+              ],
+              [
+                "+",
+                "apiVersion: v2"
+              ],
+              [
+                "+",
+                "name: miles-common"
+              ],
+              [
+                "+",
+                "description: Library chart holding the naming, labelling and shared-infra rendering every Miles chart repeats."
+              ],
+              [
+                "+",
+                "type: library"
+              ],
+              [
+                "+",
+                "version: 0.1.0"
+              ],
+              [
+                "+",
+                "home: https://github.com/radixark/miles"
+              ],
+              [
+                "+",
+                "sources:"
+              ],
+              [
+                "+",
+                "  - https://github.com/radixark/miles"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:06:39.141370+00:00"
+    },
+    {
+      "id": "radixark/miles#2194",
+      "repo": "radixark/miles",
+      "pr_number": 2194,
+      "title": "Add the miles-workbench Helm chart",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:18:31Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2194",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为 miles-workbench 添加 Helm chart，包含 StatefulSet、RBAC、ServiceAccount 等 Kubernetes 部署模板及对应测试",
+      "reason": "Helm chart 是该仓库特有的 Kubernetes 部署基础设施，涉及仓库内部的工具和调度器配置，其他 RL 训练框架不会直接复用这套 chart 结构",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "charts/miles-workbench/.helmignore",
+        "charts/miles-workbench/Chart.lock",
+        "charts/miles-workbench/Chart.yaml",
+        "charts/miles-workbench/README.md",
+        "charts/miles-workbench/templates/NOTES.txt",
+        "charts/miles-workbench/templates/_helpers.tpl",
+        "charts/miles-workbench/templates/rbac.yaml",
+        "charts/miles-workbench/templates/serviceaccount.yaml",
+        "charts/miles-workbench/templates/statefulset.yaml",
+        "charts/miles-workbench/values.schema.json",
+        "charts/miles-workbench/values.yaml",
+        "tests/fast/charts/conftest.py",
+        "tests/fast/charts/miles_common/test_library_chart.py",
+        "tests/fast/charts/miles_workbench/__init__.py",
+        "tests/fast/charts/miles_workbench/test_lint.py",
+        "tests/fast/charts/miles_workbench/test_rbac.py",
+        "tests/fast/charts/miles_workbench/test_statefulset.py",
+        "tests/fast/charts/miles_workbench/test_values_schema.py",
+        "tests/fast/charts/test_shared_infra_contract.py",
+        "tests/fast/charts/utils.py"
+      ],
+      "diff_preview": {
+        "additions": 940,
+        "deletions": 16,
+        "hunks": [
+          {
+            "file": "charts/miles-workbench/.helmignore",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,10 @@"
+              ],
+              [
+                "+",
+                ".DS_Store"
+              ],
+              [
+                "+",
+                ".git/"
+              ],
+              [
+                "+",
+                ".gitignore"
+              ],
+              [
+                "+",
+                "*.swp"
+              ],
+              [
+                "+",
+                "*.bak"
+              ],
+              [
+                "+",
+                "*.tmp"
+              ],
+              [
+                "+",
+                "*.orig"
+              ],
+              [
+                "+",
+                "*~"
+              ],
+              [
+                "+",
+                ".idea/"
+              ],
+              [
+                "+",
+                ".vscode/"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:06:33.249435+00:00"
+    },
+    {
+      "id": "radixark/miles#2195",
+      "repo": "radixark/miles",
+      "pr_number": 2195,
+      "title": "Add a cli.py for the miles-workbench chart",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:18:35Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2195",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为 miles-workbench Helm chart 添加 CLI 工具（cli.py），并附带相应的测试文件",
+      "reason": "该 PR 新增的是针对 miles-workbench 这一特定 Helm chart 的命令行工具及其测试，属于该仓库内部的运维/部署基础设施，与 RL 训练算法、rollout、权重同步等通用组件无关，其他框架不会直接复用此工具",
+      "value": 1,
+      "subsystems": [
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "charts/miles-workbench/README.md",
+        "charts/miles-workbench/cli.py",
+        "tests/fast/charts/miles_workbench/test_cli.py",
+        "tests/fast/charts/miles_workbench/test_doctor.py",
+        "tests/fast/charts/utils.py"
+      ],
+      "diff_preview": {
+        "additions": 975,
+        "deletions": 7,
+        "hunks": [
+          {
+            "file": "charts/miles-workbench/README.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -11,16 +11,17 @@ OS, same image, same paths as the training pods."
+              ],
+              [
+                " ",
+                "  namespace `admin` role never includes them."
+              ],
+              [
+                " ",
+                "- Local `kubectl` and `helm`, and a kubeconfig for the namespace."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "## Install"
+              ],
+              [
+                "+",
+                "## Use"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "```bash"
+              ],
+              [
+                "-",
+                "# the library chart is a file:// dependency, so vendor it first"
+              ],
+              [
+                "-",
+                "helm dependency build ./charts/miles-workbench"
+              ],
+              [
+                "+",
+                "# check whether your identity may install the chart and use the workbench"
+              ],
+              [
+                "+",
+                "./charts/miles-workbench/cli.py doctor -n <ns> -r <release>"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:06:27.717284+00:00"
+    },
+    {
+      "id": "radixark/miles#2196",
+      "repo": "radixark/miles",
+      "pr_number": 2196,
+      "title": "[DO NOT MERGE] CI",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-04T14:22:49Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2196",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "添加用于验证机械重构正确性的 CI 工具链，包含证明生成、复现脚本及测试套件",
+      "reason": "这是该仓库专属的内部 CI 工具，用于验证代码机械重构的正确性，属于仓库自有工具链，不涉及 RL 训练框架的通用组件",
+      "value": 1,
+      "subsystems": [
+        "ci",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".claude/skills/mechanical-refactor-verify/SKILL.md",
+        ".claude/skills/mechanical-refactor-verify/guide-construct-proof.md",
+        ".claude/skills/mechanical-refactor-verify/guide-modify-skill.md",
+        ".claude/skills/mechanical-refactor-verify/guide-split.md",
+        ".claude/skills/mechanical-refactor-verify/guide-verify-proof.md",
+        ".claude/skills/mechanical-refactor-verify/mechanical_refactor_verify_utils.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/mechanical_refactor_proof_generator.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/mechanical_refactor_reproduction_cli.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/mechanical_refactor_reproduction_utils.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/proof_generator/conftest.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/proof_generator/generator_testlib.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/proof_generator/test_infer_extract_functions.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/proof_generator/test_infer_extracts.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/proof_generator/test_infer_imports.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/proof_generator/test_infer_moves.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/proof_generator/test_main_single_commit.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/proof_generator/test_script_and_diff.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/reproduction_cli/cli_testlib.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/reproduction_cli/conftest.py",
+        ".claude/skills/mechanical-refactor-verify/scripts/tests/reproduction_cli/test_classification.py"
+      ],
+      "diff_preview": {
+        "additions": 7055,
+        "deletions": 227,
+        "hunks": [
+          {
+            "file": ".claude/skills/mechanical-refactor-verify/SKILL.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -1,152 +1,82 @@"
+              ],
+              [
+                " ",
+                "---"
+              ],
+              [
+                " ",
+                "name: mechanical-refactor-verify"
+              ],
+              [
+                "-",
+                "description: Verify mechanical refactoring commits by requiring a reproducible transform script (gist) in the PR description. Use when doing or reviewing file splits, function moves, or module extractions."
+              ],
+              [
+                "+",
+                "description: Make mechanical refactoring (file splits, function moves, module extractions, renames) machine-checkable instead of eyeballed. Reproduce a relocation commit byte-for-byte from faithful primitives, and split an extraction into a verifiable prepare + move + postpare. Use when doing or reviewing such changes."
+              ],
+              [
+                " ",
+                "user_invocable: true"
+              ],
+              [
+                "-",
+                "argument: \"[verify <pr_url_or_commit>] — verify an existing PR, or omit to see the workflow guide\""
+              ],
+              [
+                "+",
+                "argument: \"split <base>..<tip> | construct <base>..<tip> [--match REGEX] [--out DIR] | verify --base <base> --branch <branch> --proof <folder> [--jobs N] [--skip-passed]\""
+              ],
+              [
+                " ",
+                "---"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "# Mechanical Refactor — Reproducible Verification"
+              ],
+              [
+                "-",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:06:20.552218+00:00"
+    },
+    {
+      "id": "radixark/miles#2197",
+      "repo": "radixark/miles",
+      "pr_number": 2197,
+      "title": "fix: fail at launch when static micro-batching cannot align the rollout-side DP schedule",
+      "state": "closed",
+      "author": "guapisolo",
+      "created_at": "2026-08-04T20:07:27Z",
+      "merged_at": "2026-08-04T22:44:27Z",
+      "url": "https://github.com/radixark/miles/pull/2197",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "在启动时提前校验静态微批次数量能否整除 DP 调度所需的 dp_size * mb_group，避免训练多步后才在 build_dp_schedule 中崩溃",
+      "reason": "静态微批次与 DP 并行度对齐的问题是所有使用数据并行+静态批次策略的 RL 训练框架都可能遇到的通用问题，fail-fast 校验模式也是通用工程实践，与仓库特有逻辑无关",
+      "value": 3,
+      "subsystems": [
+        "parallel",
+        "infra",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "数据并行",
+        "micro-batch",
+        "动态batch-size",
+        "rollout"
+      ],
+      "files": [
+        "miles/utils/arguments.py",
+        "miles/utils/dp_schedule.py",
+        "tests/fast/utils/test_arguments.py"
+      ],
+      "diff_preview": {
+        "additions": 71,
+        "deletions": 34,
+        "hunks": [
+          {
+            "file": "miles/utils/arguments.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -2943,6 +2943,20 @@ def miles_validate_args(args):"
+              ],
+              [
+                " ",
+                "        if args.log_probs_max_tokens_per_gpu is None:"
+              ],
+              [
+                " ",
+                "            args.log_probs_max_tokens_per_gpu = args.max_tokens_per_gpu"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "    # --use-dynamic-global-batch-size has two motivations:"
+              ],
+              [
+                "+",
+                "    # 1. compaction/subagent rollouts: static micro-batching cannot guarantee alignment"
+              ],
+              [
+                "+",
+                "    #    when the physical sample count is data-dependent, so --use-dynamic-batch-size"
+              ],
+              [
+                "+",
+                "    #    is required."
+              ],
+              [
+                "+",
+                "    # 2. multi-LoRA (auto-enabled, no compaction/subagent): the per-round sample count is"
+              ],
+              [
+                "+",
+                "    #    a config-shaped multiple of dp_size trained as exactly one step on the legacy"
+              ],
+              [
+                "+",
+                "    #    training-side schedule; static micro-batching stays valid there."
+              ],
+              [
+                "+",
+                "    if args.use_dynamic_global_batch_size and not args.multi_lora:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:06:13.932842+00:00"
+    },
+    {
+      "id": "radixark/miles#2198",
+      "repo": "radixark/miles",
+      "pr_number": 2198,
+      "title": "megatron: name the tensors behind a non-finite grad norm",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-08-04T22:19:29Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2198",
+      "category": "feature",
+      "scope": "universal",
+      "summary": "在 Megatron 训练步骤因梯度范数非有限值被跳过时，记录哪些参数的梯度为非有限值（NaN/Inf）及哪些梯度保持有限，辅助定位梯度污染来源",
+      "reason": "梯度非有限值调试是所有使用 Megatron 并行的 RL 训练框架都会遇到的通用问题，该工具函数的设计（提取到 misc_utils 供复用）具有普遍参考价值",
+      "value": 3,
+      "subsystems": [
+        "trainer",
+        "parallel",
+        "logging"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "LoRA",
+        "梯度裁剪"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/misc_utils.py",
+        "miles/backends/megatron_utils/model.py"
+      ],
+      "diff_preview": {
+        "additions": 49,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/misc_utils.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -1,7 +1,46 @@"
+              ],
+              [
+                "+",
+                "import logging"
+              ],
+              [
+                "+",
+                "from collections.abc import Iterable"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "import torch"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "logger = logging.getLogger(__name__)"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                "def strip_param_name_prefix(name: str | None) -> str | None:"
+              ],
+              [
+                " ",
+                "    if name is None:"
+              ],
+              [
+                " ",
+                "        return None"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:06:07.059387+00:00"
+    },
+    {
+      "id": "radixark/miles#2199",
+      "repo": "radixark/miles",
+      "pr_number": 2199,
+      "title": "Cap train-actor torch memory via MILES_TRAIN_MEMORY_FRACTION",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-08-04T22:19:32Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2199",
+      "category": "infra",
+      "scope": "universal",
+      "summary": "新增 MILES_TRAIN_MEMORY_FRACTION 环境变量，通过 torch.cuda.set_per_process_memory_fraction 为 Megatron train actor 设置 GPU 显存上限，防止 NCCL 因 torch 缓存分配器占满显存而 OOM",
+      "reason": "NCCL 通过 cudaMalloc 在 torch 缓存分配器之外分配显存、导致 backward 中途 OOM 的问题，是所有使用 Megatron+NCCL 的 RL 训练框架都会遇到的通用问题，解决方案（set_per_process_memory_fraction）也与框架无关",
+      "value": 4,
+      "subsystems": [
+        "memory",
+        "parallel",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "NCCL",
+        "显存管理"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/actor.py"
+      ],
+      "diff_preview": {
+        "additions": 9,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -149,6 +149,15 @@ def init("
+              ],
+              [
+                " ",
+                "        self.train_parallel_config = {} if args.indep_dp else {\"dp_size\": get_parallel_state().intra_dp.size}"
+              ],
+              [
+                " ",
+                "        dist.barrier(group=get_gloo_group())"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "        # NCCL allocates outside torch's caching allocator, so allocator knobs alone"
+              ],
+              [
+                "+",
+                "        # cannot keep memory free for it: gc_threshold is relative to the per-process"
+              ],
+              [
+                "+",
+                "        # cap, which defaults to the whole device. A hard cap forces the allocator to"
+              ],
+              [
+                "+",
+                "        # release cached blocks instead of growing reserved until NCCL's cudaMalloc"
+              ],
+              [
+                "+",
+                "        # during backward finds 0 bytes free."
+              ],
+              [
+                "+",
+                "        if (frac := float(os.environ.get(\"MILES_TRAIN_MEMORY_FRACTION\", \"0\"))) > 0:"
+              ],
+              [
+                "+",
+                "            torch.cuda.set_per_process_memory_fraction(frac)"
+              ],
+              [
+                "+",
+                "            logger.info(f\"Set torch per-process CUDA memory fraction to {frac}\")"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:06:00.378254+00:00"
+    },
+    {
+      "id": "radixark/miles#2200",
+      "repo": "radixark/miles",
+      "pr_number": 2200,
+      "title": "[RL] Add exact top-p sampling-mask replay",
+      "state": "open",
+      "author": "nanjiangwill",
+      "created_at": "2026-08-04T22:29:17Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2200",
+      "category": "algo",
+      "scope": "universal",
+      "summary": "在top-p采样时记录每个token的采样支撑集（sampling mask），并在计算actor log-prob时仅对该支撑集内的token做归一化，从而实现精确的top-p采样回放（replay），避免训练与采样分布不一致",
+      "reason": "top-p采样下log-prob重归一化是所有基于重要性采样的RL训练框架（PPO/GRPO等）的通用问题——任何使用SGLang/vLLM做rollout并需要off-policy校正的框架都面临同样挑战，与仓库特有架构无关",
+      "value": 5,
+      "subsystems": [
+        "rollout",
+        "algo",
+        "objective"
+      ],
+      "rl_concepts": [
+        "PPO",
+        "GRPO",
+        "importance-sampling",
+        "log-prob",
+        "top-p sampling"
+      ],
+      "files": [
+        "miles/backends/experimental/fsdp_utils/actor.py",
+        "miles/backends/megatron_utils/model.py",
+        "miles/backends/training_utils/loss_hub/logit_processors.py",
+        "miles/backends/training_utils/loss_hub/losses.py",
+        "miles/backends/training_utils/loss_hub/math_utils.py",
+        "miles/backends/training_utils/sampling_mask.py",
+        "miles/ray/rollout/server_group.py",
+        "miles/ray/rollout/train_data_conversion.py",
+        "miles/rollout/generate_utils/generate_endpoint_utils.py",
+        "miles/rollout/generate_utils/sample_utils.py",
+        "miles/rollout/generate_utils/sampling_mask.py",
+        "miles/rollout/generate_utils/tool_call_utils.py",
+        "miles/rollout/session/core.py",
+        "miles/rollout/session/samples/codec.py",
+        "miles/rollout/session/samples/merge.py",
+        "miles/rollout/sglang_rollout.py",
+        "miles/utils/arguments.py",
+        "miles/utils/types.py",
+        "tests/fast/backends/training_utils/test_sampling_mask.py",
+        "tests/fast/dashboard/dummy_dump.py"
+      ],
+      "diff_preview": {
+        "additions": 805,
+        "deletions": 29,
+        "hunks": [
+          {
+            "file": "miles/backends/experimental/fsdp_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -10,6 +10,7 @@"
+              ],
+              [
+                " ",
+                "import torch.distributed as dist"
+              ],
+              [
+                " ",
+                "from tqdm import tqdm"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "from miles.backends.training_utils.sampling_mask import get_rollout_sampling_mask"
+              ],
+              [
+                " ",
+                "from miles.ray.train_actor import TrainRayActor"
+              ],
+              [
+                " ",
+                "from miles.utils import train_dump_utils, train_metric_utils"
+              ],
+              [
+                " ",
+                "from miles.utils.context_utils import with_defer"
+              ],
+              [
+                "h",
+                "@@ -341,6 +342,7 @@ def _compute_log_prob("
+              ],
+              [
+                " ",
+                "            active_model.eval()"
+              ],
+              [
+                " ",
+                "        else:"
+              ],
+              [
+                " ",
+                "            active_model = self.model"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:05:52.594443+00:00"
+    },
+    {
+      "id": "radixark/miles#2202",
+      "repo": "radixark/miles",
+      "pr_number": 2202,
+      "title": "fix(tito): prevent DeepSeek V4 system-tail mismatch",
+      "state": "open",
+      "author": "guapisolo",
+      "created_at": "2026-08-05T00:07:01Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2202",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "限制 DeepSeek V4 TITO tokenizer 的 system-tail append 支持范围，避免编码器与采样结果不一致导致的随机 mismatch",
+      "reason": "该修复针对 miles 仓库内部的 TITO（Token-In Token-Out）会话服务器机制及其专属的 DeepSeek V4 tokenizer 适配层，TITO 会话管理和 TITOTokenizer 是该仓库特有的设计，其他框架不存在相同的 system-tail append 逻辑或 compute_session_mismatch 校验流程",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/chat_template_utils/tito_tokenizer.py",
+        "tests/e2e/sglang/test_session_server_multi_role/test_deepseekv4.py",
+        "tests/fast/utils/chat_template_utils/test_fixed_templates.py"
+      ],
+      "diff_preview": {
+        "additions": 4,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "miles/utils/chat_template_utils/tito_tokenizer.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -666,6 +666,7 @@ class DeepSeekV4TITOTokenizer(TITOTokenizer):"
+              ],
+              [
+                " ",
+                "    FIXED_TEMPLATE = FixedTemplate("
+              ],
+              [
+                " ",
+                "        template=None,"
+              ],
+              [
+                " ",
+                "        extra_kwargs={\"drop_thinking\": False},"
+              ],
+              [
+                "+",
+                "        allowed_append_roles=frozenset({\"tool\", \"user\", \"assistant\"}),"
+              ],
+              [
+                " ",
+                "    )"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    _DEFAULT_ASSISTANT_START = \"<｜Assistant｜>\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:05:44.609410+00:00"
+    },
+    {
+      "id": "radixark/miles#2203",
+      "repo": "radixark/miles",
+      "pr_number": 2203,
+      "title": "Revert \"Reject --disable-weights-backuper for LoRA + colocate + offload-train\" (#2077)",
+      "state": "closed",
+      "author": "Shi-Dong",
+      "created_at": "2026-08-05T00:45:01Z",
+      "merged_at": "2026-08-05T00:50:25Z",
+      "url": "https://github.com/radixark/miles/pull/2203",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "回滚了一个过于严格的启动断言，该断言错误地拒绝了 LoRA + colocate + disable-weights-backuper 的合法组合，导致所有 LoRA e2e CI 失败",
+      "reason": "weights-backuper 禁用与 LoRA + colocate + offload-train 组合的兼容性问题，涉及训练参数解析逻辑中的通用缺陷，其他使用类似 colocate/offload 机制的 RL 框架同样可能遇到此类因参数联动导致的误断言问题",
+      "value": 3,
+      "subsystems": [
+        "weight-sync",
+        "infra",
+        "ci"
+      ],
+      "rl_concepts": [
+        "LoRA",
+        "offload-train",
+        "colocate",
+        "Megatron"
+      ],
+      "files": [
+        "miles/utils/arguments.py"
+      ],
+      "diff_preview": {
+        "additions": 0,
+        "deletions": 8,
+        "hunks": [
+          {
+            "file": "miles/utils/arguments.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -3078,14 +3078,6 @@ def miles_validate_args(args):"
+              ],
+              [
+                " ",
+                "        args.disable_grad_buffers_cpu_backup = True"
+              ],
+              [
+                " ",
+                "        args.disable_param_buffers_cpu_backup = args.enable_weights_backuper"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "    # patch_param_grad_buffer_for_colocate_mode_lora() forces disable_param_buffers_cpu_backup"
+              ],
+              [
+                "-",
+                "    # on regardless of the line above, so without the backuper there is no host copy at all and"
+              ],
+              [
+                "-",
+                "    # named_params_and_buffers() hands update_weights the live, paused GPU tensors. That reads"
+              ],
+              [
+                "-",
+                "    # unmapped memory instead of failing, so the symptom is a 30-minute gloo barrier timeout."
+              ],
+              [
+                "-",
+                "    assert not ("
+              ],
+              [
+                "-",
+                "        not args.enable_weights_backuper and args.offload_train and args.colocate and is_lora_enabled(args)"
+              ],
+              [
+                "-",
+                "    ), \"--disable-weights-backuper is not supported with LoRA + --colocate + --offload-train\""
+              ],
+              [
+                "-",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:05:37.339738+00:00"
+    },
+    {
+      "id": "radixark/miles#2204",
+      "repo": "radixark/miles",
+      "pr_number": 2204,
+      "title": "Fail fast when an offloaded weight has no CPU backup",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-08-05T01:02:33Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2204",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "当 offloaded 权重缺失 CPU backup 时，改为快速失败并抛出明确错误，避免触碰未映射内存导致的 30 分钟 gloo 超时挂起",
+      "reason": "权重 offload 与 CPU backup 机制（torch_memory_saver 模式）是多个 RL 框架共用的内存优化手段，offload 状态下静默返回 GPU 指针导致 gloo 超时的 bug 模式具有普遍性，任何使用类似 paused tensor + weight sync 组合的框架都会遇到该问题",
+      "value": 4,
+      "subsystems": [
+        "weight-sync",
+        "memory",
+        "rollout"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "weight-sync",
+        "offload"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/actor.py",
+        "miles/backends/megatron_utils/update_weight/common.py"
+      ],
+      "diff_preview": {
+        "additions": 17,
+        "deletions": 2,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -213,6 +213,9 @@ def init("
+              ],
+              [
+                " ",
+                "                self.model,"
+              ],
+              [
+                " ",
+                "                convert_to_global_name=args.megatron_to_hf_mode == \"raw\","
+              ],
+              [
+                " ",
+                "                translate_gpu_to_cpu=not self.args.enable_weights_backuper,"
+              ],
+              [
+                "+",
+                "                # Evaluated at call time: while the model is offloaded, a paused"
+              ],
+              [
+                "+",
+                "                # tensor without a CPU backup must fail fast instead of hanging."
+              ],
+              [
+                "+",
+                "                require_cpu_backup=self._asleep,"
+              ],
+              [
+                " ",
+                "            ),"
+              ],
+              [
+                " ",
+                "            single_tag=None if args.enable_weights_backuper else \"actor\","
+              ],
+              [
+                " ",
+                "        )"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:05:30.255070+00:00"
+    },
+    {
+      "id": "THUDM/slime#2250",
+      "repo": "THUDM/slime",
+      "pr_number": 2250,
+      "title": "Add lightweight rollout hooks and sampling controls",
+      "state": "closed",
+      "author": "zhuzilin",
+      "created_at": "2026-08-04T02:23:04Z",
+      "merged_at": "2026-08-04T02:40:32Z",
+      "url": "https://github.com/THUDM/slime/pull/2250",
+      "category": "feature",
+      "scope": "universal",
+      "summary": "新增轻量级 per-sample rollout 钩子机制、可配置路由器日志、DeepEP TMS 状态保留及单轮动态采样回退支持",
+      "reason": "per-sample rollout hooks、动态采样回退等机制是通用的 RL rollout 扩展模式，其他框架在实现自定义采样控制和 rollout 后处理时会面临同样的设计需求；仅 DeepEP TMS patch 属于特定实现细节，但整体架构思路具有参考价值",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "logging",
+        "infra"
+      ],
+      "rl_concepts": [
+        "rollout",
+        "dynamic-sampling",
+        "reward-model"
+      ],
+      "files": [
+        ".github/workflows/pr-test.yml",
+        ".github/workflows/pr-test.yml.j2",
+        "slime/backends/megatron_utils/__init__.py",
+        "slime/backends/sglang_utils/arguments.py",
+        "slime/ray/rollout.py",
+        "slime/rollout/filter_hub/base_types.py",
+        "slime/rollout/filter_hub/dynamic_sampling_filters.py",
+        "slime/rollout/sample_hooks.py",
+        "slime/rollout/sglang_rollout.py",
+        "slime/utils/arguments.py",
+        "slime/utils/misc.py",
+        "tests/plugin_contracts/test_plugin_path_loading_contracts.py",
+        "tests/test_deep_ep_tms_patch.py",
+        "tests/test_rollout_sample_hooks.py",
+        "tests/test_stateless_adam.py"
+      ],
+      "diff_preview": {
+        "additions": 388,
+        "deletions": 15,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -561,6 +561,14 @@ jobs:"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_megatron_argument_validation.py\""
+              ],
+              [
+                " ",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_deep_ep_tms_patch.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_stateless_adam.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:05:23.309827+00:00"
+    },
+    {
+      "id": "THUDM/slime#2251",
+      "repo": "THUDM/slime",
+      "pr_number": 2251,
+      "title": "Internalize mbridge and remove megatron-bridge",
+      "state": "closed",
+      "author": "zhuzilin",
+      "created_at": "2026-08-04T06:19:59Z",
+      "merged_at": "2026-08-04T07:19:07Z",
+      "url": "https://github.com/THUDM/slime/pull/2251",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将外部依赖 mbridge 的相关代码内化到 slime 仓库，同时移除未完成的 Megatron-Bridge 实验性集成，以保持代码库整洁可维护",
+      "reason": "此 PR 涉及的是 slime 特有的外部依赖管理决策（内化 mbridge、移除 Megatron-Bridge 集成），以及 Docker/构建脚本、文档等仓库专属文件的调整，不涉及可跨框架复用的通用算法或基础设施改动",
+      "value": 2,
+      "subsystems": [
+        "infra",
+        "parallel",
+        "ci"
+      ],
+      "rl_concepts": [
+        "Megatron"
+      ],
+      "files": [
+        ".github/workflows/pr-test.yml",
+        ".github/workflows/pr-test.yml.j2",
+        "build_conda.sh",
+        "docker/Dockerfile",
+        "docker/Dockerfile.gb10",
+        "docker/Dockerfile.rocm",
+        "docker/Dockerfile.rocm_MI350-5",
+        "docker/Dockerfile_20250810_9a48ba0.rocm",
+        "docker/Dockerfile_20250810_c22f55b.rocm",
+        "docker/patch/v0.5.5.post1/sglang.patch",
+        "docker/patch/v0.5.6/sglang.patch",
+        "docs/en/advanced/arch-support-beyond-megatron.md",
+        "docs/en/examples/gemma4.md",
+        "docs/en/examples/glm4.7-30B-A3B.md",
+        "docs/en/examples/glm4.7-355B-A32B.md",
+        "docs/en/examples/glm5.2-744B-A40B.md",
+        "docs/en/index.rst",
+        "docs/en/platform_support/amd_tutorial.md",
+        "docs/zh/advanced/arch-support-beyond-megatron.md",
+        "docs/zh/examples/gemma4.md"
+      ],
+      "diff_preview": {
+        "additions": 38,
+        "deletions": 716,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -641,6 +641,14 @@ jobs:"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_rollout_sample_hooks.py\""
+              ],
+              [
+                " ",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_hf_to_megatron.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_qwen3_5_vl_native.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:05:16.243713+00:00"
+    },
+    {
+      "id": "THUDM/slime#2252",
+      "repo": "THUDM/slime",
+      "pr_number": 2252,
+      "title": "[release] bump to v0.3.1",
+      "state": "open",
+      "author": "zhuzilin",
+      "created_at": "2026-08-04T07:57:52Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2252",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "发布 v0.3.1 版本，更新依赖、Docker 构建脚本、SGLang 相关 patch 及少量 rollout/测试文件",
+      "reason": "改动主要集中在版本号 bump、Docker/conda 构建脚本、仓库特有的 SGLang patch 文件，以及针对 Qwen3 特定模型的测试脚本，均属于该仓库自身的发布基础设施与模型适配，不具备跨框架的通用参考价值",
+      "value": 1,
+      "subsystems": [
+        "infra",
+        "rollout",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "build_conda.sh",
+        "docker/Dockerfile.gb10",
+        "docker/patch/latest/sglang-pull_weights.patch",
+        "docker/patch/v0.5.15.post1/megatron.patch",
+        "docker/patch/v0.5.15.post1/sglang-pull_weights.patch",
+        "docker/patch/v0.5.15.post1/sglang-release_hicache.patch",
+        "docker/patch/v0.5.15.post1/sglang-top_p.patch",
+        "docker/patch/v0.5.15.post1/sglang.patch",
+        "docker/version.txt",
+        "requirements.txt",
+        "setup.py",
+        "slime/backends/sglang_utils/external.py",
+        "slime/backends/sglang_utils/sglang_engine.py",
+        "slime/rollout/sglang_rollout.py",
+        "tests/plugin_contracts/_shared.py",
+        "tests/test_external_sglang_engines.py",
+        "tests/test_qwen3_30B_A3B.py",
+        "tests/test_qwen3_30B_A3B_r3.py"
+      ],
+      "diff_preview": {
+        "additions": 4521,
+        "deletions": 105,
+        "hunks": [
+          {
+            "file": "build_conda.sh",
+            "lang": "bash",
+            "lines": [
+              [
+                "h",
+                "@@ -2,6 +2,8 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "set -ex"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "export SLIME_DIR=\"${SLIME_DIR:-$(cd -- \"$(dirname -- \"${BASH_SOURCE[0]}\")\" && pwd)}\""
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                "# create conda"
+              ],
+              [
+                " ",
+                "yes '' | \"${SHELL}\" <(curl -L micro.mamba.pm/install.sh)"
+              ],
+              [
+                " ",
+                "export PS1=tmp"
+              ],
+              [
+                "h",
+                "@@ -24,10 +26,12 @@ export CUDA_HOME=\"$CONDA_PREFIX\""
+              ],
+              [
+                " ",
+                "#   - SGLANG_IMAGE_TAG (ARG)            -> SGLANG_VERSION below"
+              ],
+              [
+                " ",
+                "#   - MEGATRON_COMMIT (ARG)             -> MEGATRON_COMMIT below"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-05T01:05:09.323022+00:00"
+    },
+    {
       "id": "radixark/miles#2087",
       "repo": "radixark/miles",
       "pr_number": 2087,
@@ -60559,698 +65356,751 @@
     }
   ],
   "analyzed_ids": [
-    "radixark/miles#1895",
-    "radixark/miles#1882",
-    "THUDM/slime#2166",
-    "radixark/miles#1000",
-    "radixark/miles#1210",
-    "THUDM/slime#1913",
-    "radixark/miles#1218",
-    "radixark/miles#1021",
-    "radixark/miles#2126",
-    "radixark/miles#947",
-    "radixark/miles#1976",
-    "THUDM/slime#2171",
-    "radixark/miles#2075",
-    "radixark/miles#2027",
-    "THUDM/slime#1849",
-    "radixark/miles#984",
-    "THUDM/slime#2227",
-    "radixark/miles#1977",
-    "radixark/miles#2112",
-    "radixark/miles#1779",
-    "radixark/miles#997",
-    "THUDM/slime#1915",
-    "radixark/miles#986",
-    "radixark/miles#1914",
-    "THUDM/slime#1958",
-    "radixark/miles#1721",
-    "radixark/miles#1747",
-    "radixark/miles#1879",
-    "radixark/miles#2021",
-    "radixark/miles#2004",
-    "THUDM/slime#1937",
-    "THUDM/slime#2213",
-    "radixark/miles#2121",
-    "radixark/miles#2070",
-    "THUDM/slime#1921",
-    "radixark/miles#2051",
-    "THUDM/slime#2238",
-    "THUDM/slime#2163",
-    "radixark/miles#1874",
-    "radixark/miles#940",
-    "THUDM/slime#1955",
-    "THUDM/slime#1917",
-    "radixark/miles#1757",
-    "radixark/miles#1044",
-    "THUDM/slime#1832",
-    "radixark/miles#1978",
-    "THUDM/slime#1927",
-    "radixark/miles#1992",
-    "THUDM/slime#1932",
-    "radixark/miles#1028",
-    "radixark/miles#1208",
-    "radixark/miles#1913",
-    "radixark/miles#1791",
-    "radixark/miles#2073",
-    "radixark/miles#1013",
-    "radixark/miles#1725",
-    "radixark/miles#1016",
-    "radixark/miles#1003",
-    "radixark/miles#2020",
-    "THUDM/slime#2240",
-    "radixark/miles#2015",
-    "radixark/miles#1884",
-    "radixark/miles#1227",
-    "radixark/miles#1981",
-    "THUDM/slime#2241",
-    "THUDM/slime#2221",
-    "radixark/miles#2048",
-    "radixark/miles#1830",
-    "THUDM/slime#1941",
-    "radixark/miles#1938",
-    "radixark/miles#1738",
-    "radixark/miles#1035",
-    "THUDM/slime#2174",
-    "radixark/miles#951",
-    "THUDM/slime#2219",
-    "radixark/miles#1734",
-    "radixark/miles#1918",
-    "radixark/miles#2023",
-    "radixark/miles#1023",
-    "radixark/miles#1694",
-    "THUDM/slime#2206",
-    "THUDM/slime#1856",
-    "THUDM/slime#2162",
-    "THUDM/slime#2199",
-    "radixark/miles#2001",
-    "radixark/miles#1708",
-    "THUDM/slime#1841",
-    "radixark/miles#1188",
-    "radixark/miles#1931",
-    "radixark/miles#1704",
-    "radixark/miles#958",
-    "THUDM/slime#1842",
-    "radixark/miles#935",
-    "radixark/miles#2091",
-    "radixark/miles#1796",
-    "radixark/miles#1986",
-    "radixark/miles#996",
-    "radixark/miles#2130",
-    "radixark/miles#1987",
-    "THUDM/slime#1814",
-    "THUDM/slime#1770",
-    "radixark/miles#1831",
-    "radixark/miles#1045",
-    "radixark/miles#1690",
-    "radixark/miles#1705",
-    "radixark/miles#1789",
-    "THUDM/slime#2187",
-    "radixark/miles#1941",
-    "radixark/miles#1906",
-    "radixark/miles#976",
-    "radixark/miles#1179",
-    "radixark/miles#2104",
-    "radixark/miles#2016",
-    "radixark/miles#991",
-    "radixark/miles#1764",
-    "radixark/miles#2127",
-    "radixark/miles#961",
-    "radixark/miles#980",
-    "radixark/miles#1204",
-    "radixark/miles#953",
-    "THUDM/slime#2237",
-    "radixark/miles#2011",
-    "radixark/miles#1996",
-    "radixark/miles#1969",
-    "radixark/miles#938",
-    "radixark/miles#2009",
-    "radixark/miles#1785",
-    "radixark/miles#1199",
-    "THUDM/slime#1798",
-    "radixark/miles#1784",
-    "radixark/miles#1022",
-    "radixark/miles#2056",
-    "radixark/miles#2136",
-    "THUDM/slime#1807",
-    "THUDM/slime#1934",
-    "radixark/miles#1726",
-    "radixark/miles#1755",
-    "radixark/miles#994",
-    "radixark/miles#1772",
-    "THUDM/slime#2248",
-    "radixark/miles#1799",
-    "THUDM/slime#1929",
-    "radixark/miles#2118",
-    "radixark/miles#2103",
-    "radixark/miles#2064",
-    "THUDM/slime#1925",
-    "radixark/miles#1817",
-    "radixark/miles#1781",
-    "radixark/miles#1797",
-    "radixark/miles#1213",
-    "radixark/miles#1912",
-    "THUDM/slime#2175",
-    "radixark/miles#939",
-    "radixark/miles#1880",
-    "radixark/miles#1811",
-    "THUDM/slime#2223",
-    "THUDM/slime#1914",
-    "radixark/miles#1887",
-    "radixark/miles#2059",
-    "radixark/miles#2072",
-    "radixark/miles#2049",
-    "radixark/miles#1774",
-    "radixark/miles#2034",
-    "radixark/miles#1767",
-    "THUDM/slime#2235",
-    "radixark/miles#1720",
-    "THUDM/slime#1959",
-    "radixark/miles#2060",
-    "radixark/miles#2057",
-    "radixark/miles#1009",
-    "radixark/miles#1923",
-    "radixark/miles#1937",
-    "radixark/miles#966",
     "radixark/miles#2099",
-    "radixark/miles#2033",
-    "THUDM/slime#1809",
-    "THUDM/slime#1928",
-    "radixark/miles#1917",
-    "radixark/miles#1732",
-    "radixark/miles#2000",
-    "radixark/miles#1788",
-    "radixark/miles#975",
-    "radixark/miles#1924",
-    "radixark/miles#1229",
-    "radixark/miles#1901",
-    "radixark/miles#1803",
-    "radixark/miles#989",
-    "radixark/miles#1180",
-    "THUDM/slime#2205",
-    "radixark/miles#2002",
-    "radixark/miles#1011",
-    "radixark/miles#1907",
-    "radixark/miles#1219",
-    "radixark/miles#1823",
-    "radixark/miles#1763",
-    "radixark/miles#1203",
-    "radixark/miles#1940",
-    "radixark/miles#1971",
-    "radixark/miles#1808",
-    "radixark/miles#1933",
-    "radixark/miles#1778",
-    "radixark/miles#1890",
-    "radixark/miles#2132",
-    "radixark/miles#2090",
-    "radixark/miles#2039",
-    "radixark/miles#1953",
-    "radixark/miles#1806",
-    "radixark/miles#1716",
-    "radixark/miles#1031",
-    "radixark/miles#942",
-    "radixark/miles#1223",
-    "radixark/miles#1042",
-    "THUDM/slime#2172",
-    "radixark/miles#1224",
-    "radixark/miles#1793",
-    "radixark/miles#1753",
-    "radixark/miles#2135",
-    "radixark/miles#1699",
-    "THUDM/slime#1963",
-    "radixark/miles#2052",
-    "radixark/miles#1756",
-    "THUDM/slime#1957",
-    "radixark/miles#1893",
-    "radixark/miles#1900",
-    "THUDM/slime#2195",
-    "radixark/miles#2042",
-    "radixark/miles#1911",
-    "radixark/miles#2036",
-    "THUDM/slime#1944",
-    "THUDM/slime#1816",
-    "radixark/miles#1970",
-    "radixark/miles#1943",
-    "radixark/miles#1039",
-    "radixark/miles#1824",
-    "radixark/miles#1801",
-    "radixark/miles#974",
-    "THUDM/slime#1950",
-    "radixark/miles#1792",
-    "radixark/miles#998",
-    "radixark/miles#1740",
-    "radixark/miles#2106",
-    "radixark/miles#2053",
-    "radixark/miles#1975",
-    "radixark/miles#1735",
-    "radixark/miles#1954",
-    "radixark/miles#2032",
-    "radixark/miles#1783",
-    "THUDM/slime#1919",
-    "THUDM/slime#2173",
-    "radixark/miles#1214",
-    "radixark/miles#1733",
-    "radixark/miles#1719",
-    "radixark/miles#1723",
-    "radixark/miles#1782",
-    "THUDM/slime#2217",
-    "radixark/miles#1967",
-    "radixark/miles#2092",
-    "radixark/miles#2074",
-    "radixark/miles#1185",
-    "radixark/miles#2037",
-    "THUDM/slime#2239",
-    "radixark/miles#1717",
-    "radixark/miles#1883",
-    "radixark/miles#1765",
-    "radixark/miles#2107",
-    "radixark/miles#960",
-    "radixark/miles#1980",
-    "radixark/miles#1961",
-    "radixark/miles#943",
-    "radixark/miles#1698",
-    "radixark/miles#2108",
-    "radixark/miles#1692",
-    "THUDM/slime#2233",
-    "radixark/miles#1706",
-    "radixark/miles#1040",
-    "radixark/miles#987",
-    "radixark/miles#2041",
-    "THUDM/slime#2185",
-    "radixark/miles#2113",
-    "radixark/miles#2110",
-    "THUDM/slime#1775",
-    "radixark/miles#1194",
-    "radixark/miles#1929",
-    "THUDM/slime#2169",
-    "radixark/miles#1990",
-    "radixark/miles#967",
-    "THUDM/slime#1945",
-    "THUDM/slime#1938",
-    "radixark/miles#973",
-    "radixark/miles#2102",
-    "radixark/miles#2088",
-    "radixark/miles#2043",
-    "radixark/miles#1191",
-    "THUDM/slime#1828",
-    "radixark/miles#2065",
-    "radixark/miles#1019",
-    "radixark/miles#1766",
-    "radixark/miles#2010",
-    "radixark/miles#2054",
-    "radixark/miles#2105",
-    "radixark/miles#1957",
-    "THUDM/slime#2211",
-    "THUDM/slime#2180",
-    "radixark/miles#1695",
-    "radixark/miles#1813",
-    "radixark/miles#1888",
-    "radixark/miles#2014",
-    "radixark/miles#1991",
-    "radixark/miles#1713",
-    "radixark/miles#2055",
-    "THUDM/slime#2246",
-    "THUDM/slime#2183",
-    "THUDM/slime#1948",
-    "radixark/miles#2125",
-    "radixark/miles#972",
-    "radixark/miles#1182",
-    "radixark/miles#1804",
-    "THUDM/slime#2197",
-    "radixark/miles#2111",
-    "radixark/miles#2115",
-    "radixark/miles#1689",
-    "THUDM/slime#1918",
-    "radixark/miles#1222",
-    "radixark/miles#1787",
-    "radixark/miles#1947",
-    "radixark/miles#1769",
-    "radixark/miles#1688",
-    "radixark/miles#1972",
-    "radixark/miles#1036",
-    "THUDM/slime#1813",
-    "THUDM/slime#1772",
-    "radixark/miles#1010",
-    "radixark/miles#2005",
-    "radixark/miles#2040",
-    "radixark/miles#964",
-    "radixark/miles#1230",
-    "THUDM/slime#1808",
-    "radixark/miles#1773",
-    "radixark/miles#1207",
-    "THUDM/slime#2234",
-    "radixark/miles#1043",
-    "radixark/miles#1968",
-    "THUDM/slime#1795",
-    "radixark/miles#2109",
-    "radixark/miles#1891",
-    "THUDM/slime#1846",
-    "radixark/miles#1211",
-    "radixark/miles#1822",
-    "THUDM/slime#1768",
-    "THUDM/slime#1916",
-    "radixark/miles#2047",
-    "radixark/miles#1886",
-    "radixark/miles#1710",
-    "radixark/miles#2069",
-    "THUDM/slime#1812",
-    "radixark/miles#1814",
-    "THUDM/slime#1774",
-    "radixark/miles#1712",
-    "radixark/miles#2068",
-    "radixark/miles#2119",
-    "radixark/miles#1926",
-    "radixark/miles#1819",
-    "radixark/miles#1927",
-    "radixark/miles#1974",
-    "radixark/miles#2017",
-    "radixark/miles#1828",
-    "radixark/miles#2046",
-    "THUDM/slime#1922",
-    "radixark/miles#1812",
-    "radixark/miles#1195",
-    "radixark/miles#1944",
-    "radixark/miles#1928",
-    "radixark/miles#2035",
-    "radixark/miles#2128",
-    "radixark/miles#1014",
-    "radixark/miles#1739",
-    "radixark/miles#1827",
-    "THUDM/slime#1776",
-    "radixark/miles#1807",
-    "THUDM/slime#1962",
-    "THUDM/slime#1805",
-    "radixark/miles#1217",
-    "radixark/miles#1892",
-    "radixark/miles#1737",
-    "radixark/miles#971",
-    "radixark/miles#2129",
-    "THUDM/slime#1923",
-    "radixark/miles#2007",
-    "radixark/miles#1988",
-    "THUDM/slime#1931",
-    "radixark/miles#1921",
-    "radixark/miles#2114",
-    "radixark/miles#1032",
-    "radixark/miles#1809",
-    "radixark/miles#1008",
-    "radixark/miles#1920",
-    "radixark/miles#1896",
-    "radixark/miles#1707",
-    "radixark/miles#1215",
-    "radixark/miles#1805",
-    "radixark/miles#1790",
-    "radixark/miles#1775",
-    "radixark/miles#1714",
-    "THUDM/slime#1947",
     "radixark/miles#2101",
-    "radixark/miles#1997",
-    "radixark/miles#944",
-    "radixark/miles#1810",
-    "radixark/miles#1993",
-    "radixark/miles#2094",
-    "radixark/miles#2120",
-    "THUDM/slime#2216",
-    "radixark/miles#1885",
-    "radixark/miles#1220",
-    "radixark/miles#1946",
-    "radixark/miles#999",
-    "radixark/miles#1962",
-    "THUDM/slime#1823",
-    "radixark/miles#1985",
-    "radixark/miles#1748",
-    "radixark/miles#1995",
-    "radixark/miles#1693",
-    "radixark/miles#1816",
-    "radixark/miles#1881",
-    "radixark/miles#992",
-    "radixark/miles#1821",
-    "radixark/miles#1005",
-    "radixark/miles#1216",
-    "radixark/miles#1922",
-    "radixark/miles#1930",
-    "THUDM/slime#2208",
-    "radixark/miles#1770",
-    "radixark/miles#1030",
-    "THUDM/slime#1806",
-    "THUDM/slime#1953",
-    "THUDM/slime#2198",
-    "radixark/miles#1902",
-    "radixark/miles#1703",
-    "radixark/miles#2071",
-    "radixark/miles#2050",
-    "radixark/miles#1190",
-    "radixark/miles#1973",
-    "THUDM/slime#1933",
-    "radixark/miles#1015",
-    "radixark/miles#2024",
-    "radixark/miles#1184",
-    "THUDM/slime#2224",
-    "radixark/miles#1730",
-    "radixark/miles#1034",
-    "radixark/miles#1776",
+    "radixark/miles#1960",
+    "radixark/miles#2048",
+    "radixark/miles#1690",
     "radixark/miles#1004",
-    "radixark/miles#2026",
-    "radixark/miles#2044",
-    "radixark/miles#1876",
-    "radixark/miles#1948",
+    "radixark/miles#2100",
+    "radixark/miles#1709",
+    "radixark/miles#2069",
+    "radixark/miles#2015",
+    "radixark/miles#996",
+    "radixark/miles#1982",
+    "radixark/miles#1029",
+    "radixark/miles#1898",
+    "radixark/miles#1825",
+    "radixark/miles#2171",
+    "radixark/miles#1226",
+    "radixark/miles#1703",
+    "radixark/miles#1800",
+    "radixark/miles#1807",
+    "THUDM/slime#1772",
+    "radixark/miles#2094",
     "THUDM/slime#1946",
+    "radixark/miles#2014",
+    "radixark/miles#1917",
+    "radixark/miles#1207",
+    "THUDM/slime#2216",
+    "THUDM/slime#1952",
+    "radixark/miles#2001",
+    "radixark/miles#1966",
+    "radixark/miles#1007",
+    "radixark/miles#1714",
+    "radixark/miles#1876",
+    "radixark/miles#1989",
+    "radixark/miles#2059",
+    "THUDM/slime#1940",
+    "THUDM/slime#2170",
+    "radixark/miles#1026",
+    "radixark/miles#2166",
+    "radixark/miles#1928",
+    "THUDM/slime#2198",
+    "radixark/miles#1974",
+    "radixark/miles#1998",
+    "THUDM/slime#1932",
+    "radixark/miles#2196",
+    "radixark/miles#1778",
+    "THUDM/slime#2211",
+    "radixark/miles#1948",
+    "radixark/miles#1941",
+    "radixark/miles#1223",
+    "radixark/miles#2056",
+    "radixark/miles#2026",
+    "radixark/miles#2118",
+    "radixark/miles#945",
+    "radixark/miles#2016",
+    "radixark/miles#2028",
+    "radixark/miles#1035",
+    "radixark/miles#1894",
+    "radixark/miles#1045",
+    "radixark/miles#1822",
+    "radixark/miles#2070",
+    "THUDM/slime#2193",
+    "THUDM/slime#1801",
+    "radixark/miles#1205",
+    "radixark/miles#2112",
+    "radixark/miles#1900",
+    "radixark/miles#2124",
+    "THUDM/slime#1768",
+    "radixark/miles#1750",
+    "THUDM/slime#1844",
+    "radixark/miles#2031",
+    "radixark/miles#1044",
+    "radixark/miles#2023",
+    "THUDM/slime#2250",
+    "radixark/miles#2103",
+    "THUDM/slime#1930",
+    "radixark/miles#1225",
+    "radixark/miles#1777",
+    "radixark/miles#2049",
+    "THUDM/slime#1916",
+    "radixark/miles#1695",
+    "THUDM/slime#1960",
+    "radixark/miles#1005",
+    "radixark/miles#2107",
+    "radixark/miles#2106",
+    "radixark/miles#1935",
+    "radixark/miles#1877",
+    "radixark/miles#2089",
+    "THUDM/slime#1791",
+    "radixark/miles#2190",
+    "radixark/miles#2071",
+    "radixark/miles#1988",
+    "radixark/miles#1210",
+    "radixark/miles#1942",
+    "radixark/miles#1030",
+    "radixark/miles#987",
+    "radixark/miles#1212",
+    "THUDM/slime#2204",
+    "radixark/miles#2128",
+    "radixark/miles#1918",
+    "THUDM/slime#1797",
+    "radixark/miles#1888",
+    "radixark/miles#1729",
+    "radixark/miles#1736",
+    "radixark/miles#1883",
+    "radixark/miles#2198",
+    "THUDM/slime#2227",
+    "radixark/miles#976",
+    "THUDM/slime#1812",
+    "radixark/miles#1718",
+    "radixark/miles#1200",
+    "radixark/miles#1691",
+    "radixark/miles#1970",
+    "radixark/miles#2188",
+    "radixark/miles#1025",
+    "radixark/miles#1912",
+    "THUDM/slime#1919",
+    "THUDM/slime#2234",
+    "THUDM/slime#1942",
+    "radixark/miles#2187",
+    "radixark/miles#982",
+    "THUDM/slime#1822",
+    "radixark/miles#990",
+    "radixark/miles#951",
+    "radixark/miles#1952",
+    "radixark/miles#2108",
+    "radixark/miles#1752",
+    "THUDM/slime#1798",
+    "radixark/miles#1726",
+    "radixark/miles#1999",
+    "radixark/miles#1018",
+    "THUDM/slime#1855",
+    "radixark/miles#2113",
+    "radixark/miles#995",
+    "radixark/miles#1728",
+    "radixark/miles#1196",
+    "radixark/miles#1038",
+    "radixark/miles#1023",
+    "radixark/miles#1829",
+    "radixark/miles#1924",
+    "radixark/miles#1758",
+    "radixark/miles#1203",
+    "radixark/miles#1774",
+    "THUDM/slime#2228",
+    "radixark/miles#2119",
+    "radixark/miles#1946",
+    "radixark/miles#2062",
+    "radixark/miles#1003",
+    "radixark/miles#1887",
+    "radixark/miles#2058",
+    "radixark/miles#1951",
+    "radixark/miles#1830",
+    "radixark/miles#1197",
+    "radixark/miles#1719",
+    "THUDM/slime#1944",
+    "THUDM/slime#1949",
+    "radixark/miles#1751",
+    "radixark/miles#2043",
+    "radixark/miles#1217",
+    "radixark/miles#1790",
+    "THUDM/slime#2200",
+    "radixark/miles#949",
+    "radixark/miles#1727",
+    "radixark/miles#1032",
+    "radixark/miles#1767",
+    "THUDM/slime#1955",
+    "radixark/miles#1812",
+    "radixark/miles#2167",
+    "radixark/miles#1716",
+    "radixark/miles#2158",
+    "radixark/miles#1198",
+    "radixark/miles#1934",
+    "radixark/miles#1882",
+    "radixark/miles#1699",
+    "THUDM/slime#2164",
+    "radixark/miles#1000",
+    "THUDM/slime#2169",
+    "THUDM/slime#2183",
+    "THUDM/slime#2177",
+    "radixark/miles#1189",
+    "radixark/miles#1803",
+    "radixark/miles#2123",
+    "radixark/miles#1204",
+    "radixark/miles#1911",
+    "THUDM/slime#2173",
+    "radixark/miles#1701",
+    "radixark/miles#1694",
+    "THUDM/slime#2199",
+    "THUDM/slime#2196",
+    "radixark/miles#1921",
+    "radixark/miles#2168",
+    "radixark/miles#1188",
+    "radixark/miles#2002",
+    "THUDM/slime#2233",
+    "radixark/miles#2060",
+    "radixark/miles#1933",
+    "THUDM/slime#1828",
+    "THUDM/slime#1849",
+    "radixark/miles#966",
+    "radixark/miles#1994",
+    "THUDM/slime#1937",
+    "radixark/miles#991",
+    "radixark/miles#1784",
+    "radixark/miles#2117",
+    "THUDM/slime#1929",
+    "THUDM/slime#1817",
+    "radixark/miles#958",
+    "THUDM/slime#2241",
+    "radixark/miles#2090",
+    "radixark/miles#2174",
+    "radixark/miles#1923",
+    "radixark/miles#2132",
+    "radixark/miles#1943",
+    "radixark/miles#940",
+    "radixark/miles#1823",
+    "radixark/miles#1021",
+    "radixark/miles#1738",
+    "radixark/miles#2065",
+    "THUDM/slime#1827",
+    "radixark/miles#1179",
+    "radixark/miles#1033",
+    "THUDM/slime#2203",
+    "radixark/miles#2170",
+    "THUDM/slime#1795",
+    "THUDM/slime#1931",
+    "THUDM/slime#2190",
+    "radixark/miles#998",
+    "radixark/miles#2121",
+    "radixark/miles#1009",
+    "radixark/miles#1954",
+    "radixark/miles#1027",
+    "THUDM/slime#2220",
+    "radixark/miles#942",
+    "radixark/miles#1977",
+    "radixark/miles#1802",
+    "radixark/miles#1995",
+    "radixark/miles#1897",
+    "radixark/miles#2035",
+    "THUDM/slime#1823",
+    "radixark/miles#2160",
+    "radixark/miles#1997",
+    "radixark/miles#1880",
+    "radixark/miles#1969",
+    "THUDM/slime#1956",
+    "radixark/miles#2042",
+    "THUDM/slime#1917",
+    "radixark/miles#2057",
+    "radixark/miles#2111",
+    "radixark/miles#1962",
+    "THUDM/slime#1819",
+    "radixark/miles#1919",
+    "radixark/miles#1878",
+    "radixark/miles#1786",
+    "radixark/miles#994",
+    "radixark/miles#957",
+    "radixark/miles#2044",
+    "THUDM/slime#2218",
+    "radixark/miles#1874",
+    "radixark/miles#1902",
+    "radixark/miles#1689",
+    "radixark/miles#1808",
+    "radixark/miles#2159",
+    "radixark/miles#2039",
+    "THUDM/slime#2205",
+    "radixark/miles#2193",
+    "THUDM/slime#2167",
+    "THUDM/slime#2237",
+    "radixark/miles#1791",
+    "radixark/miles#1783",
+    "radixark/miles#2162",
+    "radixark/miles#968",
+    "THUDM/slime#2166",
+    "THUDM/slime#2174",
+    "radixark/miles#1704",
+    "radixark/miles#1991",
+    "radixark/miles#1181",
+    "THUDM/slime#1846",
+    "radixark/miles#1741",
+    "radixark/miles#2072",
+    "radixark/miles#1725",
+    "radixark/miles#975",
+    "radixark/miles#960",
+    "radixark/miles#1770",
+    "radixark/miles#1696",
+    "radixark/miles#2066",
+    "radixark/miles#1972",
+    "THUDM/slime#1948",
+    "radixark/miles#2120",
+    "THUDM/slime#1799",
+    "radixark/miles#1015",
+    "radixark/miles#2034",
+    "THUDM/slime#1825",
+    "THUDM/slime#1807",
+    "THUDM/slime#2238",
+    "radixark/miles#2096",
+    "THUDM/slime#1958",
+    "THUDM/slime#1856",
+    "radixark/miles#937",
+    "radixark/miles#1001",
+    "THUDM/slime#2185",
+    "radixark/miles#2185",
+    "radixark/miles#2054",
+    "radixark/miles#984",
+    "THUDM/slime#2243",
+    "radixark/miles#2009",
+    "radixark/miles#1739",
+    "THUDM/slime#1954",
+    "radixark/miles#1768",
+    "THUDM/slime#1835",
+    "radixark/miles#1913",
+    "radixark/miles#1922",
+    "radixark/miles#2095",
+    "radixark/miles#1735",
+    "radixark/miles#2074",
+    "radixark/miles#1781",
+    "THUDM/slime#2240",
+    "THUDM/slime#1925",
+    "radixark/miles#2032",
+    "radixark/miles#944",
     "THUDM/slime#1834",
+    "radixark/miles#1184",
+    "radixark/miles#2091",
+    "radixark/miles#1022",
+    "radixark/miles#1011",
+    "radixark/miles#1805",
+    "radixark/miles#1796",
+    "radixark/miles#1218",
+    "radixark/miles#1720",
+    "radixark/miles#1987",
+    "radixark/miles#1221",
+    "radixark/miles#1220",
+    "radixark/miles#1762",
+    "THUDM/slime#2187",
+    "radixark/miles#2046",
+    "THUDM/slime#1943",
+    "THUDM/slime#1941",
+    "THUDM/slime#1808",
+    "radixark/miles#2004",
+    "radixark/miles#1216",
+    "radixark/miles#1787",
+    "radixark/miles#1949",
+    "radixark/miles#1797",
+    "radixark/miles#1754",
+    "radixark/miles#2011",
+    "THUDM/slime#2224",
+    "THUDM/slime#2217",
+    "radixark/miles#2092",
+    "radixark/miles#1219",
+    "THUDM/slime#1953",
+    "radixark/miles#952",
+    "radixark/miles#1206",
+    "radixark/miles#1983",
+    "radixark/miles#2126",
+    "radixark/miles#1890",
+    "radixark/miles#1792",
+    "radixark/miles#1760",
+    "radixark/miles#971",
+    "radixark/miles#2180",
+    "radixark/miles#1892",
+    "radixark/miles#1979",
+    "radixark/miles#941",
+    "THUDM/slime#1848",
+    "radixark/miles#2181",
+    "THUDM/slime#1813",
+    "radixark/miles#999",
+    "radixark/miles#1798",
+    "radixark/miles#1793",
+    "radixark/miles#1180",
+    "radixark/miles#1733",
+    "radixark/miles#1707",
+    "radixark/miles#1192",
+    "radixark/miles#963",
+    "radixark/miles#1794",
+    "radixark/miles#1763",
+    "radixark/miles#2169",
+    "THUDM/slime#1959",
+    "THUDM/slime#2210",
+    "THUDM/slime#2163",
+    "radixark/miles#1799",
+    "radixark/miles#1766",
+    "radixark/miles#938",
+    "radixark/miles#2114",
+    "radixark/miles#950",
+    "THUDM/slime#1939",
+    "radixark/miles#1771",
+    "radixark/miles#985",
+    "radixark/miles#1819",
+    "radixark/miles#2195",
+    "THUDM/slime#1963",
+    "radixark/miles#1748",
+    "radixark/miles#2030",
+    "radixark/miles#943",
+    "radixark/miles#1908",
+    "radixark/miles#2075",
+    "radixark/miles#973",
+    "radixark/miles#1806",
+    "radixark/miles#2133",
+    "THUDM/slime#2248",
+    "radixark/miles#1723",
+    "THUDM/slime#1777",
+    "THUDM/slime#2236",
+    "radixark/miles#1036",
+    "THUDM/slime#1934",
+    "radixark/miles#1185",
+    "radixark/miles#1938",
+    "radixark/miles#1944",
+    "radixark/miles#1199",
+    "radixark/miles#1961",
+    "radixark/miles#997",
+    "THUDM/slime#1824",
+    "radixark/miles#1208",
+    "radixark/miles#1211",
+    "radixark/miles#1789",
+    "radixark/miles#2012",
+    "radixark/miles#948",
+    "THUDM/slime#2178",
+    "radixark/miles#1183",
+    "radixark/miles#2022",
+    "radixark/miles#2097",
+    "radixark/miles#2021",
+    "radixark/miles#2036",
+    "radixark/miles#1920",
+    "radixark/miles#1042",
+    "radixark/miles#2027",
+    "radixark/miles#1959",
+    "THUDM/slime#2192",
+    "radixark/miles#2105",
+    "THUDM/slime#1922",
+    "radixark/miles#2165",
+    "radixark/miles#1990",
+    "THUDM/slime#1774",
+    "THUDM/slime#1805",
+    "radixark/miles#1756",
+    "radixark/miles#1932",
+    "radixark/miles#2053",
+    "radixark/miles#1193",
+    "THUDM/slime#1814",
+    "radixark/miles#2155",
+    "radixark/miles#992",
+    "radixark/miles#1916",
+    "radixark/miles#1772",
+    "radixark/miles#2189",
+    "radixark/miles#1926",
+    "radixark/miles#1914",
+    "THUDM/slime#2182",
+    "radixark/miles#1993",
+    "radixark/miles#1773",
+    "radixark/miles#2202",
+    "radixark/miles#1788",
+    "radixark/miles#989",
+    "radixark/miles#1712",
+    "THUDM/slime#1857",
+    "THUDM/slime#2242",
+    "radixark/miles#1228",
+    "THUDM/slime#1962",
+    "radixark/miles#1713",
+    "radixark/miles#1037",
+    "radixark/miles#1765",
+    "THUDM/slime#2221",
+    "radixark/miles#1973",
+    "THUDM/slime#1914",
+    "THUDM/slime#1842",
+    "radixark/miles#980",
+    "radixark/miles#1980",
+    "radixark/miles#2154",
+    "radixark/miles#2110",
+    "radixark/miles#1976",
+    "radixark/miles#939",
+    "radixark/miles#977",
+    "radixark/miles#1028",
+    "radixark/miles#1905",
+    "radixark/miles#2093",
+    "radixark/miles#2125",
+    "radixark/miles#1755",
+    "radixark/miles#1764",
+    "radixark/miles#2177",
+    "radixark/miles#2115",
+    "radixark/miles#2020",
+    "radixark/miles#1940",
+    "radixark/miles#2183",
+    "radixark/miles#2040",
+    "radixark/miles#1968",
+    "radixark/miles#1889",
+    "radixark/miles#935",
+    "THUDM/slime#1841",
+    "radixark/miles#1881",
+    "radixark/miles#1016",
+    "THUDM/slime#1950",
+    "radixark/miles#1795",
+    "radixark/miles#1801",
+    "THUDM/slime#1945",
+    "radixark/miles#2130",
+    "radixark/miles#1737",
+    "THUDM/slime#2181",
+    "radixark/miles#1006",
+    "radixark/miles#2131",
+    "radixark/miles#988",
+    "radixark/miles#2109",
+    "radixark/miles#1895",
+    "radixark/miles#2003",
+    "radixark/miles#953",
+    "radixark/miles#2156",
+    "THUDM/slime#2171",
+    "THUDM/slime#2226",
+    "radixark/miles#1967",
+    "THUDM/slime#1788",
+    "radixark/miles#1020",
+    "radixark/miles#2041",
+    "radixark/miles#2104",
+    "radixark/miles#1201",
+    "radixark/miles#1202",
+    "radixark/miles#2199",
+    "radixark/miles#986",
+    "radixark/miles#1811",
+    "radixark/miles#1816",
+    "THUDM/slime#2195",
+    "radixark/miles#1710",
+    "radixark/miles#1014",
+    "radixark/miles#1937",
+    "radixark/miles#2050",
+    "radixark/miles#1826",
+    "radixark/miles#2163",
+    "THUDM/slime#1832",
+    "THUDM/slime#1776",
+    "THUDM/slime#2175",
+    "THUDM/slime#1773",
+    "radixark/miles#1815",
+    "radixark/miles#1717",
+    "radixark/miles#1971",
+    "radixark/miles#1190",
+    "radixark/miles#1820",
+    "THUDM/slime#2184",
+    "radixark/miles#1230",
+    "radixark/miles#2087",
+    "radixark/miles#1757",
+    "radixark/miles#2024",
+    "radixark/miles#2038",
+    "radixark/miles#1896",
+    "radixark/miles#2000",
+    "radixark/miles#2013",
+    "THUDM/slime#1770",
+    "radixark/miles#2164",
+    "radixark/miles#2006",
+    "radixark/miles#1010",
+    "radixark/miles#1804",
+    "radixark/miles#1040",
+    "THUDM/slime#2197",
+    "radixark/miles#2047",
+    "radixark/miles#1831",
+    "radixark/miles#1957",
+    "radixark/miles#1996",
+    "THUDM/slime#1957",
+    "radixark/miles#1213",
+    "radixark/miles#1692",
+    "radixark/miles#1984",
+    "radixark/miles#2178",
+    "THUDM/slime#1933",
+    "radixark/miles#2176",
+    "radixark/miles#1906",
+    "radixark/miles#2045",
+    "radixark/miles#972",
+    "radixark/miles#1215",
+    "THUDM/slime#1913",
+    "THUDM/slime#2239",
+    "radixark/miles#959",
+    "radixark/miles#1782",
+    "radixark/miles#1875",
+    "radixark/miles#1785",
+    "radixark/miles#1698",
+    "radixark/miles#2197",
+    "THUDM/slime#2235",
+    "radixark/miles#1821",
+    "radixark/miles#2127",
+    "THUDM/slime#1918",
+    "THUDM/slime#2252",
+    "radixark/miles#2017",
+    "radixark/miles#1891",
+    "radixark/miles#1019",
+    "radixark/miles#2037",
+    "radixark/miles#2061",
+    "THUDM/slime#2207",
+    "radixark/miles#2116",
+    "radixark/miles#1953",
+    "radixark/miles#1039",
+    "THUDM/slime#2247",
+    "radixark/miles#1017",
+    "radixark/miles#1884",
+    "radixark/miles#1012",
+    "THUDM/slime#1775",
+    "radixark/miles#2033",
+    "radixark/miles#1693",
+    "radixark/miles#2204",
+    "radixark/miles#1688",
+    "THUDM/slime#1935",
+    "radixark/miles#947",
+    "radixark/miles#1828",
+    "radixark/miles#964",
+    "radixark/miles#1931",
+    "radixark/miles#1721",
+    "radixark/miles#2073",
+    "THUDM/slime#1809",
+    "radixark/miles#1209",
+    "radixark/miles#1214",
+    "radixark/miles#1711",
+    "radixark/miles#2098",
     "THUDM/slime#1769",
     "THUDM/slime#1781",
-    "radixark/miles#1029",
-    "radixark/miles#990",
-    "THUDM/slime#2242",
-    "radixark/miles#1226",
-    "THUDM/slime#1954",
-    "radixark/miles#2096",
-    "THUDM/slime#1819",
-    "radixark/miles#1750",
-    "radixark/miles#1908",
-    "radixark/miles#1771",
-    "radixark/miles#1818",
-    "radixark/miles#1037",
-    "radixark/miles#1041",
-    "radixark/miles#2063",
-    "radixark/miles#1800",
-    "THUDM/slime#2243",
-    "radixark/miles#985",
-    "radixark/miles#968",
-    "radixark/miles#1916",
-    "radixark/miles#1701",
-    "THUDM/slime#1926",
-    "radixark/miles#1959",
-    "radixark/miles#1820",
-    "radixark/miles#1018",
-    "radixark/miles#2087",
-    "radixark/miles#1221",
-    "radixark/miles#2012",
-    "radixark/miles#2028",
-    "radixark/miles#2123",
-    "radixark/miles#1889",
-    "radixark/miles#949",
-    "radixark/miles#1979",
-    "THUDM/slime#2204",
-    "THUDM/slime#1961",
-    "radixark/miles#1936",
-    "radixark/miles#1910",
-    "radixark/miles#946",
-    "radixark/miles#1999",
-    "THUDM/slime#1827",
-    "THUDM/slime#1848",
-    "THUDM/slime#2192",
-    "THUDM/slime#2167",
-    "radixark/miles#1729",
-    "radixark/miles#1205",
-    "radixark/miles#1027",
-    "radixark/miles#1934",
-    "radixark/miles#1802",
-    "radixark/miles#1709",
-    "radixark/miles#2134",
-    "radixark/miles#1025",
-    "THUDM/slime#1935",
-    "radixark/miles#1935",
-    "THUDM/slime#1942",
-    "radixark/miles#1825",
-    "radixark/miles#1758",
-    "THUDM/slime#2210",
-    "THUDM/slime#1844",
-    "radixark/miles#2029",
-    "THUDM/slime#2218",
-    "radixark/miles#1012",
-    "THUDM/slime#1940",
-    "THUDM/slime#1835",
-    "THUDM/slime#2228",
-    "radixark/miles#2133",
-    "radixark/miles#1228",
-    "radixark/miles#1038",
-    "radixark/miles#1202",
-    "THUDM/slime#1836",
-    "THUDM/slime#1858",
-    "THUDM/slime#1773",
-    "radixark/miles#1983",
-    "THUDM/slime#1788",
-    "radixark/miles#988",
-    "radixark/miles#1192",
-    "radixark/miles#2124",
-    "radixark/miles#2131",
-    "radixark/miles#1905",
-    "radixark/miles#1994",
-    "radixark/miles#1894",
-    "radixark/miles#1225",
-    "radixark/miles#2003",
-    "radixark/miles#1989",
-    "radixark/miles#1181",
-    "radixark/miles#1960",
-    "THUDM/slime#2247",
-    "radixark/miles#965",
-    "radixark/miles#995",
-    "THUDM/slime#2249",
-    "THUDM/slime#2193",
-    "THUDM/slime#2177",
-    "radixark/miles#1200",
-    "radixark/miles#1026",
-    "radixark/miles#1001",
-    "radixark/miles#1711",
-    "radixark/miles#1877",
-    "radixark/miles#1728",
-    "THUDM/slime#1777",
-    "radixark/miles#2098",
-    "radixark/miles#2095",
-    "radixark/miles#950",
-    "THUDM/slime#2196",
-    "radixark/miles#1903",
-    "THUDM/slime#2189",
-    "radixark/miles#1777",
-    "THUDM/slime#2181",
-    "radixark/miles#1715",
-    "radixark/miles#2117",
-    "THUDM/slime#2203",
-    "radixark/miles#2093",
-    "THUDM/slime#2190",
-    "radixark/miles#2066",
-    "radixark/miles#2061",
     "radixark/miles#1950",
-    "radixark/miles#2022",
-    "radixark/miles#1899",
-    "radixark/miles#1932",
-    "radixark/miles#1945",
-    "radixark/miles#1722",
-    "radixark/miles#2089",
-    "radixark/miles#948",
-    "THUDM/slime#1817",
-    "radixark/miles#1897",
-    "radixark/miles#1939",
-    "THUDM/slime#2200",
-    "THUDM/slime#2207",
-    "THUDM/slime#1855",
-    "radixark/miles#945",
-    "radixark/miles#1754",
-    "THUDM/slime#1920",
-    "radixark/miles#2006",
-    "radixark/miles#1017",
-    "radixark/miles#952",
-    "radixark/miles#1196",
-    "radixark/miles#1815",
-    "radixark/miles#954",
-    "radixark/miles#1965",
-    "radixark/miles#1898",
-    "radixark/miles#2038",
-    "THUDM/slime#2182",
-    "radixark/miles#2031",
-    "THUDM/slime#2164",
-    "THUDM/slime#1952",
-    "radixark/miles#1949",
+    "radixark/miles#1229",
+    "radixark/miles#1817",
+    "radixark/miles#1753",
+    "radixark/miles#1975",
+    "radixark/miles#1978",
+    "radixark/miles#2102",
+    "radixark/miles#2182",
+    "radixark/miles#2052",
+    "radixark/miles#1985",
+    "radixark/miles#2055",
+    "radixark/miles#1182",
+    "radixark/miles#1008",
+    "THUDM/slime#2251",
+    "radixark/miles#1734",
+    "THUDM/slime#2180",
+    "THUDM/slime#1947",
+    "THUDM/slime#2162",
     "radixark/miles#1761",
-    "radixark/miles#1727",
-    "radixark/miles#1982",
-    "radixark/miles#1752",
-    "radixark/miles#977",
-    "radixark/miles#1915",
-    "THUDM/slime#2178",
+    "radixark/miles#967",
+    "radixark/miles#2068",
+    "radixark/miles#1945",
+    "radixark/miles#1929",
+    "radixark/miles#1824",
+    "radixark/miles#965",
+    "THUDM/slime#1961",
+    "radixark/miles#1981",
     "radixark/miles#1759",
-    "radixark/miles#1826",
-    "radixark/miles#2062",
-    "radixark/miles#1998",
-    "radixark/miles#1209",
-    "radixark/miles#937",
-    "radixark/miles#1984",
-    "radixark/miles#1751",
-    "radixark/miles#2100",
-    "THUDM/slime#1797",
-    "radixark/miles#1193",
-    "radixark/miles#2045",
-    "THUDM/slime#1799",
-    "radixark/miles#1909",
-    "radixark/miles#1212",
-    "THUDM/slime#1833",
-    "radixark/miles#1702",
-    "THUDM/slime#1857",
-    "radixark/miles#957",
-    "radixark/miles#1951",
-    "radixark/miles#1966",
-    "radixark/miles#2122",
-    "THUDM/slime#2236",
-    "THUDM/slime#1960",
-    "radixark/miles#1024",
-    "radixark/miles#941",
-    "radixark/miles#959",
-    "THUDM/slime#1824",
-    "radixark/miles#993",
-    "THUDM/slime#1965",
-    "radixark/miles#1007",
-    "radixark/miles#1919",
-    "radixark/miles#2097",
-    "radixark/miles#982",
-    "THUDM/slime#2220",
-    "radixark/miles#1875",
-    "radixark/miles#1020",
-    "THUDM/slime#2226",
-    "radixark/miles#1206",
-    "radixark/miles#1829",
-    "radixark/miles#1798",
-    "radixark/miles#1736",
-    "THUDM/slime#1791",
-    "radixark/miles#1201",
+    "radixark/miles#1813",
+    "radixark/miles#1965",
+    "THUDM/slime#1915",
     "radixark/miles#2067",
-    "THUDM/slime#1825",
-    "radixark/miles#2013",
-    "radixark/miles#2116",
-    "THUDM/slime#1930",
-    "THUDM/slime#1939",
-    "radixark/miles#1691",
+    "THUDM/slime#1923",
+    "radixark/miles#1879",
+    "THUDM/slime#2189",
+    "radixark/miles#1886",
+    "THUDM/slime#1921",
+    "radixark/miles#2088",
+    "radixark/miles#1936",
+    "radixark/miles#1903",
+    "radixark/miles#2186",
+    "radixark/miles#1227",
+    "radixark/miles#1909",
+    "radixark/miles#1915",
+    "radixark/miles#974",
+    "radixark/miles#2029",
+    "radixark/miles#1043",
+    "radixark/miles#1740",
+    "radixark/miles#1769",
+    "THUDM/slime#1926",
+    "radixark/miles#2134",
+    "THUDM/slime#1938",
+    "radixark/miles#1775",
+    "radixark/miles#1779",
+    "radixark/miles#1899",
+    "radixark/miles#2051",
+    "radixark/miles#954",
+    "radixark/miles#1722",
+    "radixark/miles#2173",
+    "radixark/miles#2192",
+    "THUDM/slime#2249",
+    "radixark/miles#1708",
+    "THUDM/slime#2208",
+    "THUDM/slime#1928",
+    "radixark/miles#1885",
+    "radixark/miles#1730",
     "THUDM/slime#1924",
-    "radixark/miles#1768",
-    "radixark/miles#1183",
-    "radixark/miles#1189",
-    "radixark/miles#2030",
-    "radixark/miles#1197",
-    "radixark/miles#1696",
-    "radixark/miles#1794",
-    "radixark/miles#1878",
-    "radixark/miles#1033",
-    "radixark/miles#1762",
-    "radixark/miles#1006",
-    "THUDM/slime#2184",
-    "THUDM/slime#1943",
-    "radixark/miles#1741",
-    "radixark/miles#1760",
+    "radixark/miles#1706",
+    "THUDM/slime#2219",
+    "THUDM/slime#1836",
+    "THUDM/slime#1816",
+    "radixark/miles#1907",
+    "THUDM/slime#2206",
+    "radixark/miles#1947",
+    "radixark/miles#1814",
+    "radixark/miles#2191",
+    "radixark/miles#2129",
+    "radixark/miles#1222",
+    "radixark/miles#1986",
+    "THUDM/slime#2246",
+    "radixark/miles#2184",
+    "radixark/miles#2005",
+    "radixark/miles#2200",
+    "radixark/miles#1818",
+    "radixark/miles#1939",
+    "radixark/miles#1901",
+    "radixark/miles#2010",
+    "radixark/miles#2064",
+    "radixark/miles#1702",
+    "radixark/miles#2007",
+    "radixark/miles#2194",
+    "radixark/miles#1910",
+    "radixark/miles#1041",
+    "radixark/miles#1024",
+    "radixark/miles#993",
+    "THUDM/slime#1806",
+    "radixark/miles#961",
+    "radixark/miles#1034",
+    "radixark/miles#1013",
+    "radixark/miles#1927",
+    "THUDM/slime#1833",
+    "radixark/miles#2203",
+    "radixark/miles#1224",
+    "THUDM/slime#2213",
     "radixark/miles#1904",
-    "radixark/miles#2058",
-    "radixark/miles#1786",
-    "radixark/miles#1718",
-    "THUDM/slime#1822",
-    "radixark/miles#1952",
-    "radixark/miles#963",
-    "radixark/miles#1942",
-    "THUDM/slime#2170",
-    "THUDM/slime#1956",
-    "THUDM/slime#1949",
-    "THUDM/slime#1801",
-    "radixark/miles#1795",
-    "radixark/miles#1198"
+    "THUDM/slime#2172",
+    "radixark/miles#1827",
+    "radixark/miles#1930",
+    "THUDM/slime#1927",
+    "radixark/miles#1776",
+    "radixark/miles#1732",
+    "radixark/miles#1809",
+    "radixark/miles#2135",
+    "radixark/miles#1715",
+    "radixark/miles#1031",
+    "radixark/miles#2179",
+    "radixark/miles#2161",
+    "radixark/miles#1194",
+    "radixark/miles#1191",
+    "THUDM/slime#1920",
+    "radixark/miles#1705",
+    "radixark/miles#1195",
+    "radixark/miles#946",
+    "radixark/miles#2157",
+    "radixark/miles#2122",
+    "radixark/miles#1747",
+    "radixark/miles#1992",
+    "radixark/miles#2063",
+    "radixark/miles#2175",
+    "radixark/miles#2172",
+    "THUDM/slime#1965",
+    "radixark/miles#2136",
+    "THUDM/slime#2223",
+    "THUDM/slime#1858",
+    "radixark/miles#1893",
+    "radixark/miles#1810"
   ],
   "weekly_note": "<p>本周重点：<em>OPSD自蒸馏</em>训练模式上线<b>#miles#2074</b>，<em>LoRA rollout</em>路径修复<b>#miles#2075</b>，另有<em>GAE mask</em>修正<b>#miles#1827</b>、<em>compact rollout</em>调度重构<b>#miles#1933</b>及多模型CI覆盖<b>#miles#2073</b>落地。</p>",
   "weekly_note_week": "2026-W32",
-  "last_updated": "2026-08-04T01:10:45.427758+00:00"
+  "last_updated": "2026-08-05T02:00:08.633946+00:00"
 }
