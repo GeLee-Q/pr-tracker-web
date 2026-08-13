@@ -1,6 +1,4465 @@
 {
   "prs": [
     {
+      "id": "radixark/miles#2448",
+      "repo": "radixark/miles",
+      "pr_number": 2448,
+      "title": "Run the mooncake master as part of the run that needs it",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:22:26Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2448",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Run the mooncake master as part of the run that needs it",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "charts/miles-run/templates/mooncake-master.yaml",
+        "charts/miles-run/values.schema.json",
+        "charts/miles-run/values.yaml",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/entrypoint.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/values/builder.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/values/helm_values_types.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/values/misc.py",
+        "tests/fast/utils/external_utils/command_utils/helm_backend/launcher/test_launch_colocate.py",
+        "tests/fast/utils/external_utils/command_utils/helm_backend/launcher/values/test_misc.py",
+        "tests/fast/utils/external_utils/command_utils/helm_backend/test_cluster_backend_flag.py"
+      ],
+      "diff_preview": {
+        "additions": 682,
+        "deletions": 7,
+        "hunks": [
+          {
+            "file": "charts/miles-run/templates/mooncake-master.yaml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,64 @@"
+              ],
+              [
+                "+",
+                "{{- if .Values.run.mooncake.enabled }}"
+              ],
+              [
+                "+",
+                "{{- $name := .Values.run.objectNames.mooncakeMaster }}"
+              ],
+              [
+                "+",
+                "{{- $labels := dict \"context\" . \"component\" \"mooncake-master\" }}"
+              ],
+              [
+                "+",
+                "apiVersion: v1"
+              ],
+              [
+                "+",
+                "kind: Service"
+              ],
+              [
+                "+",
+                "metadata:"
+              ],
+              [
+                "+",
+                "  name: {{ $name | quote }}"
+              ],
+              [
+                "+",
+                "  namespace: {{ .Release.Namespace | quote }}"
+              ],
+              [
+                "+",
+                "  labels:"
+              ],
+              [
+                "+",
+                "    {{- include \"miles-run.labels\" $labels | nindent 4 }}"
+              ],
+              [
+                "+",
+                "spec:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:15:20.089066+00:00"
+    },
+    {
+      "id": "radixark/miles#2449",
+      "repo": "radixark/miles",
+      "pr_number": 2449,
+      "title": "Stream every container's logs while the run is going",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:22:29Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2449",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Stream every container's logs while the run is going",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/observability/log_follower.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/observability/polling.py",
+        "tests/fast/utils/external_utils/command_utils/helm_backend/launcher/observability/test_log_follower.py"
+      ],
+      "diff_preview": {
+        "additions": 369,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "miles/utils/external_utils/command_utils/helm_backend/launcher/observability/log_follower.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,158 @@"
+              ],
+              [
+                "+",
+                "from __future__ import annotations"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "import logging"
+              ],
+              [
+                "+",
+                "import subprocess"
+              ],
+              [
+                "+",
+                "import tempfile"
+              ],
+              [
+                "+",
+                "import threading"
+              ],
+              [
+                "+",
+                "from collections.abc import Iterator"
+              ],
+              [
+                "+",
+                "from contextlib import contextmanager"
+              ],
+              [
+                "+",
+                "from datetime import datetime"
+              ],
+              [
+                "+",
+                "from typing import IO"
+              ],
+              [
+                "+",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:15:16.900549+00:00"
+    },
+    {
+      "id": "radixark/miles#2450",
+      "repo": "radixark/miles",
+      "pr_number": 2450,
+      "title": "Announce the cluster events that explain a stuck run",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:22:33Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2450",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Announce the cluster events that explain a stuck run",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/observability/cluster_info.py",
+        "tests/fast/utils/external_utils/command_utils/helm_backend/launcher/observability/test_cluster_info.py"
+      ],
+      "diff_preview": {
+        "additions": 236,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "miles/utils/external_utils/command_utils/helm_backend/launcher/observability/cluster_info.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,109 @@"
+              ],
+              [
+                "+",
+                "from __future__ import annotations"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "import logging"
+              ],
+              [
+                "+",
+                "from collections.abc import Iterator"
+              ],
+              [
+                "+",
+                "from contextlib import contextmanager"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "from miles.utils.external_utils.command_utils.helm_backend.launcher.observability import polling"
+              ],
+              [
+                "+",
+                "from miles.utils.external_utils.command_utils.helm_backend.launcher.observability.pod_facts import ("
+              ],
+              [
+                "+",
+                "    is_pod_ready,"
+              ],
+              [
+                "+",
+                "    is_pod_scheduling_gated,"
+              ],
+              [
+                "+",
+                "    phase_of_pod,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:15:13.042965+00:00"
+    },
+    {
+      "id": "radixark/miles#2451",
+      "repo": "radixark/miles",
+      "pr_number": 2451,
+      "title": "Watch a run while it runs, and say how to look at it afterwards",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:22:36Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2451",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Watch a run while it runs, and say how to look at it afterwards",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/command_wrapper.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/entrypoint.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/observability/__init__.py",
+        "tests/fast/utils/external_utils/command_utils/helm_backend/launcher/observability/test_observability.py"
+      ],
+      "diff_preview": {
+        "additions": 103,
+        "deletions": 6,
+        "hunks": [
+          {
+            "file": "miles/utils/external_utils/command_utils/helm_backend/launcher/command_wrapper.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -8,6 +8,7 @@"
+              ],
+              [
+                " ",
+                "from pydantic import BaseModel"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from miles.utils.external_utils.command_utils.common import run_process"
+              ],
+              [
+                "+",
+                "from miles.utils.workers.worker_provider.kubernetes.helm.env import INSTANCE_LABEL"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "_ModelT = TypeVar(\"_ModelT\", bound=BaseModel)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -94,6 +95,10 @@ def logs_command("
+              ],
+              [
+                " ",
+                "            command += [\"--since-time\", since_time]"
+              ],
+              [
+                " ",
+                "        return command"
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:07:50.335503+00:00"
+    },
+    {
+      "id": "radixark/miles#2452",
+      "repo": "radixark/miles",
+      "pr_number": 2452,
+      "title": "Collect the scene when a run fails, and let the workbench collect it too",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:22:39Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2452",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Collect the scene when a run fails, and let the workbench collect it too",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/entrypoint.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/observability/diagnosis.py",
+        "miles/utils/external_utils/miles_workbench/__main__.py",
+        "miles/utils/external_utils/miles_workbench/actions.py",
+        "miles/utils/external_utils/miles_workbench/options.py"
+      ],
+      "diff_preview": {
+        "additions": 155,
+        "deletions": 6,
+        "hunks": [
+          {
+            "file": "miles/utils/external_utils/command_utils/helm_backend/launcher/entrypoint.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -19,6 +19,7 @@"
+              ],
+              [
+                " ",
+                "from miles.utils.external_utils.command_utils.helm_backend import naming"
+              ],
+              [
+                " ",
+                "from miles.utils.external_utils.command_utils.helm_backend.launcher.command_wrapper import Helm, Kubectl"
+              ],
+              [
+                " ",
+                "from miles.utils.external_utils.command_utils.helm_backend.launcher.observability import farewell, with_observability"
+              ],
+              [
+                "+",
+                "from miles.utils.external_utils.command_utils.helm_backend.launcher.observability.diagnosis import collect_diagnosis"
+              ],
+              [
+                " ",
+                "from miles.utils.external_utils.command_utils.helm_backend.launcher.observability.pod_facts import pod_phase"
+              ],
+              [
+                " ",
+                "from miles.utils.external_utils.command_utils.helm_backend.launcher.values.builder import build_values"
+              ],
+              [
+                " ",
+                "from miles.utils.external_utils.command_utils.helm_backend.launcher.values.misc import ("
+              ],
+              [
+                "h",
+                "@@ -93,6 +94,9 @@ def _follow_until_finished(*, release: str, namespace: str, state_file: Path) ->"
+              ],
+              [
+                " ",
+                "            read_pod_phase=lambda: pod_phase(namespace, orchestrator_workload),"
+              ],
+              [
+                " ",
+                "        )"
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:07:47.175157+00:00"
+    },
+    {
+      "id": "radixark/miles#2453",
+      "repo": "radixark/miles",
+      "pr_number": 2453,
+      "title": "Say which fields of an installed run a relaunch may change",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:22:42Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2453",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Say which fields of an installed run a relaunch may change",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/manifest_diff.py",
+        "tests/fast/utils/external_utils/command_utils/helm_backend/launcher/test_manifest_diff.py"
+      ],
+      "diff_preview": {
+        "additions": 263,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "miles/utils/external_utils/command_utils/helm_backend/launcher/manifest_diff.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,75 @@"
+              ],
+              [
+                "+",
+                "from __future__ import annotations"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "from typing import Any"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "from miles.utils.external_utils.command_utils.helm_backend.launcher.manifest_types import Manifest, ManifestObject"
+              ],
+              [
+                "+",
+                "from miles.utils.pydantic_utils import FrozenStrictBaseModel"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "_SCALABLE_KINDS = frozenset({\"LeaderWorkerSet\"})"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "class ManifestDiff(FrozenStrictBaseModel):"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:07:43.897258+00:00"
+    },
+    {
+      "id": "radixark/miles#2454",
+      "repo": "radixark/miles",
+      "pr_number": 2454,
+      "title": "Let a relaunch change a run's size and nothing else",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:22:45Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2454",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Let a relaunch change a run's size and nothing else",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/command_wrapper.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/entrypoint.py"
+      ],
+      "diff_preview": {
+        "additions": 69,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "miles/utils/external_utils/command_utils/helm_backend/launcher/command_wrapper.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -1,5 +1,6 @@"
+              ],
+              [
+                " ",
+                "from __future__ import annotations"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "import json"
+              ],
+              [
+                " ",
+                "import subprocess"
+              ],
+              [
+                " ",
+                "from pathlib import Path"
+              ],
+              [
+                " ",
+                "from typing import TypeVar"
+              ],
+              [
+                "h",
+                "@@ -8,6 +9,7 @@"
+              ],
+              [
+                " ",
+                "from pydantic import BaseModel"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from miles.utils.external_utils.command_utils.common import run_process"
+              ],
+              [
+                "+",
+                "from miles.utils.external_utils.command_utils.helm_backend.launcher.manifest_types import Manifest"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:07:40.770384+00:00"
+    },
+    {
+      "id": "radixark/miles#2455",
+      "repo": "radixark/miles",
+      "pr_number": 2455,
+      "title": "Attach a relaunch to the verdict the installed run is already writing",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:22:49Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2455",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Attach a relaunch to the verdict the installed run is already writing",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/entrypoint.py"
+      ],
+      "diff_preview": {
+        "additions": 15,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "miles/utils/external_utils/command_utils/helm_backend/launcher/entrypoint.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -60,7 +60,9 @@ def execute_train(*, request: ExecuteTrainRequest, config: ExecuteTrainConfig) -"
+              ],
+              [
+                " ",
+                "    Helm.build_dependencies(chart)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    installed_manifest = Helm.get_manifest(release, namespace)"
+              ],
+              [
+                "-",
+                "    state_file = RunFiles.new_state_file(run_directory=run_directory)"
+              ],
+              [
+                "+",
+                "    state_file = _compute_state_file("
+              ],
+              [
+                "+",
+                "        installed_manifest=installed_manifest, run_directory=run_directory, release=release"
+              ],
+              [
+                "+",
+                "    )"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    plan = LaunchPlan("
+              ],
+              [
+                " ",
+                "        run_id=run_id,"
+              ],
+              [
+                "h",
+                "@@ -132,6 +134,18 @@ def _compute_train_argv("
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:07:37.385660+00:00"
+    },
+    {
+      "id": "radixark/miles#2456",
+      "repo": "radixark/miles",
+      "pr_number": 2456,
+      "title": "Remove the releases a previous ci run left behind",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:22:53Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2456",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Remove the releases a previous ci run left behind",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/command_wrapper.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/entrypoint.py",
+        "tests/fast/utils/external_utils/command_utils/helm_backend/launcher/test_ci_cleanup.py"
+      ],
+      "diff_preview": {
+        "additions": 141,
+        "deletions": 3,
+        "hunks": [
+          {
+            "file": "miles/utils/external_utils/command_utils/helm_backend/launcher/command_wrapper.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -14,6 +14,8 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "_ModelT = TypeVar(\"_ModelT\", bound=BaseModel)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "CI_LABEL = \"miles.radixark.io/ci-run\""
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "class Helm:"
+              ],
+              [
+                " ",
+                "    @staticmethod"
+              ],
+              [
+                "h",
+                "@@ -27,8 +29,9 @@ def upgrade("
+              ],
+              [
+                " ",
+                "        namespace: str,"
+              ],
+              [
+                " ",
+                "        chart: str | Path,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:07:34.159306+00:00"
+    },
+    {
+      "id": "radixark/miles#2457",
+      "repo": "radixark/miles",
+      "pr_number": 2457,
+      "title": "Ship a run with the job that will uninstall it",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:22:56Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2457",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Ship a run with the job that will uninstall it",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "charts/miles-run/templates/_helpers.tpl",
+        "charts/miles-run/templates/orchestrator-rbac.yaml",
+        "charts/miles-run/templates/orchestrator.yaml",
+        "charts/miles-run/templates/uninstall-manifest.yaml",
+        "charts/miles-run/values.schema.json",
+        "charts/miles-run/values.yaml",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/values/builder.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/values/helm_values_types.py",
+        "miles/utils/external_utils/command_utils/helm_backend/naming.py",
+        "miles/utils/workers/worker_provider/kubernetes/helm/naming.py",
+        "tests/fast/charts/miles_run/test_auto_uninstall.py",
+        "tests/fast/charts/miles_run/test_infra_paths.py",
+        "tests/fast/charts/miles_run/test_orchestrator.py",
+        "tests/fast/charts/utils.py"
+      ],
+      "diff_preview": {
+        "additions": 336,
+        "deletions": 6,
+        "hunks": [
+          {
+            "file": "charts/miles-run/templates/_helpers.tpl",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -33,6 +33,8 @@ affinity:"
+              ],
+              [
+                " ",
+                "{{- end }}"
+              ],
+              [
+                " ",
+                "{{- end }}"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "{{- /* Every container of the release: the run's own identity, from which a worker that has to"
+              ],
+              [
+                "+",
+                "       reach another worker recomputes its address and builds a backend capability of its own. */ -}}"
+              ],
+              [
+                " ",
+                "{{- define \"miles-run.releaseEnv\" -}}"
+              ],
+              [
+                " ",
+                "{{- $identity := dict \"MILES_K8S_NAMESPACE\" .Release.Namespace \"MILES_K8S_RELEASE\" .Release.Name -}}"
+              ],
+              [
+                " ",
+                "{{- $base := include \"miles-common.envBase\" . | fromYaml -}}"
+              ],
+              [
+                "h",
+                "@@ -92,3 +94,34 @@ volumeMounts:"
+              ],
+              [
+                " ",
+                "  {{- . | nindent 2 }}"
+              ],
+              [
+                " ",
+                "{{- end }}"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:07:30.920260+00:00"
+    },
+    {
+      "id": "radixark/miles#2458",
+      "repo": "radixark/miles",
+      "pr_number": 2458,
+      "title": "Arm the escape job once the run has reported its verdict",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:22:59Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2458",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Arm the escape job once the run has reported its verdict",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/command_wrapper.py",
+        "miles/utils/external_utils/command_utils/helm_backend/orchestrator/wrapper.py",
+        "tests/fast/utils/external_utils/command_utils/helm_backend/orchestrator/test_wrapper.py"
+      ],
+      "diff_preview": {
+        "additions": 206,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "miles/utils/external_utils/command_utils/helm_backend/launcher/command_wrapper.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -15,6 +15,7 @@"
+              ],
+              [
+                " ",
+                "_ModelT = TypeVar(\"_ModelT\", bound=BaseModel)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "CI_LABEL = \"miles.radixark.io/ci-run\""
+              ],
+              [
+                "+",
+                "_ALREADY_EXISTS = \"AlreadyExists\""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "class Helm:"
+              ],
+              [
+                "h",
+                "@@ -94,6 +95,24 @@ class Kubectl:"
+              ],
+              [
+                " ",
+                "    def run_raw(*arguments: str) -> subprocess.CompletedProcess[str]:"
+              ],
+              [
+                " ",
+                "        return Kubectl._run(list(arguments))"
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:07:27.784250+00:00"
+    },
+    {
+      "id": "radixark/miles#2459",
+      "repo": "radixark/miles",
+      "pr_number": 2459,
+      "title": "Defuse the previous launch's escape job before installing over it",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:23:02Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2459",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Defuse the previous launch's escape job before installing over it",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/entrypoint.py",
+        "tests/fast/utils/external_utils/command_utils/helm_backend/launcher/test_entrypoint.py",
+        "tests/fast/utils/external_utils/command_utils/helm_backend/launcher/test_launch_lifecycle.py"
+      ],
+      "diff_preview": {
+        "additions": 408,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "miles/utils/external_utils/command_utils/helm_backend/launcher/entrypoint.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -81,7 +81,9 @@ def execute_train(*, request: ExecuteTrainRequest, config: ExecuteTrainConfig) -"
+              ],
+              [
+                " ",
+                "    _write_helm_values(values_path, build_values(specs, plan).as_values())"
+              ],
+              [
+                " ",
+                "    values_files: list[str | Path] = [*config.helm_values, values_path]"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "    if installed_manifest is not None:"
+              ],
+              [
+                "+",
+                "    if installed_manifest is None:"
+              ],
+              [
+                "+",
+                "        _remove_pending_uninstall(release, namespace=namespace)"
+              ],
+              [
+                "+",
+                "    else:"
+              ],
+              [
+                " ",
+                "        _assert_upgrade_only_resizes("
+              ],
+              [
+                " ",
+                "            installed_manifest=installed_manifest,"
+              ],
+              [
+                " ",
+                "            release=release,"
+              ],
+              [
+                "h",
+                "@@ -185,6 +187,12 @@ def _uninstall_leftover_ci_releases(namespace: str) -> list[str]:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:07:24.471203+00:00"
+    },
+    {
+      "id": "radixark/miles#2460",
+      "repo": "radixark/miles",
+      "pr_number": 2460,
+      "title": "Pin what a typical run renders, and the commands one launch runs",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:23:05Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2460",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Pin what a typical run renders, and the commands one launch runs",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        ".pre-commit-config.yaml",
+        "tests/fast/charts/miles_run/test_snapshot.py",
+        "tests/fast/charts/miles_run/typical-infra.yaml",
+        "tests/fast/charts/miles_run/typical-model/config.json",
+        "tests/fast/charts/miles_run/typical-sglang.yaml",
+        "tests/fast/utils/external_utils/command_utils/helm_backend/launcher/test_command_wrapper.py",
+        "tests/fast/utils/external_utils/command_utils/helm_backend/launcher/test_launch_snapshot.py",
+        "tests/fast/utils/external_utils/command_utils/helm_backend/test_naming.py",
+        "tests/snapshots/charts/miles-run/typical-values.yaml",
+        "tests/snapshots/charts/miles-run/typical.yaml"
+      ],
+      "diff_preview": {
+        "additions": 2605,
+        "deletions": 24,
+        "hunks": [
+          {
+            "file": ".pre-commit-config.yaml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -15,6 +15,7 @@ repos:"
+              ],
+              [
+                " ",
+                "    rev: v4.5.0"
+              ],
+              [
+                " ",
+                "    hooks:"
+              ],
+              [
+                " ",
+                "      - id: check-yaml"
+              ],
+              [
+                "+",
+                "        args: ['--allow-multiple-documents']"
+              ],
+              [
+                " ",
+                "        exclude: '^charts/.*/templates/'"
+              ],
+              [
+                " ",
+                "      - id: check-case-conflict"
+              ],
+              [
+                " ",
+                "      - id: detect-private-key"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:07:21.101686+00:00"
+    },
+    {
+      "id": "radixark/miles#2461",
+      "repo": "radixark/miles",
+      "pr_number": 2461,
+      "title": "Render a one-off command as a Job of the run chart",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:23:09Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2461",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Render a one-off command as a Job of the run chart",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "charts/miles-run/templates/_helpers.tpl",
+        "charts/miles-run/templates/command-job.yaml",
+        "charts/miles-run/values.schema.json",
+        "charts/miles-run/values.yaml",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/values/helm_values_types.py",
+        "tests/fast/charts/miles_run/test_command_job.py"
+      ],
+      "diff_preview": {
+        "additions": 339,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "charts/miles-run/templates/_helpers.tpl",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -33,6 +33,28 @@ affinity:"
+              ],
+              [
+                " ",
+                "{{- end }}"
+              ],
+              [
+                " ",
+                "{{- end }}"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "{{- define \"miles-run.podDefaultsWithAntiAffinity\" -}}"
+              ],
+              [
+                "+",
+                "{{- $context := .context -}}"
+              ],
+              [
+                "+",
+                "{{- $scheduling := $context.Values.infra.scheduling | default dict -}}"
+              ],
+              [
+                "+",
+                "enableServiceLinks: false"
+              ],
+              [
+                "+",
+                "{{- with include \"miles-common.imagePullSecrets\" $context }}"
+              ],
+              [
+                "+",
+                "{{ . }}"
+              ],
+              [
+                "+",
+                "{{- end }}"
+              ],
+              [
+                "+",
+                "{{- with $scheduling.nodeSelector }}"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:07:17.695726+00:00"
+    },
+    {
+      "id": "radixark/miles#2462",
+      "repo": "radixark/miles",
+      "pr_number": 2462,
+      "title": "Extract the placeholder substitution the ray path does inline",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:23:12Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2462",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Extract the placeholder substitution the ray path does inline",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/external_utils/command_utils/common.py",
+        "miles/utils/external_utils/command_utils/ray_backend/command.py"
+      ],
+      "diff_preview": {
+        "additions": 27,
+        "deletions": 24,
+        "hunks": [
+          {
+            "file": "miles/utils/external_utils/command_utils/common.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -30,6 +30,7 @@ def _pythonpath_with_sources(megatron_path: str, *additional_pythonpaths: str |"
+              ],
+              [
+                " ",
+                "def chart_dir(*, repo_base_dir: str | Path) -> Path:"
+              ],
+              [
+                " ",
+                "    return Path(repo_base_dir) / \"charts\" / CHART_NAME"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                "def rsync_cmd(path_src: str, path_dst: str) -> str:"
+              ],
+              [
+                " ",
+                "    return f\"mkdir -p {path_dst} && rsync -a --info=progress2 {path_src}/ {path_dst}\""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -205,6 +206,9 @@ def encode_pseudo_file(text: str) -> str:"
+              ],
+              [
+                " ",
+                "}"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:07:14.321080+00:00"
+    },
+    {
+      "id": "radixark/miles#2463",
+      "repo": "radixark/miles",
+      "pr_number": 2463,
+      "title": "Run a command in the cluster the same way a run is launched",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:23:15Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2463",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Run a command in the cluster the same way a run is launched",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/external_utils/command_utils/common.py",
+        "miles/utils/external_utils/command_utils/helm_backend/backend.py",
+        "miles/utils/external_utils/command_utils/helm_backend/command_job.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/command_wrapper.py",
+        "tests/fast/utils/external_utils/command_utils/helm_backend/test_command_job.py"
+      ],
+      "diff_preview": {
+        "additions": 729,
+        "deletions": 8,
+        "hunks": [
+          {
+            "file": "miles/utils/external_utils/command_utils/common.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -10,10 +10,14 @@"
+              ],
+              [
+                " ",
+                "import socket"
+              ],
+              [
+                " ",
+                "import subprocess"
+              ],
+              [
+                " ",
+                "from pathlib import Path"
+              ],
+              [
+                "+",
+                "from typing import TYPE_CHECKING"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from miles.utils.file_arg_utils import PSEUDO_FILE_PREFIX"
+              ],
+              [
+                " ",
+                "from miles.utils.workers.worker_provider.kubernetes.helm.naming import CHART_NAME"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "if TYPE_CHECKING:"
+              ],
+              [
+                "+",
+                "    from miles.utils.external_utils.command_utils.base_backend import ExecuteTrainConfig, ExecuteTrainRequest"
+              ],
+              [
+                "+",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:07:11.015070+00:00"
+    },
+    {
+      "id": "radixark/miles#2464",
+      "repo": "radixark/miles",
+      "pr_number": 2464,
+      "title": "Compute which engine pod pairs with which trainer pod",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:23:18Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2464",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Compute which engine pod pairs with which trainer pod",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/external_utils/colocate_pairing/__init__.py",
+        "miles/utils/external_utils/colocate_pairing/config.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/entrypoint.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/values/builder.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/values/colocate.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/values/helm_values_types.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/values/misc.py",
+        "tests/fast/utils/external_utils/command_utils/helm_backend/launcher/values/test_colocate.py"
+      ],
+      "diff_preview": {
+        "additions": 285,
+        "deletions": 4,
+        "hunks": [
+          {
+            "file": "miles/utils/external_utils/colocate_pairing/config.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,58 @@"
+              ],
+              [
+                "+",
+                "from __future__ import annotations"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "from pydantic import Field, model_validator"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "from miles.utils.pydantic_utils import FrozenStrictBaseModel"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "class PairingLayout(FrozenStrictBaseModel):"
+              ],
+              [
+                "+",
+                "    num_inference_cells: int = Field(ge=1)"
+              ],
+              [
+                "+",
+                "    num_trainer_cells: int = Field(ge=1)"
+              ],
+              [
+                "+",
+                "    num_pods_per_inference_cell: int = Field(ge=1)"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:07:07.699188+00:00"
+    },
+    {
+      "id": "radixark/miles#2465",
+      "repo": "radixark/miles",
+      "pr_number": 2465,
+      "title": "Hold a colocated engine pod until something places it",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:23:21Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2465",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Hold a colocated engine pod until something places it",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "charts/miles-run/templates/_pool.tpl",
+        "charts/miles-run/values.schema.json",
+        "tests/fast/charts/utils.py"
+      ],
+      "diff_preview": {
+        "additions": 201,
+        "deletions": 88,
+        "hunks": [
+          {
+            "file": "charts/miles-run/templates/_pool.tpl",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -1,6 +1,16 @@"
+              ],
+              [
+                "+",
+                "{{- define \"miles-run.colocateRole\" -}}"
+              ],
+              [
+                "+",
+                "{{- $colocate := .context.Values.run.colocate | default dict -}}"
+              ],
+              [
+                "+",
+                "{{- $poolId := .poolId -}}"
+              ],
+              [
+                "+",
+                "{{- $isInference := false -}}"
+              ],
+              [
+                "+",
+                "{{- range $colocate.inference_pools }}{{- if eq .pool_id $poolId }}{{- $isInference = true }}{{- end }}{{- end }}"
+              ],
+              [
+                "+",
+                "{{- if $isInference }}inference{{ else if eq $poolId ($colocate.trainer_pool_id | default \"\") }}trainer{{ end }}"
+              ],
+              [
+                "+",
+                "{{- end }}"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                "{{- define \"miles-run.pool\" -}}"
+              ],
+              [
+                " ",
+                "{{- $context := .context }}"
+              ],
+              [
+                " ",
+                "{{- $pool := .pool }}"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:07:04.428062+00:00"
+    },
+    {
+      "id": "radixark/miles#2466",
+      "repo": "radixark/miles",
+      "pr_number": 2466,
+      "title": "Place each gated engine pod on the node its trainer landed on",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:23:25Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2466",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Place each gated engine pod on the node its trainer landed on",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "charts/miles-run/templates/colocate-pairing.yaml",
+        "charts/miles-run/values.schema.json",
+        "charts/miles-run/values.yaml",
+        "charts/miles-workbench/templates/NOTES.txt",
+        "charts/miles-workbench/templates/_helpers.tpl",
+        "miles/utils/external_utils/colocate_pairing/__main__.py",
+        "miles/utils/external_utils/colocate_pairing/controller.py",
+        "miles/utils/external_utils/colocate_pairing/pods.py",
+        "miles/utils/external_utils/command_utils/helm_backend/launcher/values/helm_values_types.py",
+        "tests/fast/charts/miles_run/test_colocate.py",
+        "tests/fast/utils/external_utils/test_colocate_pairing.py"
+      ],
+      "diff_preview": {
+        "additions": 1337,
+        "deletions": 10,
+        "hunks": [
+          {
+            "file": "charts/miles-run/templates/colocate-pairing.yaml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,81 @@"
+              ],
+              [
+                "+",
+                "{{- if .Values.run.colocate }}"
+              ],
+              [
+                "+",
+                "{{- $name := .Values.run.objectNames.colocatePairing }}"
+              ],
+              [
+                "+",
+                "{{- $labels := dict \"context\" . \"component\" \"colocate-pairing\" }}"
+              ],
+              [
+                "+",
+                "apiVersion: v1"
+              ],
+              [
+                "+",
+                "kind: ServiceAccount"
+              ],
+              [
+                "+",
+                "metadata:"
+              ],
+              [
+                "+",
+                "  name: {{ $name | quote }}"
+              ],
+              [
+                "+",
+                "  namespace: {{ .Release.Namespace | quote }}"
+              ],
+              [
+                "+",
+                "  labels:"
+              ],
+              [
+                "+",
+                "    {{- include \"miles-run.labels\" $labels | nindent 4 }}"
+              ],
+              [
+                "+",
+                "---"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:07:01.007305+00:00"
+    },
+    {
+      "id": "radixark/miles#2467",
+      "repo": "radixark/miles",
+      "pr_number": 2467,
+      "title": "Skip a backend's tests when that backend is not there",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:23:28Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2467",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Skip a backend's tests when that backend is not there",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "tests/fast/cluster_backends.py",
+        "tests/fast/test_backend_dimension.py",
+        "tests/fast/test_cluster_backends.py",
+        "tests/fast/test_platform_contract.py"
+      ],
+      "diff_preview": {
+        "additions": 479,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": "tests/fast/cluster_backends.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,67 @@"
+              ],
+              [
+                "+",
+                "from __future__ import annotations"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "import os"
+              ],
+              [
+                "+",
+                "import shutil"
+              ],
+              [
+                "+",
+                "import subprocess"
+              ],
+              [
+                "+",
+                "from dataclasses import dataclass"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "import pytest"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "from miles.utils.workers.types import ClusterBackend"
+              ],
+              [
+                "+",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:57.875532+00:00"
+    },
+    {
+      "id": "radixark/miles#2468",
+      "repo": "radixark/miles",
+      "pr_number": 2468,
+      "title": "Let every e2e script pick its backend from the environment",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:23:31Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2468",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Let every e2e script pick its backend from the environment",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/external_utils/command_utils/base_backend.py",
+        "tests/e2e/ckpt/test_glm47_flash_ckpt.py",
+        "tests/e2e/ckpt/test_qwen3_4B_ckpt.py",
+        "tests/e2e/fsdp/test_qwen3_0.6B_fsdp_distributed.py",
+        "tests/e2e/fsdp/test_qwen3_0.6B_megatron_fsdp_align.py",
+        "tests/e2e/fsdp/test_qwen3_4B_fsdp_hybrid_shard_r2s2.py",
+        "tests/e2e/fsdp/test_qwen3_4B_fsdp_hybrid_shard_r2s4.py",
+        "tests/e2e/fsdp/test_qwen3_4B_fsdp_true_on_policy.py",
+        "tests/e2e/fsdp/test_qwen3_vl_4B_fsdp.py",
+        "tests/e2e/ft/conftest_ft/execution.py",
+        "tests/e2e/ft/conftest_ft/fault_injection.py",
+        "tests/e2e/ft/conftest_ft/scenario_ft_random.py",
+        "tests/e2e/ft/conftest_ft/scenario_realistic_gsm8k.py",
+        "tests/e2e/long/test_qwen2.5_0.5B_gsm8k.py",
+        "tests/e2e/long/test_qwen2.5_0.5B_gsm8k_async.py",
+        "tests/e2e/lora/test_lora_qwen2.5_0.5B.py",
+        "tests/e2e/megatron/model_scripts/test_deepseek_v32_5layer_fp8.py",
+        "tests/e2e/megatron/model_scripts/test_deepseek_v32_5layer_mxfp8.py",
+        "tests/e2e/megatron/model_scripts/test_deepseek_v4_flash_4layer_ci.py",
+        "tests/e2e/megatron/model_scripts/test_glm5_1_744b_a40b_6layer_lora_ci.py"
+      ],
+      "diff_preview": {
+        "additions": 144,
+        "deletions": 67,
+        "hunks": [
+          {
+            "file": "miles/utils/external_utils/command_utils/base_backend.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -5,9 +5,10 @@"
+              ],
+              [
+                " ",
+                "import shlex"
+              ],
+              [
+                " ",
+                "from abc import ABC, abstractmethod"
+              ],
+              [
+                " ",
+                "from collections.abc import Callable"
+              ],
+              [
+                "-",
+                "from dataclasses import dataclass, field"
+              ],
+              [
+                "+",
+                "from dataclasses import dataclass, field, replace"
+              ],
+              [
+                " ",
+                "from functools import partial"
+              ],
+              [
+                " ",
+                "from pathlib import Path"
+              ],
+              [
+                "+",
+                "from typing import Any"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from miles.utils.external_utils.command_utils.common import ("
+              ],
+              [
+                " ",
+                "    ArgvManipulator,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:54.546695+00:00"
+    },
+    {
+      "id": "radixark/miles#2469",
+      "repo": "radixark/miles",
+      "pr_number": 2469,
+      "title": "Document the cluster backend for the people who will use it",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T13:23:34Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2469",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Document the cluster backend for the people who will use it",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "charts/miles-common/README.md",
+        "charts/miles-run/README.md",
+        "charts/miles-workbench/README.md",
+        "docs/advanced/cluster-backend.md",
+        "docs/docs.json"
+      ],
+      "diff_preview": {
+        "additions": 112,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "charts/miles-common/README.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1 @@"
+              ],
+              [
+                "+",
+                "See `docs/advanced/cluster-backend.md`."
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:51.334955+00:00"
+    },
+    {
+      "id": "radixark/miles#2470",
+      "repo": "radixark/miles",
+      "pr_number": 2470,
+      "title": "Assert that the rollout executor keeps receiving weight versions",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T14:08:45Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2470",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Assert that the rollout executor keeps receiving weight versions",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/rollout/rollout_executor.py",
+        "miles/utils/weight_version.py",
+        "tests/fast/ray/rollout/real_ray/test_rollout_executor.py",
+        "tests/fast/utils/test_weight_version.py"
+      ],
+      "diff_preview": {
+        "additions": 98,
+        "deletions": 3,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/rollout_executor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -34,7 +34,7 @@"
+              ],
+              [
+                " ",
+                "from miles.utils.metric_checker import MetricChecker"
+              ],
+              [
+                " ",
+                "from miles.utils.timer import timer"
+              ],
+              [
+                " ",
+                "from miles.utils.tracking_utils.tracking import init_tracking"
+              ],
+              [
+                "-",
+                "from miles.utils.weight_version import assert_samples_weight_version_sane"
+              ],
+              [
+                "+",
+                "from miles.utils.weight_version import assert_samples_weight_version_sane, assert_weight_version_is_published"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "logging.getLogger(\"httpx\").setLevel(logging.WARNING)"
+              ],
+              [
+                " ",
+                "logging.getLogger(\"httpcore\").setLevel(logging.WARNING)"
+              ],
+              [
+                "h",
+                "@@ -54,6 +54,7 @@ def __init__(self, *, args):"
+              ],
+              [
+                " ",
+                "        self.args = args"
+              ],
+              [
+                " ",
+                "        # set by the training actor after each weight update"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:47.985636+00:00"
+    },
+    {
+      "id": "radixark/miles#2471",
+      "repo": "radixark/miles",
+      "pr_number": 2471,
+      "title": "Fail the run when the FT api server cannot start",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T14:08:55Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2471",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Fail the run when the FT api server cannot start",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/ft_utils/api_server/server.py",
+        "tests/fast/utils/api_server/test_server.py"
+      ],
+      "diff_preview": {
+        "additions": 140,
+        "deletions": 15,
+        "hunks": [
+          {
+            "file": "miles/utils/ft_utils/api_server/server.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -2,6 +2,8 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "import logging"
+              ],
+              [
+                " ",
+                "import threading"
+              ],
+              [
+                "+",
+                "import time"
+              ],
+              [
+                "+",
+                "from collections.abc import Callable"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "import uvicorn"
+              ],
+              [
+                " ",
+                "from fastapi import FastAPI, Request"
+              ],
+              [
+                "h",
+                "@@ -17,14 +19,17 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "logger = logging.getLogger(__name__)"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:44.772085+00:00"
+    },
+    {
+      "id": "radixark/miles#2472",
+      "repo": "radixark/miles",
+      "pr_number": 2472,
+      "title": "Run the weight equality check before leaving StateInitializing",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T14:08:58Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2472",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Run the weight equality check before leaving StateInitializing",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/rollout/server_cell.py",
+        "tests/fast/ray/rollout/test_server_cell_state_machine.py"
+      ],
+      "diff_preview": {
+        "additions": 49,
+        "deletions": 7,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/server_cell.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -166,20 +166,21 @@ async def _tick_when_initializing(self) -> None:"
+              ],
+              [
+                " ",
+                "            await api_client.resume_memory_occupation(tags=[GPU_MEMORY_TYPE_WEIGHTS])"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "        serve_without_weight_update: bool = not self.meta.update_weights or self.args.debug_rollout_only"
+              ],
+              [
+                "+",
+                "        if not serve_without_weight_update and self.args.check_weight_update_equal:"
+              ],
+              [
+                "+",
+                "            await self.check_weights("
+              ],
+              [
+                "+",
+                "                action=\"reset_tensors\","
+              ],
+              [
+                "+",
+                "                allow_quant_error=False,"
+              ],
+              [
+                "+",
+                "                selector=\"all\","
+              ],
+              [
+                "+",
+                "                skip_list=self.args.check_weight_update_skip_list,"
+              ],
+              [
+                "+",
+                "            )"
+              ],
+              [
+                "+",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:41.683598+00:00"
+    },
+    {
+      "id": "radixark/miles#2473",
+      "repo": "radixark/miles",
+      "pr_number": 2473,
+      "title": "Bound and wrap the free-port scan",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T14:09:10Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2473",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Bound and wrap the free-port scan",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/misc.py",
+        "miles/utils/workers/addr_allocator.py",
+        "tests/fast/utils/test_misc.py",
+        "tests/fast/utils/workers/test_addr_allocator.py"
+      ],
+      "diff_preview": {
+        "additions": 59,
+        "deletions": 4,
+        "hunks": [
+          {
+            "file": "miles/utils/misc.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -10,6 +10,10 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "logger = logging.getLogger(__name__)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "# ray uses 10002-19999, and 32768+ is the ephemeral range, so wrapped scans restart above ray's block"
+              ],
+              [
+                "+",
+                "_MIN_DYNAMIC_PORT = 20000"
+              ],
+              [
+                "+",
+                "_MAX_PORT = 65535"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "async def call_agent_abort_hook(args) -> None:"
+              ],
+              [
+                " ",
+                "    \"\"\"Invoke the agent plugin's optional abort hook, if it defines one."
+              ],
+              [
+                "h",
+                "@@ -65,11 +69,19 @@ def get_current_node_ip():"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:38.464373+00:00"
+    },
+    {
+      "id": "radixark/miles#2474",
+      "repo": "radixark/miles",
+      "pr_number": 2474,
+      "title": "Report a rollout cell stuck initializing as unhealthy",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T14:09:13Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2474",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Report a rollout cell stuck initializing as unhealthy",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/rollout/cell_state.py",
+        "miles/ray/rollout/server_cell.py",
+        "tests/fast/ray/rollout/test_rollout_cell_status.py",
+        "tests/fast/ray/rollout/test_server_cell_state_machine.py",
+        "tests/fast/utils/test_mini_ft_controller.py"
+      ],
+      "diff_preview": {
+        "additions": 107,
+        "deletions": 6,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/cell_state.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -13,6 +13,7 @@ class StateUninitialized(FrozenStrictBaseModel):"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "class StateInitializing(FrozenStrictBaseModel):"
+              ],
+              [
+                " ",
+                "    addr_info: CellAddrInfo"
+              ],
+              [
+                "+",
+                "    start_time: float"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "class StatePendingWeights(FrozenStrictBaseModel):"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:35.196373+00:00"
+    },
+    {
+      "id": "radixark/miles#2475",
+      "repo": "radixark/miles",
+      "pr_number": 2475,
+      "title": "Let workers deregister from the miles router",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-12T14:09:16Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2475",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Let workers deregister from the miles router",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/router/router.py",
+        "tests/fast/router/test_router.py"
+      ],
+      "diff_preview": {
+        "additions": 84,
+        "deletions": 9,
+        "hunks": [
+          {
+            "file": "miles/router/router.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -60,6 +60,7 @@ def _setup_routes(self):"
+              ],
+              [
+                " ",
+                "        \"\"\"Setup all the HTTP routes except catch-all proxy\"\"\""
+              ],
+              [
+                " ",
+                "        # sglang-router api"
+              ],
+              [
+                " ",
+                "        self.app.post(\"/add_worker\")(self.add_worker)"
+              ],
+              [
+                "+",
+                "        self.app.post(\"/remove_worker\")(self.remove_worker)"
+              ],
+              [
+                " ",
+                "        self.app.get(\"/list_workers\")(self.list_workers)"
+              ],
+              [
+                " ",
+                "        # Catch-all route for proxying to SGLang - must be registered LAST"
+              ],
+              [
+                " ",
+                "        self.app.api_route(\"/{path:path}\", methods=[\"GET\", \"POST\", \"PUT\", \"DELETE\"])(self.proxy)"
+              ],
+              [
+                "h",
+                "@@ -179,15 +180,7 @@ async def add_worker(self, request: Request):"
+              ],
+              [
+                " ",
+                "        - POST /add_worker?url=http://127.0.0.1:10090"
+              ],
+              [
+                " ",
+                "        - POST /add_worker  with body {\"url\": \"http://127.0.0.1:10090\"}"
+              ],
+              [
+                " ",
+                "        \"\"\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:31.707962+00:00"
+    },
+    {
+      "id": "radixark/miles#2476",
+      "repo": "radixark/miles",
+      "pr_number": 2476,
+      "title": "fix(dashboard): zero the trainer log-probs the loss masks out",
+      "state": "closed",
+      "author": "Shi-Dong",
+      "created_at": "2026-08-12T16:50:06Z",
+      "merged_at": "2026-08-12T17:53:10Z",
+      "url": "https://github.com/radixark/miles/pull/2476",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "fix(dashboard): zero the trainer log-probs the loss masks out",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "docs/user-guide/dashboard.md",
+        "miles/dashboard/dump_reader.py",
+        "tests/fast/dashboard/test_dump_reader_views.py"
+      ],
+      "diff_preview": {
+        "additions": 37,
+        "deletions": 3,
+        "hunks": [
+          {
+            "file": "docs/user-guide/dashboard.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -200,6 +200,10 @@ Two things here are easy to misread:"
+              ],
+              [
+                " ",
+                "  no statistics. That is expected, not missing data."
+              ],
+              [
+                " ",
+                "* The difference between rollout and train log-probs is the true-on-policy check. It should be"
+              ],
+              [
+                " ",
+                "  near zero. A band that is consistently non-zero is worth chasing."
+              ],
+              [
+                "+",
+                "* Positions the loss ignores, such as tool output in an agentic session, have no rollout"
+              ],
+              [
+                "+",
+                "  log-prob because the engine never generated them. Both log-prob sides read zero there, so"
+              ],
+              [
+                "+",
+                "  `lp_diff` is zero and `imp_ratio` is one by construction: judge train and rollout agreement"
+              ],
+              [
+                "+",
+                "  on the loss-covered tokens only."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "## Turning it on"
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:28.369126+00:00"
+    },
+    {
+      "id": "radixark/miles#2477",
+      "repo": "radixark/miles",
+      "pr_number": 2477,
+      "title": "fix(docs): correct agentic rollout guidance",
+      "state": "open",
+      "author": "guapisolo",
+      "created_at": "2026-08-12T18:23:28Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2477",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "fix(docs): correct agentic rollout guidance",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "README.md",
+        "docs/developer/debug.md",
+        "docs/docs.json",
+        "docs/index.md",
+        "docs/models/deepseek/deepseek-v3-2.md",
+        "docs/user-guide/agentic-chat-template.md",
+        "docs/user-guide/agentic-rollout.md",
+        "docs/user-guide/cli-reference.md",
+        "docs/user-guide/customization.md",
+        "docs/user-guide/environments.md",
+        "docs/user-guide/generate-endpoint.md",
+        "docs/user-guide/index.md",
+        "docs/user-guide/nemo-gym.md",
+        "docs/user-guide/rollout-endpoints.md",
+        "miles/utils/arguments.py"
+      ],
+      "diff_preview": {
+        "additions": 409,
+        "deletions": 364,
+        "hunks": [
+          {
+            "file": "README.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -63,7 +63,7 @@ the largest models all live on Megatron-LM. See"
+              ],
+              [
+                " ",
+                "### Correctness and resilience"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "- **Token-in-token-out (TITO).** Supported for"
+              ],
+              [
+                "-",
+                "  [every model and every black-box harness](https://miles.radixark.com/docs/user-guide/agentic-chat-template),"
+              ],
+              [
+                "+",
+                "  [every model and every black-box harness](https://miles.radixark.com/docs/user-guide/agentic-rollout),"
+              ],
+              [
+                " ",
+                "  with no detokenize and retokenize round-trip between rollout and training."
+              ],
+              [
+                " ",
+                "- **Rollout Routing Replay (R3).** Expert routing recorded during rollout is"
+              ],
+              [
+                " ",
+                "  [replayed in the trainer's forward pass](https://miles.radixark.com/docs/advanced/miles-router),"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:25.146777+00:00"
+    },
+    {
+      "id": "radixark/miles#2478",
+      "repo": "radixark/miles",
+      "pr_number": 2478,
+      "title": "docs: rewrite INT4 QAT guide",
+      "state": "closed",
+      "author": "nanjiangwill",
+      "created_at": "2026-08-12T18:41:08Z",
+      "merged_at": "2026-08-12T20:13:57Z",
+      "url": "https://github.com/radixark/miles/pull/2478",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "docs: rewrite INT4 QAT guide",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "docs/advanced/int4-qat.md"
+      ],
+      "diff_preview": {
+        "additions": 219,
+        "deletions": 60,
+        "hunks": [
+          {
+            "file": "docs/advanced/int4-qat.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -1,59 +1,180 @@"
+              ],
+              [
+                " ",
+                "---"
+              ],
+              [
+                " ",
+                "title: INT4 Quantization-Aware Training"
+              ],
+              [
+                "-",
+                "description: Fit large models on a single 8-GPU node by training with W4A16 quantization in the loop."
+              ],
+              [
+                "+",
+                "description: Train MoE policies with fake-quantized expert weights in Megatron and packed W4A16 rollout weights in SGLang."
+              ],
+              [
+                " ",
+                "---"
+              ],
+              [
+                "-",
+                "When the model is large enough that even FP8 will not fit on one node, the"
+              ],
+              [
+                "-",
+                "options are spreading across more nodes (and paying cross-node bandwidth) or"
+              ],
+              [
+                "-",
+                "quantizing further. Miles ships an INT4 W4A16 quant-aware-training pipeline."
+              ],
+              [
+                "-",
+                "On an 8 × 141 GB H200 node, this is the path used to fit very large models in"
+              ],
+              [
+                "-",
+                "a single box."
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:21.879756+00:00"
+    },
+    {
+      "id": "radixark/miles#2479",
+      "repo": "radixark/miles",
+      "pr_number": 2479,
+      "title": "examples: computer-use RL on HUD v6 environments",
+      "state": "open",
+      "author": "nblintao",
+      "created_at": "2026-08-12T19:40:06Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2479",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "examples: computer-use RL on HUD v6 environments",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "docs/user-guide/environments.md",
+        "examples/experimental/hud/README.md",
+        "examples/experimental/hud/agent.py",
+        "examples/experimental/hud/computer_tool.py",
+        "examples/experimental/hud/hud2048_config.yaml",
+        "examples/experimental/hud/make_hud_data.py",
+        "examples/experimental/hud/rollout.py",
+        "examples/experimental/hud/run_hud2048.py",
+        "examples/experimental/hud/sglang_compat.py",
+        "examples/experimental/hud/tests/test_computer_tool.py",
+        "examples/experimental/hud/tests/test_make_hud_data.py",
+        "examples/experimental/hud/tests/test_rollout.py",
+        "examples/experimental/hud/tests/test_sglang_compat.py"
+      ],
+      "diff_preview": {
+        "additions": 1679,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "docs/user-guide/environments.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -19,6 +19,7 @@ where the environment itself comes from:"
+              ],
+              [
+                " ",
+                "| Integration | Plugs in at | Guide |"
+              ],
+              [
+                " ",
+                "|---|---|---|"
+              ],
+              [
+                " ",
+                "| [Harbor](https://github.com/harbor-framework/harbor) | agent function | [guide](/user-guide/harbor) |"
+              ],
+              [
+                "+",
+                "| [HUD](https://hud.ai) | generate function³ | [example](https://github.com/radixark/miles/tree/main/examples/experimental/hud) |"
+              ],
+              [
+                " ",
+                "| [NeMo Gym](https://github.com/NVIDIA-NeMo/Gym) | agent function | [guide](/user-guide/nemo-gym) |"
+              ],
+              [
+                " ",
+                "| [OpenEnv](https://github.com/huggingface/openenv) | agent function | [guide](/user-guide/openenv) |"
+              ],
+              [
+                " ",
+                "| [Strands Agents](https://strandsagents.com/) | generate function | [example](https://github.com/radixark/miles/tree/main/examples/experimental/strands_sglang) |"
+              ],
+              [
+                "h",
+                "@@ -31,7 +32,7 @@ Sandbox providers are a different axis: they provision the task containers"
+              ],
+              [
+                " ",
+                "| Sandbox provider | Used within | Guide |"
+              ],
+              [
+                " ",
+                "|---|---|---|"
+              ],
+              [
+                " ",
+                "| [AgentENV](https://github.com/kvcache-ai/AgentENV) | OpenEnv | [example](https://github.com/radixark/miles/tree/main/examples/experimental/agentenv) |"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:18.626868+00:00"
+    },
+    {
+      "id": "radixark/miles#2480",
+      "repo": "radixark/miles",
+      "pr_number": 2480,
+      "title": "[AMD CI] Enable verified ROCm tests",
+      "state": "open",
+      "author": "XinyuJiangCMU",
+      "created_at": "2026-08-12T19:54:17Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2480",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "[AMD CI] Enable verified ROCm tests",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "tests/e2e/fsdp/test_qwen3_0.6B_fsdp_distributed.py",
+        "tests/e2e/fsdp/test_qwen3_0.6B_megatron_fsdp_align.py",
+        "tests/e2e/long/test_qwen2.5_0.5B_gsm8k.py",
+        "tests/e2e/megatron/test_qwen3_30B_A3B/test_disagg_broadcast.py",
+        "tests/e2e/megatron/test_qwen3_30B_A3B/test_fully_async.py",
+        "tests/e2e/megatron/test_qwen3_4B_disk_delta.py",
+        "tests/e2e/megatron/test_qwen3_4B_offload_disk.py",
+        "tests/e2e/megatron/test_qwen3_4B_offload_disk_stream.py",
+        "tests/e2e/megatron/test_qwen3_4B_ppo.py",
+        "tests/e2e/megatron/test_qwen3_4B_variable_gbs.py",
+        "tests/e2e/megatron/test_qwen3_4b_fully_async_eval.py",
+        "tests/e2e/sglang/test_chat_input_ids_equivalence.py",
+        "tests/e2e/sglang/test_session_server_multi_role/test_qwen3.py",
+        "tests/e2e/sglang/test_session_server_multi_role/test_qwen35.py",
+        "tests/e2e/short/test_dumper.py",
+        "tests/e2e/short/test_qwen2.5_0.5B_compact_rollout.py",
+        "tests/e2e/short/test_qwen2.5_0.5B_fully_async_eval.py",
+        "tests/e2e/short/test_qwen2.5_0.5B_opd_sglang.py",
+        "tests/e2e/short/test_qwen3_0.6B_fsdp_colocated_2xGPU.py",
+        "tests/fast-gpu/test_det_process_group.py"
+      ],
+      "diff_preview": {
+        "additions": 69,
+        "deletions": 22,
+        "hunks": [
+          {
+            "file": "tests/e2e/fsdp/test_qwen3_0.6B_fsdp_distributed.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -1,6 +1,6 @@"
+              ],
+              [
+                " ",
+                "import os"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "from tests.ci.ci_register import register_cuda_ci"
+              ],
+              [
+                "+",
+                "from tests.ci.ci_register import register_cuda_ci, register_rocm_ci"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "import miles.utils.external_utils.command_utils as U"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -9,6 +9,11 @@"
+              ],
+              [
+                " ",
+                "    suite=\"stage-c-4-gpu-h200\","
+              ],
+              [
+                " ",
+                "    labels=[\"long\"],"
+              ],
+              [
+                " ",
+                ")"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:15.402920+00:00"
+    },
+    {
+      "id": "radixark/miles#2481",
+      "repo": "radixark/miles",
+      "pr_number": 2481,
+      "title": "docs: mirror examples/ READMEs into the Examples tab",
+      "state": "closed",
+      "author": "nblintao",
+      "created_at": "2026-08-12T20:03:20Z",
+      "merged_at": "2026-08-12T22:26:44Z",
+      "url": "https://github.com/radixark/miles/pull/2481",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "docs: mirror examples/ READMEs into the Examples tab",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        ".gitattributes",
+        ".pre-commit-config.yaml",
+        "docs/README.md",
+        "docs/developer/debug.md",
+        "docs/developer/index.md",
+        "docs/docs.json",
+        "docs/examples/fully-async.md",
+        "docs/examples/geo3k-vlm.md",
+        "docs/examples/geo3k-vlm/multi-turn.md",
+        "docs/examples/index.md",
+        "docs/examples/infra-features.md",
+        "docs/examples/infra-features/low-precision.md",
+        "docs/examples/infra-features/p2p-weight-transfer.md",
+        "docs/examples/infra-features/random-async.md",
+        "docs/examples/infra-features/train-infer-mismatch-helper.md",
+        "docs/examples/infra-features/true-on-policy.md",
+        "docs/examples/multi-agent.md",
+        "docs/examples/multi-lora.md",
+        "docs/examples/on-policy-distillation.md",
+        "docs/examples/on-policy-distillation/qwen3-5-35b-selfdistill.md"
+      ],
+      "diff_preview": {
+        "additions": 2226,
+        "deletions": 1041,
+        "hunks": [
+          {
+            "file": ".gitattributes",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,3 @@"
+              ],
+              [
+                "+",
+                "# Mirrored from examples/**/README.md by scripts/tools/sync_example_docs.py."
+              ],
+              [
+                "+",
+                "# linguist-generated collapses these files in PR diffs; review the README instead."
+              ],
+              [
+                "+",
+                "docs/examples/** linguist-generated=true"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:12.118305+00:00"
+    },
+    {
+      "id": "radixark/miles#2482",
+      "repo": "radixark/miles",
+      "pr_number": 2482,
+      "title": "examples: fix READMEs — dead links, broken list structure, missing entries",
+      "state": "closed",
+      "author": "nblintao",
+      "created_at": "2026-08-12T20:10:29Z",
+      "merged_at": "2026-08-12T22:26:43Z",
+      "url": "https://github.com/radixark/miles/pull/2482",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "examples: fix READMEs — dead links, broken list structure, missing entries",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "examples/README.md",
+        "examples/infra_features/README.md",
+        "examples/infra_features/low_precision/README.md",
+        "examples/infra_features/p2p_weight_transfer/README.md",
+        "examples/retool_v2/README.md"
+      ],
+      "diff_preview": {
+        "additions": 47,
+        "deletions": 39,
+        "hunks": [
+          {
+            "file": "examples/README.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -1,44 +1,48 @@"
+              ],
+              [
+                " ",
+                "# Examples"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "These examples provide concrete examples to leverage miles in your own RL workflow. Some examples are just demonstrative, but most of them are verifiable with a concrete performance score."
+              ],
+              [
+                "+",
+                "These examples are runnable starting points for your own RL workflow. A few are purely demonstrative, but most are verifiable against a concrete performance score."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "## Directory Structure"
+              ],
+              [
+                "+",
+                "## Recipes"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "Training recipes live at the top level. Two subdirectories group everything else:"
+              ],
+              [
+                "-",
+                "`infra_features/` for runtime and infrastructure plumbing, and `experimental/` for"
+              ],
+              [
+                "-",
+                "recipes that are not fully verified."
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:08.826474+00:00"
+    },
+    {
+      "id": "radixark/miles#2484",
+      "repo": "radixark/miles",
+      "pr_number": 2484,
+      "title": "docs: add disaggregated RL rollout guide",
+      "state": "closed",
+      "author": "nanjiangwill",
+      "created_at": "2026-08-12T20:58:55Z",
+      "merged_at": "2026-08-12T22:39:53Z",
+      "url": "https://github.com/radixark/miles/pull/2484",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "docs: add disaggregated RL rollout guide",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "docs/advanced/disaggregated-rollout.md",
+        "docs/advanced/index.md",
+        "docs/advanced/pd-disaggregation.md",
+        "docs/docs.json",
+        "docs/getting-started/quick-start.md",
+        "docs/user-guide/fully-async.md",
+        "docs/user-guide/training-backend.md"
+      ],
+      "diff_preview": {
+        "additions": 359,
+        "deletions": 12,
+        "hunks": [
+          {
+            "file": "docs/advanced/disaggregated-rollout.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,332 @@"
+              ],
+              [
+                "+",
+                "---"
+              ],
+              [
+                "+",
+                "title: Disaggregated RL Rollout"
+              ],
+              [
+                "+",
+                "description: Scale rollout independently across clusters and regions while miles preserves policy publication and version attribution."
+              ],
+              [
+                "+",
+                "---"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "Policy training and rollout inference have different resource and scaling"
+              ],
+              [
+                "+",
+                "profiles. A trainer is a long-lived, tightly coupled cluster whose ranks step"
+              ],
+              [
+                "+",
+                "together. Rollout is request-driven and bursty: long and agentic trajectories"
+              ],
+              [
+                "+",
+                "finish at different times, demand changes over a run, and inference capacity"
+              ],
+              [
+                "+",
+                "may be available in different clusters, regions, or compute providers."
+              ],
+              [
+                "+",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:05.676442+00:00"
+    },
+    {
+      "id": "radixark/miles#2486",
+      "repo": "radixark/miles",
+      "pr_number": 2486,
+      "title": "docs: point AMD installs at the maintained rocm/sgl-dev images",
+      "state": "open",
+      "author": "Arist12",
+      "created_at": "2026-08-12T21:55:55Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2486",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "docs: point AMD installs at the maintained rocm/sgl-dev images",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "docs/ci/02-docker-build.md",
+        "docs/developer/versions.md",
+        "docs/getting-started/installation.md"
+      ],
+      "diff_preview": {
+        "additions": 22,
+        "deletions": 13,
+        "hunks": [
+          {
+            "file": "docs/ci/02-docker-build.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -38,14 +38,15 @@ The Dockerfile is the build recipe: it provides the cu13 defaults and emits one"
+              ],
+              [
+                " ",
+                "`docker/build.py` builds and pushes the images. Select a build with `--variant` and a tag mode with `--image-tag {dev,latest,custom}`. A single `VARIANTS` table is the source of truth for each variant's image, target platforms, Dockerfile, and build-args."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "| `--variant`    | Tag (`--image-tag dev`)            | Platforms                     | Notes                                          |"
+              ],
+              [
+                "-",
+                "| -------------- | ---------------------------------- | ----------------------------- | ---------------------------------------------- |"
+              ],
+              [
+                "-",
+                "| `cu13`         | `radixark/miles:dev`               | `linux/amd64` + `linux/arm64` | **multi-arch**, one manifest — the daily image |"
+              ],
+              [
+                "-",
+                "| `cu13-x86`     | `radixark/miles:dev`               | `linux/amd64`                 | x86-only build of the same image               |"
+              ],
+              [
+                "-",
+                "| `cu13-aarch64` | `radixark/miles:dev`               | `linux/arm64`                 | arm64-only build of the same image             |"
+              ],
+              [
+                "-",
+                "| `cu12-x86`     | `radixark/miles:dev-cu12`          | `linux/amd64`                 | CUDA 12.9 legacy                               |"
+              ],
+              [
+                "-",
+                "| `rocm-mi300`   | `rocm/sgl-dev:miles-rocm700-mi30x` | native                        | AMD MI30x — `docker/Dockerfile.rocm`           |"
+              ],
+              [
+                "-",
+                "| `rocm-mi350`   | `rocm/sgl-dev:miles-rocm720-mi35x` | native                        | AMD MI35x — `docker/Dockerfile.rocm`           |"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:06:02.300171+00:00"
+    },
+    {
+      "id": "radixark/miles#2485",
+      "repo": "radixark/miles",
+      "pr_number": 2485,
+      "title": "clean up fully async example and mv to examples/infra_features",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-08-12T21:55:55Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2485",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "clean up fully async example and mv to examples/infra_features",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "docs/examples/fully-async.md",
+        "docs/user-guide/fully-async.md",
+        "examples/README.md",
+        "examples/fully_async/README.md",
+        "examples/fully_async/run-qwen3-4b-fully_async.sh",
+        "examples/infra_features/fully_async/README.md",
+        "examples/infra_features/fully_async/__init__.py",
+        "examples/infra_features/fully_async/external_eval_fn.py",
+        "examples/infra_features/fully_async/run_qwen3_30b_a3b_fully_async.py",
+        "examples/infra_features/fully_async/run_qwen3_5_4b_fully_async_eval.py",
+        "examples/infra_features/random_async/README.md",
+        "miles/rollout/checkpoint_eval.py",
+        "tests/e2e/megatron/test_qwen3_4b_fully_async_eval.py",
+        "tests/fast/rollout/test_checkpoint_eval.py",
+        "tests/snapshots/launch_scripts/sh/examples/fully_async/run-qwen3-4b-fully_async.sh.txt"
+      ],
+      "diff_preview": {
+        "additions": 45,
+        "deletions": 401,
+        "hunks": [
+          {
+            "file": "docs/examples/fully-async.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -32,16 +32,17 @@ instead of the sum."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "```text"
+              ],
+              [
+                " ",
+                "miles/rollout/fully_async_rollout.py # FullyAsyncRolloutFn (worker + drain)"
+              ],
+              [
+                "-",
+                "examples/fully_async/"
+              ],
+              [
+                "-",
+                "├── run-qwen3-4b-fully_async.sh     # launch script (Qwen3-4B)"
+              ],
+              [
+                "-",
+                "└── run_qwen3_30b_a3b_fully_async.py # MoE variant"
+              ],
+              [
+                "+",
+                "examples/infra_features/fully_async/"
+              ],
+              [
+                "+",
+                "├── run_qwen3_5_4b_fully_async_eval.py # Qwen3.5-4B, both checkpoint-eval backends"
+              ],
+              [
+                "+",
+                "├── run_qwen3_30b_a3b_fully_async.py   # MoE variant"
+              ],
+              [
+                "+",
+                "└── external_eval_fn.py                # reference CheckpointEvalFn"
+              ],
+              [
+                " ",
+                "```"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:05:59.097916+00:00"
+    },
+    {
+      "id": "radixark/miles#2487",
+      "repo": "radixark/miles",
+      "pr_number": 2487,
+      "title": "docs: drop the Contact button from the docs navbar",
+      "state": "open",
+      "author": "nblintao",
+      "created_at": "2026-08-12T22:05:45Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2487",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "docs: drop the Contact button from the docs navbar",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "docs/docs.json"
+      ],
+      "diff_preview": {
+        "additions": 1,
+        "deletions": 6,
+        "hunks": [
+          {
+            "file": "docs/docs.json",
+            "lang": "json",
+            "lines": [
+              [
+                "h",
+                "@@ -33,12 +33,7 @@"
+              ],
+              [
+                " ",
+                "    \"type\": \"github\","
+              ],
+              [
+                " ",
+                "    \"href\": \"https://github.com/radixark/miles\""
+              ],
+              [
+                " ",
+                "   }"
+              ],
+              [
+                "-",
+                "  ],"
+              ],
+              [
+                "-",
+                "  \"primary\": {"
+              ],
+              [
+                "-",
+                "   \"type\": \"button\","
+              ],
+              [
+                "-",
+                "   \"label\": \"Contact\","
+              ],
+              [
+                "-",
+                "   \"href\": \"mailto:miles@radixark.ai\""
+              ],
+              [
+                "-",
+                "  }"
+              ],
+              [
+                "+",
+                "  ]"
+              ],
+              [
+                " ",
+                " },"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:05:55.900964+00:00"
+    },
+    {
+      "id": "radixark/miles#2488",
+      "repo": "radixark/miles",
+      "pr_number": 2488,
+      "title": "Qwen 3.8 day-0 lora RL support",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-08-12T22:14:09Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2488",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Qwen 3.8 day-0 lora RL support",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        ".agents/skills",
+        ".github/CODEOWNERS",
+        ".github/workflows/_run-ci-rocm.yml",
+        ".github/workflows/_run-ci.yml",
+        ".github/workflows/_run-cpu-ci.yml",
+        ".github/workflows/pr-test-rocm.yml",
+        ".github/workflows/pr-test.yml",
+        ".gitignore",
+        "README.md",
+        "docker/Dockerfile.rocm",
+        "docker/amd_patch/latest/miles.patch",
+        "docker/npu_patch/miles.patch",
+        "docs/advanced/index.md",
+        "docs/advanced/on-policy-distillation.md",
+        "docs/ci/00-stage.md",
+        "docs/ci/03-metric-history-gate.md",
+        "docs/docs.json",
+        "docs/examples/openhermes-sft.md",
+        "docs/examples/reproducibility.md",
+        "docs/examples/search-r1.md"
+      ],
+      "diff_preview": {
+        "additions": 823,
+        "deletions": 430,
+        "hunks": [
+          {
+            "file": ".agents/skills",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1 @@"
+              ],
+              [
+                "+",
+                "../.claude/skills"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:05:52.540043+00:00"
+    },
+    {
+      "id": "radixark/miles#2489",
+      "repo": "radixark/miles",
+      "pr_number": 2489,
+      "title": "docs: label-only sidebar groups, explicit Overview pages, scoped link color",
+      "state": "open",
+      "author": "nblintao",
+      "created_at": "2026-08-12T22:18:12Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2489",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "docs: label-only sidebar groups, explicit Overview pages, scoped link color",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        ".pre-commit-config.yaml",
+        "docs/README.md",
+        "docs/advanced/index.md",
+        "docs/developer/index.md",
+        "docs/docs.json",
+        "docs/examples/index.md",
+        "docs/examples/infra-features.md",
+        "docs/index.md",
+        "docs/models/deepseek/index.md",
+        "docs/models/gemma/index.md",
+        "docs/models/glm/index.md",
+        "docs/models/index.md",
+        "docs/models/kimi/index.md",
+        "docs/models/nemotron/index.md",
+        "docs/models/qwen/index.md",
+        "docs/models/thinkingmachines/index.md",
+        "docs/style.css",
+        "docs/user-guide/environments.md",
+        "docs/user-guide/index.md",
+        "docs/user-guide/launch-script.md"
+      ],
+      "diff_preview": {
+        "additions": 155,
+        "deletions": 169,
+        "hunks": [
+          {
+            "file": ".pre-commit-config.yaml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -58,6 +58,12 @@ repos:"
+              ],
+              [
+                " ",
+                "        files: '^(examples/.*README\\.md|docs/examples/.*|docs/docs\\.json|scripts/tools/sync_example_docs\\.py)$'"
+              ],
+              [
+                " ",
+                "        pass_filenames: false"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "      - id: ban-docs-nav-group-root"
+              ],
+              [
+                "+",
+                "        name: Ban group `root` in docs navigation (put the landing page first in `pages` with `sidebarTitle Overview` instead; see docs/README.md)"
+              ],
+              [
+                "+",
+                "        language: pygrep"
+              ],
+              [
+                "+",
+                "        entry: '\"root\":'"
+              ],
+              [
+                "+",
+                "        files: ^docs/docs\\.json$"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                "      - id: ban-mpu-get"
+              ],
+              [
+                " ",
+                "        name: Ban direct mpu.get_* calls (use ParallelState)"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:05:49.116948+00:00"
+    },
+    {
+      "id": "radixark/miles#2490",
+      "repo": "radixark/miles",
+      "pr_number": 2490,
+      "title": "dashboard: keep sample status/reward chips visible on the Tokens tab",
+      "state": "closed",
+      "author": "Shi-Dong",
+      "created_at": "2026-08-12T22:45:00Z",
+      "merged_at": "2026-08-12T22:57:19Z",
+      "url": "https://github.com/radixark/miles/pull/2490",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "dashboard: keep sample status/reward chips visible on the Tokens tab",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/dashboard/static/conversation.js",
+        "miles/dashboard/static/views_tokens.js"
+      ],
+      "diff_preview": {
+        "additions": 16,
+        "deletions": 7,
+        "hunks": [
+          {
+            "file": "miles/dashboard/static/conversation.js",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -2,17 +2,24 @@ import { el, fmtNum } from \"./app.js\";"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "const CLOSED_BY_DEFAULT = new Set([\"system\", \"tool\"]);"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "// row: one trajectory-sidecar entry {status, reward, messages: [...]}"
+              ],
+              [
+                "-",
+                "// (OpenAI message shape: role/content plus optional reasoning_content,"
+              ],
+              [
+                "-",
+                "// tool_calls, name)"
+              ],
+              [
+                "-",
+                "export function renderConversation(row) {"
+              ],
+              [
+                "+",
+                "// sample outcome (status + reward) from the trajectory sidecar. Lives outside"
+              ],
+              [
+                "+",
+                "// the conversation pane so the tabbed sample view can hoist it above the tab"
+              ],
+              [
+                "+",
+                "// bar: the outcome describes the sample, not one rendering of it, so it has to"
+              ],
+              [
+                "+",
+                "// survive a switch to the Tokens tab."
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:05:45.683299+00:00"
+    },
+    {
+      "id": "radixark/miles#2491",
+      "repo": "radixark/miles",
+      "pr_number": 2491,
+      "title": "docs: nest Environments under User Guide, rename to Agentic Environments",
+      "state": "open",
+      "author": "layahaasini",
+      "created_at": "2026-08-12T22:56:15Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2491",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "docs: nest Environments under User Guide, rename to Agentic Environments",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "docs/docs.json",
+        "docs/user-guide/environments.md",
+        "docs/user-guide/index.md"
+      ],
+      "diff_preview": {
+        "additions": 12,
+        "deletions": 12,
+        "hunks": [
+          {
+            "file": "docs/docs.json",
+            "lang": "json",
+            "lines": [
+              [
+                "h",
+                "@@ -194,18 +194,18 @@"
+              ],
+              [
+                " ",
+                "       \"user-guide/customization\","
+              ],
+              [
+                " ",
+                "       \"user-guide/rollout-endpoints\","
+              ],
+              [
+                " ",
+                "       \"user-guide/agentic-chat-template\","
+              ],
+              [
+                "+",
+                "       {"
+              ],
+              [
+                "+",
+                "        \"group\": \"Agentic Environments\","
+              ],
+              [
+                "+",
+                "        \"root\": \"user-guide/environments\","
+              ],
+              [
+                "+",
+                "        \"pages\": ["
+              ],
+              [
+                "+",
+                "         \"user-guide/harbor\","
+              ],
+              [
+                "+",
+                "         \"user-guide/openenv\","
+              ],
+              [
+                "+",
+                "         \"user-guide/nemo-gym\","
+              ],
+              [
+                "+",
+                "         \"user-guide/verifiers\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:05:42.371282+00:00"
+    },
+    {
+      "id": "radixark/miles#2492",
+      "repo": "radixark/miles",
+      "pr_number": 2492,
+      "title": "docs: list Kimi-K2.6 as a P2P-supported model",
+      "state": "closed",
+      "author": "nblintao",
+      "created_at": "2026-08-13T00:14:17Z",
+      "merged_at": "2026-08-13T00:27:35Z",
+      "url": "https://github.com/radixark/miles/pull/2492",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "docs: list Kimi-K2.6 as a P2P-supported model",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "docs/advanced/p2p-weight-transfer.md"
+      ],
+      "diff_preview": {
+        "additions": 1,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "docs/advanced/p2p-weight-transfer.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -64,7 +64,7 @@ P2P weight transfer relies on a unified weight name mapping interface between Me"
+              ],
+              [
+                " ",
+                "| `Glm4MoeForCausalLM` | GLM4-MoE | GLM-4.5-Air |"
+              ],
+              [
+                " ",
+                "| `Glm4MoeLiteForCausalLM` | GLM4-MoE | GLM-4.7-9B-Flash |"
+              ],
+              [
+                " ",
+                "| `DeepseekV3ForCausalLM` | DeepSeek V3p2 | GLM-5 (744B-A40B) |"
+              ],
+              [
+                "-",
+                "| `DeepseekV3ForCausalLM` | DeepSeek V3 | Kimi-K2 (1T) \\* |"
+              ],
+              [
+                "+",
+                "| `DeepseekV3ForCausalLM` | DeepSeek V3 | Kimi-K2 (1T) \\*, Kimi-K2.6 (1T) |"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "> **Note:** All the above models are tested on H100-80GB clusters."
+              ],
+              [
+                " ",
+                ">"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:05:39.162122+00:00"
+    },
+    {
+      "id": "radixark/miles#2493",
+      "repo": "radixark/miles",
+      "pr_number": 2493,
+      "title": "Add sglang and Megatron-LM as git submodules under third_party/",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-08-13T00:18:38Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2493",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Add sglang and Megatron-LM as git submodules under third_party/",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        ".gitmodules",
+        "third_party/Megatron-LM",
+        "third_party/sglang"
+      ],
+      "diff_preview": {
+        "additions": 10,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": ".gitmodules",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,8 @@"
+              ],
+              [
+                "+",
+                "[submodule \"third_party/sglang\"]"
+              ],
+              [
+                "+",
+                "\tpath = third_party/sglang"
+              ],
+              [
+                "+",
+                "\turl = https://github.com/sgl-project/sglang.git"
+              ],
+              [
+                "+",
+                "\tbranch = sglang-miles"
+              ],
+              [
+                "+",
+                "[submodule \"third_party/Megatron-LM\"]"
+              ],
+              [
+                "+",
+                "\tpath = third_party/Megatron-LM"
+              ],
+              [
+                "+",
+                "\turl = https://github.com/radixark/Megatron-LM.git"
+              ],
+              [
+                "+",
+                "\tbranch = miles-main"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:05:35.806855+00:00"
+    },
+    {
+      "id": "radixark/miles#2494",
+      "repo": "radixark/miles",
+      "pr_number": 2494,
+      "title": "fix(fsdp): apply pause mode during non-colocated weight sync",
+      "state": "open",
+      "author": "shangrilar",
+      "created_at": "2026-08-13T00:23:50Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2494",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "fix(fsdp): apply pause mode during non-colocated weight sync",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/backends/fsdp_utils/update_weight_utils.py",
+        "tests/fast/backends/test_fsdp_update_weight.py"
+      ],
+      "diff_preview": {
+        "additions": 56,
+        "deletions": 13,
+        "hunks": [
+          {
+            "file": "miles/backends/fsdp_utils/update_weight_utils.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -71,9 +71,10 @@ def update_weights(self) -> None:"
+              ],
+              [
+                " ",
+                "        self.weight_version += 1"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "        if dist.get_rank() == 0:"
+              ],
+              [
+                "-",
+                "            futures = [engine.pause_generation.remote() for engine in self.rollout_engines]"
+              ],
+              [
+                "-",
+                "            futures.extend([engine.flush_cache.remote() for engine in self.rollout_engines])"
+              ],
+              [
+                "-",
+                "            ray.get(futures)"
+              ],
+              [
+                "+",
+                "            mode = self.args.pause_generation_mode"
+              ],
+              [
+                "+",
+                "            ray.get([engine.pause_generation.remote(mode=mode) for engine in self.rollout_engines])"
+              ],
+              [
+                "+",
+                "            if mode != \"in_place\":"
+              ],
+              [
+                "+",
+                "                ray.get([engine.flush_cache.remote() for engine in self.rollout_engines])"
+              ],
+              [
+                " ",
+                "            ray.get([engine.begin_weight_update.remote() for engine in self.rollout_engines])"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:05:32.404233+00:00"
+    },
+    {
+      "id": "radixark/miles#2495",
+      "repo": "radixark/miles",
+      "pr_number": 2495,
+      "title": "Publish miles as the miles-rl wheel on PyPI",
+      "state": "open",
+      "author": "Shi-Dong",
+      "created_at": "2026-08-13T00:27:18Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2495",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Publish miles as the miles-rl wheel on PyPI",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        ".github/workflows/publish-pypi.yml",
+        "MANIFEST.in",
+        "setup.py"
+      ],
+      "diff_preview": {
+        "additions": 362,
+        "deletions": 7,
+        "hunks": [
+          {
+            "file": ".github/workflows/publish-pypi.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,244 @@"
+              ],
+              [
+                "+",
+                "name: Publish miles-rl to PyPI"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "# Builds the `miles-rl` distribution -- miles plus the patched sglang and"
+              ],
+              [
+                "+",
+                "# Megatron-LM sources bundled from the third_party/* submodules -- and uploads"
+              ],
+              [
+                "+",
+                "# it to https://pypi.org/project/miles-rl/."
+              ],
+              [
+                "+",
+                "#"
+              ],
+              [
+                "+",
+                "# Authentication is PyPI Trusted Publishing (OIDC): PyPI is configured to trust"
+              ],
+              [
+                "+",
+                "# this workflow file in this repository, so there is no API token in the repo"
+              ],
+              [
+                "+",
+                "# secrets. See https://docs.pypi.org/trusted-publishers/."
+              ],
+              [
+                "+",
+                "#"
+              ],
+              [
+                "+",
+                "# To cut a release: bump `version=` in setup.py (PyPI rejects re-uploads of an"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:05:29.248253+00:00"
+    },
+    {
+      "id": "radixark/miles#2496",
+      "repo": "radixark/miles",
+      "pr_number": 2496,
+      "title": "feat(ci): add authorized comment-to-label gateway",
+      "state": "open",
+      "author": "guapisolo",
+      "created_at": "2026-08-13T00:36:10Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2496",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "feat(ci): add authorized comment-to-label gateway",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        ".github/workflows/comment-ci-label.yml",
+        ".github/workflows/policies/ci-label-access.json",
+        ".github/workflows/scripts/comment_ci_label.py",
+        "docs/ci/01-label.md",
+        "tests/ci/test/test_comment_ci_label.py"
+      ],
+      "diff_preview": {
+        "additions": 651,
+        "deletions": 0,
+        "hunks": [
+          {
+            "file": ".github/workflows/comment-ci-label.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,50 @@"
+              ],
+              [
+                "+",
+                "name: Comment CI label"
+              ],
+              [
+                "+",
+                "run-name: Comment CI label by ${{ github.event.comment.user.login }}"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "on:"
+              ],
+              [
+                "+",
+                "  issue_comment:"
+              ],
+              [
+                "+",
+                "    types: [created]"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "permissions:"
+              ],
+              [
+                "+",
+                "  contents: read"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "jobs:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:05:25.977058+00:00"
+    },
+    {
+      "id": "radixark/miles#2497",
+      "repo": "radixark/miles",
+      "pr_number": 2497,
+      "title": "Temporarily remove vanilla fault tolerance for the eval fleet",
+      "state": "open",
+      "author": "fzyzcjy",
+      "created_at": "2026-08-13T00:43:01Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2497",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Temporarily remove vanilla fault tolerance for the eval fleet",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/rollout/eval_fleet.py",
+        "miles/ray/rollout/rollout_server.py",
+        "miles/ray/rollout/server_cell.py",
+        "tests/fast/ray/rollout/test_eval_fleet.py",
+        "tests/fast/ray/rollout/test_rollout_server.py"
+      ],
+      "diff_preview": {
+        "additions": 6,
+        "deletions": 111,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/eval_fleet.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -31,16 +31,6 @@ async def pin(self, checkpoint_dir: str, weight_version: str) -> GenerateState:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "        On the manager's event loop: keep everything here awaiting rather than blocking."
+              ],
+              [
+                " ",
+                "        \"\"\""
+              ],
+              [
+                "-",
+                "        try:"
+              ],
+              [
+                "-",
+                "            if not self.args.use_fault_tolerance:"
+              ],
+              [
+                "-",
+                "                # Otherwise RolloutHealthMonitor owns the probing for these engines."
+              ],
+              [
+                "-",
+                "                await self._srv.probe_and_mark_dead()"
+              ],
+              [
+                "-",
+                "            await self._srv.recover()"
+              ],
+              [
+                "-",
+                "            await self._srv.wait_all_engines_alive()"
+              ],
+              [
+                "-",
+                "        except Exception as e:"
+              ],
+              [
+                "-",
+                "            logger.warning(f\"Eval fleet unhealthy: {e}\")"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:05:22.653913+00:00"
+    },
+    {
+      "id": "radixark/miles#2498",
+      "repo": "radixark/miles",
+      "pr_number": 2498,
+      "title": "fix: require shared rewards within rollouts",
+      "state": "open",
+      "author": "guapisolo",
+      "created_at": "2026-08-13T00:47:37Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2498",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "fix: require shared rewards within rollouts",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/ray/rollout/train_data_conversion.py",
+        "tests/fast/ray/rollout/test_train_data_conversion.py"
+      ],
+      "diff_preview": {
+        "additions": 30,
+        "deletions": 29,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/train_data_conversion.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -204,17 +204,13 @@ def _reward_group_segments(args: Any, samples: list[Sample], prompt_group_sizes:"
+              ],
+              [
+                " ",
+                "    return [list(range(len(samples)))]"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "def _trainable_token_count(sample: Sample) -> int:"
+              ],
+              [
+                "-",
+                "    return 0 if sample.remove_sample else sample.effective_response_length"
+              ],
+              [
+                "-",
+                ""
+              ],
+              [
+                "-",
+                ""
+              ],
+              [
+                " ",
+                "def _normalize_rewards_by_rollout("
+              ],
+              [
+                " ",
+                "    args: Any,"
+              ],
+              [
+                " ",
+                "    samples: list[Sample],"
+              ],
+              [
+                " ",
+                "    raw_rewards: list[float],"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:05:19.254252+00:00"
+    },
+    {
+      "id": "THUDM/slime#2265",
+      "repo": "THUDM/slime",
+      "pr_number": 2265,
+      "title": "[docker] Upgrade to sglang v0.5.17",
+      "state": "open",
+      "author": "zhuzilin",
+      "created_at": "2026-08-12T05:25:45Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2265",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "[docker] Upgrade to sglang v0.5.17",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "docker/Dockerfile",
+        "docker/README.md",
+        "docker/justfile",
+        "docker/patch/latest/megatron.patch",
+        "docker/patch/latest/sglang-deterministic.patch",
+        "docker/patch/latest/sglang-pull_weights.patch",
+        "docker/patch/latest/sglang-release_hicache.patch",
+        "docker/patch/latest/sglang-top_p.patch",
+        "docker/patch/latest/sglang.patch",
+        "slime/backends/megatron_utils/alignment/deepgemm_moe_forward.py",
+        "slime/backends/sglang_utils/compat.py",
+        "slime/backends/sglang_utils/sglang_engine.py",
+        "slime/utils/routing_replay.py",
+        "slime_plugins/models/glm5/glm5.py",
+        "slime_plugins/models/glm5/ops/indexer.py",
+        "tests/test_deepgemm_moe_forward.py",
+        "tests/test_glm52_6layer_deterministic_e2e.py",
+        "tests/utils/test_sglang_arguments.py"
+      ],
+      "diff_preview": {
+        "additions": 2020,
+        "deletions": 1917,
+        "hunks": [
+          {
+            "file": "docker/Dockerfile",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -1,12 +1,12 @@"
+              ],
+              [
+                "-",
+                "ARG SGLANG_IMAGE_TAG=v0.5.15.post1-cu129"
+              ],
+              [
+                "+",
+                "ARG SGLANG_IMAGE_TAG=v0.5.17-cu129"
+              ],
+              [
+                " ",
+                "FROM slimerl/sglang:${SGLANG_IMAGE_TAG} AS sglang"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# ======================================== Arguments ============================================="
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "ARG PATCH_VERSION=latest"
+              ],
+              [
+                " ",
+                "ARG MEGATRON_COMMIT=1dcf0dafa884ad52ffb243625717a3471643e087"
+              ],
+              [
+                "-",
+                "ARG DEEPGEMM_COMMIT=b38a77cd193cf38f670caae192310521d24343be"
+              ],
+              [
+                "-",
+                "ARG DEEPEP_COMMIT=6845ffd9d59126ec0030c13e0e155935a61e5b5a"
+              ],
+              [
+                "+",
+                "ARG DEEPGEMM_COMMIT=7ad54cbd80ebe24ad36cb5cd3729f37beed420bb"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:05:15.781040+00:00"
+    },
+    {
+      "id": "THUDM/slime#2266",
+      "repo": "THUDM/slime",
+      "pr_number": 2266,
+      "title": "Refactor --save-debug-train-data",
+      "state": "closed",
+      "author": "zhuzilin",
+      "created_at": "2026-08-12T09:26:39Z",
+      "merged_at": "2026-08-12T09:50:13Z",
+      "url": "https://github.com/THUDM/slime/pull/2266",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Refactor --save-debug-train-data",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        ".github/workflows/pr-test.yml",
+        ".github/workflows/pr-test.yml.j2",
+        "docs/en/developer_guide/debug.md",
+        "docs/zh/developer_guide/debug.md",
+        "slime/backends/megatron_utils/actor.py",
+        "slime/backends/megatron_utils/loss.py",
+        "slime/backends/megatron_utils/model.py",
+        "slime/backends/megatron_utils/train_dump_utils.py",
+        "slime/utils/arguments.py",
+        "slime/utils/data.py",
+        "slime/utils/train_dump_utils.py",
+        "tests/test_qwen2.5_0.5B_debug_train_dump_e2e.py",
+        "tests/test_train_dump.py"
+      ],
+      "diff_preview": {
+        "additions": 911,
+        "deletions": 28,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -228,6 +228,10 @@ jobs:"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 8,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_qwen2.5_0.5B_debug_rollout_then_train.py\""
+              ],
+              [
+                " ",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 8,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_qwen2.5_0.5B_debug_train_dump_e2e.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ],
+              [
+                " ",
+                "            {"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 8,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_qwen2.5_0.5B_opd_sglang.py\""
+              ],
+              [
+                "h",
+                "@@ -589,6 +593,10 @@ jobs:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:05:12.441774+00:00"
+    },
+    {
+      "id": "THUDM/slime#2267",
+      "repo": "THUDM/slime",
+      "pr_number": 2267,
+      "title": "Fix model convert when use latest megatron",
+      "state": "open",
+      "author": "alexqdh",
+      "created_at": "2026-08-12T12:48:11Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2267",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "Fix model convert when use latest megatron",
+      "reason": "分析出错: Error code: 503 - {'error': {'message': 'No available accounts: no available accounts', 'type': 'api_error'}, 'type': 'error'}",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "slime/backends/megatron_utils/arguments.py",
+        "slime_plugins/models/glm5/glm5.py",
+        "slime_plugins/models/qwen3_5.py",
+        "slime_plugins/models/qwen3_next.py",
+        "tools/convert_hf_to_torch_dist.py"
+      ],
+      "diff_preview": {
+        "additions": 11,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "slime/backends/megatron_utils/arguments.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -3,9 +3,13 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "from megatron.training.arguments import parse_args as _megatron_parse_args"
+              ],
+              [
+                " ",
+                "from megatron.training.arguments import validate_args as _megatron_validate_args"
+              ],
+              [
+                "-",
+                "from megatron.training.tokenizer.tokenizer import _vocab_size_with_padding"
+              ],
+              [
+                " ",
+                "from transformers import AutoConfig"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "try:"
+              ],
+              [
+                "+",
+                "    from megatron.core.tokenizers.utils.build_tokenizer import vocab_size_with_padding as _vocab_size_with_padding"
+              ],
+              [
+                "+",
+                "except ImportError:"
+              ],
+              [
+                "+",
+                "    from megatron.training.tokenizer.tokenizer import _vocab_size_with_padding"
+              ],
+              [
+                "+",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-13T01:05:09.069934+00:00"
+    },
+    {
       "id": "radixark/miles#2367",
       "repo": "radixark/miles",
       "pr_number": 2367,
@@ -80864,926 +85323,979 @@
     }
   ],
   "analyzed_ids": [
-    "radixark/miles#2227",
-    "radixark/miles#1981",
-    "radixark/miles#1779",
-    "radixark/miles#1736",
-    "radixark/miles#1801",
-    "radixark/miles#2319",
-    "radixark/miles#2373",
-    "radixark/miles#1791",
-    "THUDM/slime#1929",
-    "radixark/miles#2087",
-    "radixark/miles#2274",
-    "radixark/miles#988",
-    "radixark/miles#1989",
-    "radixark/miles#2067",
-    "radixark/miles#1893",
-    "radixark/miles#1031",
-    "radixark/miles#1011",
-    "radixark/miles#2285",
-    "radixark/miles#1811",
-    "radixark/miles#2049",
-    "radixark/miles#996",
-    "radixark/miles#1795",
-    "radixark/miles#964",
-    "radixark/miles#1931",
-    "THUDM/slime#1856",
-    "THUDM/slime#2190",
-    "radixark/miles#2366",
-    "radixark/miles#1230",
-    "radixark/miles#2024",
-    "radixark/miles#995",
-    "radixark/miles#1875",
-    "radixark/miles#1921",
-    "radixark/miles#2184",
-    "radixark/miles#1038",
-    "radixark/miles#1808",
-    "radixark/miles#2318",
-    "radixark/miles#2161",
-    "radixark/miles#2230",
-    "radixark/miles#1800",
-    "radixark/miles#1974",
-    "radixark/miles#2204",
-    "radixark/miles#2092",
-    "THUDM/slime#2247",
-    "radixark/miles#2328",
-    "radixark/miles#2190",
-    "radixark/miles#2334",
-    "radixark/miles#1886",
-    "radixark/miles#2396",
-    "radixark/miles#2011",
-    "radixark/miles#2229",
-    "radixark/miles#2329",
-    "radixark/miles#2333",
-    "radixark/miles#1696",
-    "radixark/miles#2341",
-    "THUDM/slime#1941",
-    "THUDM/slime#2251",
-    "THUDM/slime#1799",
-    "radixark/miles#1689",
-    "radixark/miles#1979",
-    "radixark/miles#1966",
-    "radixark/miles#1778",
-    "radixark/miles#2209",
-    "radixark/miles#2016",
-    "radixark/miles#2233",
-    "radixark/miles#2189",
-    "radixark/miles#2031",
-    "THUDM/slime#1963",
-    "radixark/miles#1904",
-    "radixark/miles#1015",
-    "radixark/miles#1817",
-    "radixark/miles#2176",
-    "radixark/miles#2004",
-    "THUDM/slime#2199",
-    "radixark/miles#950",
-    "radixark/miles#2005",
-    "radixark/miles#1032",
-    "radixark/miles#963",
-    "radixark/miles#2331",
-    "radixark/miles#1951",
-    "radixark/miles#2060",
-    "radixark/miles#2265",
-    "THUDM/slime#1944",
-    "radixark/miles#2238",
-    "radixark/miles#1781",
-    "radixark/miles#1733",
-    "radixark/miles#2220",
-    "THUDM/slime#1914",
-    "radixark/miles#1219",
-    "radixark/miles#952",
-    "radixark/miles#1702",
-    "radixark/miles#2263",
-    "THUDM/slime#1947",
-    "radixark/miles#1039",
-    "THUDM/slime#2173",
-    "radixark/miles#2093",
-    "radixark/miles#1949",
-    "radixark/miles#976",
-    "radixark/miles#1991",
-    "radixark/miles#2074",
-    "radixark/miles#2044",
-    "THUDM/slime#2216",
-    "radixark/miles#1754",
-    "radixark/miles#1029",
-    "THUDM/slime#2235",
-    "radixark/miles#1797",
-    "THUDM/slime#1776",
-    "radixark/miles#2003",
-    "radixark/miles#1718",
-    "radixark/miles#1823",
-    "THUDM/slime#1814",
-    "radixark/miles#2169",
-    "radixark/miles#1913",
-    "radixark/miles#1762",
-    "radixark/miles#946",
-    "radixark/miles#1703",
-    "radixark/miles#2050",
-    "radixark/miles#997",
-    "THUDM/slime#1777",
-    "radixark/miles#1017",
-    "radixark/miles#960",
-    "radixark/miles#2191",
-    "radixark/miles#1737",
-    "radixark/miles#2187",
-    "radixark/miles#2199",
-    "radixark/miles#1948",
-    "THUDM/slime#1770",
-    "radixark/miles#1773",
-    "radixark/miles#998",
-    "radixark/miles#1771",
-    "radixark/miles#1788",
-    "radixark/miles#1977",
-    "radixark/miles#1216",
-    "radixark/miles#1715",
-    "THUDM/slime#1809",
-    "radixark/miles#2330",
-    "radixark/miles#1211",
-    "THUDM/slime#1950",
-    "radixark/miles#1043",
-    "radixark/miles#1903",
-    "radixark/miles#2320",
-    "radixark/miles#2363",
-    "radixark/miles#1200",
-    "radixark/miles#1730",
-    "radixark/miles#2399",
-    "radixark/miles#2387",
-    "radixark/miles#941",
-    "radixark/miles#1014",
-    "THUDM/slime#1788",
-    "radixark/miles#2200",
-    "radixark/miles#1813",
-    "radixark/miles#1957",
-    "THUDM/slime#1813",
-    "THUDM/slime#1774",
-    "radixark/miles#2065",
-    "THUDM/slime#1957",
-    "radixark/miles#1012",
-    "radixark/miles#2221",
-    "radixark/miles#989",
-    "radixark/miles#1919",
-    "radixark/miles#2037",
-    "THUDM/slime#2174",
-    "radixark/miles#2059",
-    "radixark/miles#1815",
-    "THUDM/slime#1773",
-    "radixark/miles#1227",
-    "radixark/miles#2172",
-    "radixark/miles#1897",
-    "radixark/miles#2392",
-    "radixark/miles#2174",
-    "THUDM/slime#1939",
-    "radixark/miles#990",
-    "radixark/miles#1003",
-    "radixark/miles#1009",
-    "radixark/miles#1206",
-    "radixark/miles#1976",
-    "radixark/miles#1827",
-    "radixark/miles#1721",
-    "radixark/miles#1772",
-    "radixark/miles#1998",
-    "radixark/miles#2103",
-    "THUDM/slime#2220",
-    "radixark/miles#1007",
-    "THUDM/slime#1828",
-    "radixark/miles#2357",
-    "radixark/miles#2317",
-    "radixark/miles#975",
-    "radixark/miles#1935",
-    "radixark/miles#2154",
-    "radixark/miles#2266",
-    "radixark/miles#2088",
-    "radixark/miles#1699",
-    "radixark/miles#1975",
-    "radixark/miles#2321",
-    "radixark/miles#2171",
-    "radixark/miles#2178",
-    "radixark/miles#2000",
-    "radixark/miles#2064",
-    "radixark/miles#2069",
-    "THUDM/slime#1835",
-    "radixark/miles#2202",
-    "radixark/miles#2394",
-    "radixark/miles#1932",
-    "THUDM/slime#1781",
-    "radixark/miles#1965",
-    "radixark/miles#1018",
-    "THUDM/slime#1935",
-    "THUDM/slime#2198",
-    "radixark/miles#2379",
-    "THUDM/slime#1965",
-    "THUDM/slime#2223",
-    "radixark/miles#2007",
-    "THUDM/slime#2242",
-    "radixark/miles#2243",
-    "radixark/miles#2389",
-    "radixark/miles#2402",
-    "radixark/miles#2338",
-    "radixark/miles#2273",
-    "radixark/miles#1210",
-    "radixark/miles#992",
-    "radixark/miles#2255",
-    "THUDM/slime#2221",
-    "radixark/miles#947",
-    "radixark/miles#2002",
-    "THUDM/slime#2162",
-    "radixark/miles#1701",
-    "radixark/miles#2270",
-    "radixark/miles#1221",
-    "radixark/miles#1036",
-    "THUDM/slime#1808",
-    "radixark/miles#2102",
-    "radixark/miles#1902",
-    "THUDM/slime#2203",
-    "radixark/miles#1013",
-    "radixark/miles#2022",
-    "radixark/miles#1732",
-    "radixark/miles#2356",
-    "radixark/miles#2359",
-    "radixark/miles#1940",
-    "THUDM/slime#1925",
-    "radixark/miles#2381",
-    "radixark/miles#949",
-    "radixark/miles#1950",
-    "radixark/miles#2038",
-    "THUDM/slime#2218",
-    "radixark/miles#1023",
-    "radixark/miles#2225",
-    "THUDM/slime#2250",
-    "radixark/miles#1774",
-    "radixark/miles#2247",
-    "radixark/miles#937",
-    "THUDM/slime#2254",
-    "radixark/miles#948",
-    "radixark/miles#1812",
-    "THUDM/slime#1960",
-    "radixark/miles#1193",
-    "radixark/miles#2280",
-    "radixark/miles#2384",
-    "radixark/miles#1915",
-    "radixark/miles#1001",
-    "radixark/miles#2397",
-    "radixark/miles#2339",
-    "radixark/miles#1933",
-    "radixark/miles#2205",
-    "radixark/miles#2368",
-    "radixark/miles#2211",
-    "radixark/miles#1922",
-    "radixark/miles#1898",
-    "radixark/miles#1789",
-    "radixark/miles#2021",
-    "radixark/miles#2155",
-    "THUDM/slime#1801",
-    "radixark/miles#2090",
-    "THUDM/slime#1933",
-    "radixark/miles#2355",
-    "radixark/miles#1810",
-    "radixark/miles#2315",
-    "radixark/miles#1986",
-    "radixark/miles#2325",
-    "radixark/miles#2248",
-    "THUDM/slime#2178",
-    "radixark/miles#957",
-    "radixark/miles#2214",
-    "radixark/miles#2160",
-    "THUDM/slime#1842",
-    "radixark/miles#1899",
-    "THUDM/slime#1959",
-    "radixark/miles#2370",
-    "radixark/miles#1747",
-    "radixark/miles#1185",
-    "THUDM/slime#2227",
-    "radixark/miles#2324",
-    "radixark/miles#1939",
-    "radixark/miles#2156",
-    "radixark/miles#1224",
-    "radixark/miles#1819",
-    "radixark/miles#1942",
-    "radixark/miles#1217",
-    "radixark/miles#2122",
-    "radixark/miles#1027",
-    "THUDM/slime#1962",
-    "radixark/miles#2314",
-    "radixark/miles#2110",
-    "radixark/miles#2170",
-    "radixark/miles#1197",
-    "radixark/miles#2039",
-    "radixark/miles#2105",
-    "radixark/miles#2293",
-    "radixark/miles#1776",
-    "radixark/miles#2281",
-    "THUDM/slime#1920",
-    "radixark/miles#1044",
-    "radixark/miles#1195",
-    "radixark/miles#1901",
-    "radixark/miles#1199",
-    "THUDM/slime#1824",
-    "radixark/miles#1020",
-    "radixark/miles#1945",
-    "radixark/miles#2006",
-    "radixark/miles#1040",
-    "radixark/miles#1024",
-    "radixark/miles#2235",
-    "THUDM/slime#1961",
-    "radixark/miles#1717",
-    "THUDM/slime#2233",
-    "THUDM/slime#1825",
-    "THUDM/slime#1848",
-    "radixark/miles#1878",
-    "radixark/miles#2126",
-    "radixark/miles#1982",
-    "radixark/miles#2388",
-    "radixark/miles#2395",
-    "radixark/miles#987",
-    "THUDM/slime#1927",
-    "radixark/miles#2135",
-    "radixark/miles#1037",
-    "radixark/miles#2097",
-    "radixark/miles#1887",
-    "radixark/miles#1943",
-    "radixark/miles#1712",
-    "radixark/miles#1006",
-    "radixark/miles#2014",
-    "THUDM/slime#1953",
-    "radixark/miles#2091",
-    "radixark/miles#973",
-    "radixark/miles#1920",
-    "THUDM/slime#2255",
-    "THUDM/slime#1849",
-    "radixark/miles#1816",
-    "radixark/miles#986",
-    "radixark/miles#1972",
-    "THUDM/slime#2224",
-    "THUDM/slime#2185",
-    "radixark/miles#1930",
-    "radixark/miles#1799",
-    "radixark/miles#2335",
-    "radixark/miles#1906",
-    "radixark/miles#2183",
-    "radixark/miles#1768",
-    "radixark/miles#2133",
-    "radixark/miles#1829",
-    "radixark/miles#1917",
-    "THUDM/slime#2249",
-    "radixark/miles#2360",
-    "THUDM/slime#2193",
-    "radixark/miles#2348",
-    "radixark/miles#1190",
-    "radixark/miles#1196",
-    "radixark/miles#2175",
-    "radixark/miles#1783",
-    "radixark/miles#1179",
-    "radixark/miles#1741",
-    "radixark/miles#2374",
-    "radixark/miles#2094",
-    "THUDM/slime#1817",
-    "radixark/miles#2327",
-    "radixark/miles#2068",
-    "radixark/miles#1759",
-    "radixark/miles#1690",
-    "radixark/miles#2034",
-    "radixark/miles#2023",
-    "radixark/miles#1927",
-    "radixark/miles#1225",
-    "radixark/miles#1192",
-    "radixark/miles#1825",
-    "THUDM/slime#2164",
-    "radixark/miles#1996",
-    "THUDM/slime#2181",
-    "radixark/miles#2249",
-    "radixark/miles#2109",
-    "radixark/miles#2386",
-    "radixark/miles#2098",
-    "radixark/miles#1894",
-    "radixark/miles#1734",
-    "radixark/miles#1218",
-    "radixark/miles#1918",
-    "radixark/miles#1751",
-    "radixark/miles#2196",
-    "THUDM/slime#2252",
-    "radixark/miles#2290",
-    "radixark/miles#1786",
-    "radixark/miles#1807",
-    "radixark/miles#2240",
-    "THUDM/slime#1948",
-    "radixark/miles#2210",
-    "radixark/miles#2358",
-    "radixark/miles#1821",
-    "radixark/miles#2120",
-    "THUDM/slime#1934",
-    "radixark/miles#1824",
-    "radixark/miles#1723",
-    "radixark/miles#2234",
-    "radixark/miles#2228",
-    "radixark/miles#2157",
-    "radixark/miles#2215",
-    "radixark/miles#977",
-    "radixark/miles#1993",
-    "radixark/miles#1726",
-    "radixark/miles#1226",
-    "THUDM/slime#2171",
-    "radixark/miles#1208",
-    "radixark/miles#2223",
-    "radixark/miles#2326",
-    "radixark/miles#2032",
-    "radixark/miles#1997",
-    "radixark/miles#1707",
-    "radixark/miles#2009",
-    "radixark/miles#2367",
-    "radixark/miles#1711",
-    "radixark/miles#2056",
-    "THUDM/slime#2258",
-    "THUDM/slime#1946",
-    "radixark/miles#1026",
-    "radixark/miles#2181",
-    "radixark/miles#1708",
-    "radixark/miles#1934",
-    "radixark/miles#1818",
-    "radixark/miles#1826",
-    "radixark/miles#2251",
-    "radixark/miles#991",
-    "radixark/miles#2061",
-    "radixark/miles#1946",
-    "THUDM/slime#1857",
-    "radixark/miles#1782",
-    "radixark/miles#2237",
-    "radixark/miles#1713",
-    "radixark/miles#2275",
-    "radixark/miles#1891",
-    "radixark/miles#1028",
-    "radixark/miles#1714",
-    "THUDM/slime#2219",
-    "radixark/miles#1727",
-    "radixark/miles#1765",
-    "THUDM/slime#2182",
-    "radixark/miles#2167",
-    "radixark/miles#2279",
-    "radixark/miles#1995",
-    "radixark/miles#1214",
-    "radixark/miles#1912",
-    "radixark/miles#1688",
-    "radixark/miles#2047",
-    "radixark/miles#2177",
-    "radixark/miles#1704",
-    "THUDM/slime#2195",
-    "radixark/miles#1182",
-    "THUDM/slime#1952",
-    "radixark/miles#1926",
-    "radixark/miles#1792",
-    "radixark/miles#2347",
-    "THUDM/slime#1921",
-    "radixark/miles#2131",
-    "radixark/miles#2400",
-    "radixark/miles#2337",
-    "THUDM/slime#1772",
-    "radixark/miles#2012",
-    "radixark/miles#2264",
-    "radixark/miles#2383",
-    "radixark/miles#1803",
-    "radixark/miles#1740",
-    "radixark/miles#1881",
-    "radixark/miles#935",
-    "radixark/miles#2242",
-    "THUDM/slime#2243",
-    "radixark/miles#2316",
-    "radixark/miles#1758",
-    "radixark/miles#1882",
-    "radixark/miles#966",
-    "radixark/miles#1033",
-    "radixark/miles#1947",
-    "THUDM/slime#2196",
-    "radixark/miles#2257",
-    "radixark/miles#1961",
-    "radixark/miles#942",
-    "radixark/miles#2403",
-    "THUDM/slime#2170",
-    "radixark/miles#1794",
-    "radixark/miles#1755",
-    "radixark/miles#2125",
-    "radixark/miles#1716",
-    "radixark/miles#2072",
-    "radixark/miles#1728",
-    "radixark/miles#2055",
-    "radixark/miles#2173",
-    "radixark/miles#2391",
-    "radixark/miles#2030",
-    "THUDM/slime#2210",
-    "radixark/miles#1202",
     "THUDM/slime#1816",
-    "radixark/miles#1879",
-    "radixark/miles#1985",
-    "radixark/miles#2043",
-    "radixark/miles#2197",
-    "radixark/miles#2231",
-    "radixark/miles#2073",
-    "radixark/miles#2372",
-    "radixark/miles#1045",
-    "radixark/miles#1911",
-    "radixark/miles#2045",
-    "radixark/miles#1209",
-    "radixark/miles#1722",
-    "radixark/miles#2268",
-    "radixark/miles#1809",
-    "radixark/miles#1194",
-    "radixark/miles#1019",
-    "radixark/miles#1229",
-    "radixark/miles#2288",
-    "radixark/miles#2267",
-    "radixark/miles#2134",
-    "radixark/miles#2057",
-    "radixark/miles#2252",
-    "radixark/miles#1753",
-    "THUDM/slime#2217",
-    "THUDM/slime#1917",
-    "radixark/miles#939",
-    "THUDM/slime#1769",
-    "radixark/miles#1000",
-    "radixark/miles#1941",
-    "radixark/miles#971",
-    "radixark/miles#2292",
-    "radixark/miles#2193",
-    "radixark/miles#2259",
-    "radixark/miles#1763",
-    "radixark/miles#1905",
-    "radixark/miles#2185",
-    "radixark/miles#1016",
-    "radixark/miles#2123",
-    "radixark/miles#953",
-    "radixark/miles#1694",
-    "radixark/miles#1784",
-    "radixark/miles#1895",
-    "radixark/miles#2119",
-    "radixark/miles#1880",
-    "radixark/miles#1983",
-    "radixark/miles#1798",
-    "radixark/miles#1769",
-    "radixark/miles#2195",
-    "radixark/miles#2035",
-    "radixark/miles#1802",
-    "radixark/miles#951",
-    "THUDM/slime#1940",
-    "radixark/miles#2278",
-    "radixark/miles#1969",
-    "THUDM/slime#2213",
-    "THUDM/slime#1846",
-    "radixark/miles#1034",
-    "THUDM/slime#1945",
-    "radixark/miles#1760",
-    "radixark/miles#2222",
-    "radixark/miles#1944",
-    "radixark/miles#1814",
-    "radixark/miles#2129",
-    "THUDM/slime#1922",
-    "radixark/miles#2332",
-    "THUDM/slime#1806",
-    "radixark/miles#2346",
-    "radixark/miles#1980",
-    "THUDM/slime#1938",
-    "radixark/miles#958",
-    "radixark/miles#2033",
-    "radixark/miles#2291",
-    "radixark/miles#2111",
-    "radixark/miles#1223",
-    "THUDM/slime#1937",
-    "radixark/miles#1775",
-    "radixark/miles#2365",
-    "radixark/miles#2182",
-    "radixark/miles#967",
-    "radixark/miles#2371",
-    "radixark/miles#2041",
-    "radixark/miles#1770",
-    "THUDM/slime#1949",
-    "THUDM/slime#1775",
-    "radixark/miles#1041",
-    "radixark/miles#1830",
-    "THUDM/slime#2180",
-    "radixark/miles#2106",
-    "THUDM/slime#2241",
-    "radixark/miles#2046",
-    "radixark/miles#1191",
-    "radixark/miles#1785",
-    "radixark/miles#1952",
-    "radixark/miles#1205",
-    "radixark/miles#2217",
-    "radixark/miles#1929",
-    "THUDM/slime#2262",
-    "radixark/miles#2226",
-    "radixark/miles#2101",
-    "THUDM/slime#1844",
-    "radixark/miles#2244",
-    "radixark/miles#2186",
-    "radixark/miles#1025",
-    "radixark/miles#1739",
-    "radixark/miles#2208",
-    "radixark/miles#2179",
-    "radixark/miles#1692",
-    "radixark/miles#1962",
-    "THUDM/slime#1768",
-    "radixark/miles#1042",
-    "radixark/miles#1876",
-    "radixark/miles#2180",
+    "radixark/miles#990",
+    "radixark/miles#2067",
+    "radixark/miles#1979",
+    "radixark/miles#1707",
     "radixark/miles#1735",
-    "radixark/miles#2095",
-    "THUDM/slime#1797",
-    "radixark/miles#2036",
-    "radixark/miles#2070",
-    "radixark/miles#2353",
-    "radixark/miles#2136",
-    "radixark/miles#1691",
-    "radixark/miles#2376",
-    "radixark/miles#2294",
-    "THUDM/slime#2183",
-    "radixark/miles#1971",
-    "THUDM/slime#2206",
-    "radixark/miles#2116",
-    "THUDM/slime#2204",
-    "radixark/miles#2089",
-    "THUDM/slime#2239",
-    "THUDM/slime#2172",
-    "radixark/miles#2015",
-    "radixark/miles#1967",
-    "radixark/miles#2053",
-    "THUDM/slime#1913",
-    "THUDM/slime#1819",
-    "radixark/miles#1936",
-    "radixark/miles#2283",
-    "THUDM/slime#1795",
-    "radixark/miles#2132",
-    "radixark/miles#993",
-    "radixark/miles#1022",
-    "radixark/miles#1923",
-    "radixark/miles#1729",
-    "radixark/miles#1748",
-    "THUDM/slime#1918",
-    "radixark/miles#2115",
-    "radixark/miles#1907",
-    "radixark/miles#1180",
-    "radixark/miles#1752",
-    "THUDM/slime#1942",
-    "radixark/miles#961",
-    "radixark/miles#1968",
-    "radixark/miles#2194",
-    "radixark/miles#938",
-    "radixark/miles#1706",
-    "radixark/miles#1973",
-    "THUDM/slime#2234",
-    "radixark/miles#2112",
-    "radixark/miles#982",
-    "THUDM/slime#1832",
-    "radixark/miles#1822",
-    "radixark/miles#2100",
-    "radixark/miles#2066",
-    "radixark/miles#1960",
-    "radixark/miles#1698",
-    "radixark/miles#1953",
-    "radixark/miles#1004",
-    "radixark/miles#2382",
-    "radixark/miles#2218",
-    "THUDM/slime#1919",
-    "THUDM/slime#2197",
-    "radixark/miles#2013",
-    "radixark/miles#2224",
-    "radixark/miles#1896",
-    "THUDM/slime#1932",
-    "THUDM/slime#1834",
-    "radixark/miles#2284",
-    "THUDM/slime#1812",
-    "radixark/miles#1212",
-    "radixark/miles#2127",
-    "radixark/miles#2398",
-    "radixark/miles#2130",
-    "THUDM/slime#2207",
-    "THUDM/slime#1858",
-    "radixark/miles#2048",
-    "radixark/miles#2246",
-    "radixark/miles#1959",
-    "radixark/miles#1188",
-    "radixark/miles#2262",
-    "radixark/miles#1756",
-    "THUDM/slime#2166",
-    "radixark/miles#985",
-    "radixark/miles#1884",
-    "radixark/miles#2165",
-    "THUDM/slime#2240",
-    "radixark/miles#2099",
-    "radixark/miles#2282",
-    "THUDM/slime#1822",
-    "radixark/miles#1021",
-    "THUDM/slime#1833",
-    "THUDM/slime#2261",
-    "radixark/miles#1766",
-    "radixark/miles#1030",
-    "THUDM/slime#2167",
-    "radixark/miles#1183",
-    "radixark/miles#2062",
+    "radixark/miles#1876",
     "radixark/miles#1994",
-    "radixark/miles#2336",
-    "THUDM/slime#2184",
-    "THUDM/slime#2228",
+    "radixark/miles#1716",
     "THUDM/slime#1791",
-    "radixark/miles#1220",
-    "THUDM/slime#2257",
-    "radixark/miles#1184",
-    "radixark/miles#2001",
-    "radixark/miles#2364",
-    "radixark/miles#1709",
-    "radixark/miles#2114",
-    "THUDM/slime#1955",
-    "radixark/miles#2261",
-    "radixark/miles#1908",
-    "radixark/miles#1924",
-    "radixark/miles#2117",
-    "radixark/miles#1777",
-    "radixark/miles#2343",
-    "radixark/miles#2241",
-    "radixark/miles#1885",
-    "radixark/miles#1767",
-    "radixark/miles#2054",
-    "THUDM/slime#2236",
-    "radixark/miles#2260",
-    "radixark/miles#2164",
-    "radixark/miles#2272",
-    "radixark/miles#2027",
-    "radixark/miles#2342",
-    "radixark/miles#2192",
-    "radixark/miles#972",
-    "THUDM/slime#1926",
-    "radixark/miles#2349",
-    "THUDM/slime#1916",
-    "THUDM/slime#2226",
-    "radixark/miles#1888",
-    "radixark/miles#2385",
-    "THUDM/slime#2189",
-    "radixark/miles#1890",
-    "radixark/miles#2401",
-    "radixark/miles#2216",
-    "radixark/miles#1725",
-    "THUDM/slime#1841",
-    "radixark/miles#2020",
-    "THUDM/slime#1823",
-    "radixark/miles#2380",
-    "radixark/miles#1909",
-    "radixark/miles#1228",
-    "radixark/miles#1828",
-    "radixark/miles#2113",
-    "radixark/miles#2345",
-    "THUDM/slime#1930",
-    "radixark/miles#2286",
-    "radixark/miles#1874",
-    "radixark/miles#2096",
-    "radixark/miles#1204",
-    "THUDM/slime#1798",
-    "radixark/miles#1954",
-    "THUDM/slime#1931",
-    "radixark/miles#1877",
-    "radixark/miles#1883",
-    "radixark/miles#1820",
-    "radixark/miles#968",
-    "radixark/miles#980",
-    "radixark/miles#1900",
-    "radixark/miles#984",
-    "radixark/miles#2042",
-    "radixark/miles#1928",
-    "THUDM/slime#1836",
-    "radixark/miles#2198",
-    "radixark/miles#2369",
-    "THUDM/slime#2169",
-    "THUDM/slime#2256",
-    "radixark/miles#2017",
-    "THUDM/slime#2187",
+    "radixark/miles#2474",
+    "radixark/miles#1031",
+    "radixark/miles#1034",
+    "THUDM/slime#2267",
+    "radixark/miles#1037",
+    "THUDM/slime#2195",
+    "radixark/miles#2072",
+    "radixark/miles#2039",
+    "radixark/miles#1004",
+    "radixark/miles#2177",
+    "radixark/miles#1778",
+    "radixark/miles#2122",
     "THUDM/slime#2264",
-    "radixark/miles#1710",
-    "radixark/miles#1198",
-    "radixark/miles#1693",
-    "radixark/miles#2104",
-    "radixark/miles#2245",
-    "radixark/miles#1008",
-    "radixark/miles#1787",
-    "radixark/miles#944",
-    "THUDM/slime#2163",
-    "radixark/miles#1213",
-    "radixark/miles#2166",
-    "radixark/miles#1938",
-    "radixark/miles#2108",
-    "radixark/miles#1222",
-    "radixark/miles#2118",
-    "radixark/miles#2213",
-    "radixark/miles#2162",
-    "THUDM/slime#2211",
-    "radixark/miles#2390",
-    "radixark/miles#2075",
-    "radixark/miles#1719",
-    "radixark/miles#1010",
-    "radixark/miles#1189",
-    "THUDM/slime#2200",
-    "radixark/miles#1201",
-    "radixark/miles#1035",
-    "radixark/miles#2253",
-    "radixark/miles#1705",
-    "THUDM/slime#2208",
-    "radixark/miles#1916",
-    "radixark/miles#1987",
-    "radixark/miles#954",
-    "radixark/miles#1999",
-    "radixark/miles#2250",
-    "radixark/miles#1805",
-    "radixark/miles#1984",
-    "radixark/miles#2121",
-    "radixark/miles#1806",
+    "radixark/miles#1197",
+    "THUDM/slime#1836",
+    "radixark/miles#2205",
+    "radixark/miles#2334",
+    "radixark/miles#1807",
+    "radixark/miles#1698",
+    "radixark/miles#2127",
+    "radixark/miles#1220",
+    "THUDM/slime#1920",
+    "radixark/miles#2022",
+    "radixark/miles#1190",
+    "radixark/miles#2292",
+    "radixark/miles#1712",
+    "THUDM/slime#1799",
+    "radixark/miles#2223",
+    "radixark/miles#2275",
+    "radixark/miles#1797",
+    "radixark/miles#2315",
+    "radixark/miles#2371",
+    "radixark/miles#1001",
+    "radixark/miles#2241",
+    "radixark/miles#2463",
+    "radixark/miles#1777",
     "radixark/miles#2203",
-    "radixark/miles#2350",
-    "radixark/miles#2159",
-    "radixark/miles#2375",
-    "THUDM/slime#1923",
-    "radixark/miles#965",
-    "radixark/miles#1990",
+    "radixark/miles#949",
+    "radixark/miles#2032",
+    "THUDM/slime#1961",
+    "radixark/miles#2186",
+    "THUDM/slime#1965",
+    "THUDM/slime#1955",
+    "radixark/miles#2392",
+    "radixark/miles#1025",
+    "THUDM/slime#2236",
+    "radixark/miles#1899",
+    "radixark/miles#2105",
+    "radixark/miles#1205",
+    "radixark/miles#2336",
+    "radixark/miles#1910",
+    "radixark/miles#2467",
+    "radixark/miles#2210",
+    "radixark/miles#2015",
+    "radixark/miles#1941",
+    "radixark/miles#2213",
+    "radixark/miles#2476",
+    "radixark/miles#2331",
+    "radixark/miles#2154",
+    "radixark/miles#2108",
+    "radixark/miles#1984",
+    "radixark/miles#1770",
+    "radixark/miles#2479",
+    "radixark/miles#991",
+    "radixark/miles#1230",
+    "radixark/miles#2494",
+    "radixark/miles#2471",
+    "radixark/miles#2005",
+    "THUDM/slime#1835",
+    "radixark/miles#1904",
+    "radixark/miles#1753",
+    "radixark/miles#2056",
+    "THUDM/slime#1769",
+    "radixark/miles#2291",
+    "radixark/miles#2244",
+    "radixark/miles#2231",
+    "THUDM/slime#1929",
+    "THUDM/slime#2219",
+    "radixark/miles#2020",
+    "radixark/miles#2209",
+    "radixark/miles#2069",
+    "radixark/miles#2363",
+    "radixark/miles#1789",
+    "radixark/miles#1198",
+    "radixark/miles#1033",
+    "radixark/miles#2096",
+    "radixark/miles#2218",
+    "THUDM/slime#1932",
+    "radixark/miles#1762",
     "THUDM/slime#1855",
-    "radixark/miles#2323",
-    "radixark/miles#2269",
-    "radixark/miles#1793",
-    "radixark/miles#2340",
-    "radixark/miles#2354",
-    "radixark/miles#1804",
-    "radixark/miles#2322",
-    "radixark/miles#2344",
-    "THUDM/slime#1928",
-    "THUDM/slime#1954",
-    "THUDM/slime#2237",
-    "radixark/miles#2212",
-    "radixark/miles#2377",
-    "radixark/miles#2028",
-    "radixark/miles#2188",
-    "radixark/miles#1796",
-    "radixark/miles#2063",
-    "radixark/miles#2040",
-    "radixark/miles#1831",
-    "radixark/miles#1757",
-    "radixark/miles#2158",
-    "radixark/miles#1970",
-    "radixark/miles#2051",
-    "radixark/miles#1937",
-    "THUDM/slime#2246",
-    "THUDM/slime#2259",
-    "THUDM/slime#1956",
-    "radixark/miles#1720",
-    "radixark/miles#1761",
-    "THUDM/slime#1805",
-    "radixark/miles#943",
+    "radixark/miles#1216",
+    "radixark/miles#2335",
+    "radixark/miles#2166",
+    "radixark/miles#1689",
     "THUDM/slime#2175",
-    "radixark/miles#2168",
-    "radixark/miles#1914",
-    "radixark/miles#1207",
-    "radixark/miles#1181",
-    "radixark/miles#2071",
-    "radixark/miles#2271",
-    "THUDM/slime#1915",
-    "radixark/miles#1738",
-    "radixark/miles#2276",
-    "radixark/miles#2219",
+    "radixark/miles#1952",
+    "radixark/miles#2448",
+    "radixark/miles#2073",
+    "radixark/miles#1714",
+    "radixark/miles#1976",
+    "radixark/miles#1957",
+    "radixark/miles#2155",
+    "radixark/miles#1878",
+    "radixark/miles#2103",
+    "THUDM/slime#1823",
+    "radixark/miles#2388",
+    "radixark/miles#2329",
+    "radixark/miles#2337",
+    "radixark/miles#1813",
+    "radixark/miles#1798",
+    "THUDM/slime#2163",
+    "radixark/miles#2047",
+    "radixark/miles#2192",
+    "radixark/miles#2459",
+    "radixark/miles#1805",
+    "radixark/miles#988",
+    "radixark/miles#1796",
+    "radixark/miles#2395",
+    "radixark/miles#1044",
+    "radixark/miles#1989",
     "THUDM/slime#1958",
-    "THUDM/slime#2205",
-    "radixark/miles#2128",
-    "radixark/miles#2313",
-    "radixark/miles#2289",
-    "radixark/miles#2107",
-    "radixark/miles#994",
-    "radixark/miles#940",
-    "radixark/miles#1764",
-    "radixark/miles#2010",
-    "radixark/miles#1992",
-    "THUDM/slime#1827",
-    "THUDM/slime#2177",
-    "THUDM/slime#2238",
-    "radixark/miles#2052",
-    "radixark/miles#999",
-    "radixark/miles#1790",
-    "radixark/miles#959",
-    "radixark/miles#1978",
-    "radixark/miles#1889",
-    "radixark/miles#2026",
-    "radixark/miles#2058",
-    "radixark/miles#2287",
-    "radixark/miles#1988",
-    "THUDM/slime#1807",
-    "THUDM/slime#2248",
-    "radixark/miles#2124",
-    "THUDM/slime#1943",
-    "THUDM/slime#2192",
-    "radixark/miles#2029",
-    "radixark/miles#974",
-    "radixark/miles#1215",
+    "radixark/miles#1913",
+    "radixark/miles#2229",
+    "radixark/miles#2156",
+    "radixark/miles#2283",
+    "radixark/miles#2051",
+    "radixark/miles#2063",
     "radixark/miles#2163",
-    "radixark/miles#1695",
-    "radixark/miles#1005",
+    "THUDM/slime#1941",
+    "radixark/miles#2391",
+    "radixark/miles#1986",
+    "THUDM/slime#2197",
+    "radixark/miles#2282",
+    "THUDM/slime#1925",
+    "radixark/miles#2493",
+    "radixark/miles#2473",
+    "radixark/miles#1934",
+    "THUDM/slime#2203",
+    "radixark/miles#2092",
+    "radixark/miles#989",
+    "radixark/miles#2195",
+    "radixark/miles#2098",
+    "radixark/miles#2274",
+    "radixark/miles#1915",
+    "THUDM/slime#2213",
+    "radixark/miles#2330",
+    "radixark/miles#1819",
+    "radixark/miles#1733",
+    "radixark/miles#2038",
+    "radixark/miles#1938",
+    "radixark/miles#1709",
+    "radixark/miles#1884",
+    "radixark/miles#1032",
+    "THUDM/slime#2211",
+    "radixark/miles#1877",
+    "radixark/miles#2289",
+    "radixark/miles#1905",
+    "THUDM/slime#1931",
+    "radixark/miles#2262",
+    "radixark/miles#2109",
+    "radixark/miles#1980",
+    "radixark/miles#1703",
+    "radixark/miles#1887",
+    "radixark/miles#958",
+    "radixark/miles#1218",
+    "THUDM/slime#2248",
+    "radixark/miles#1896",
+    "radixark/miles#1903",
+    "THUDM/slime#1833",
+    "radixark/miles#993",
+    "radixark/miles#2031",
+    "radixark/miles#2036",
+    "radixark/miles#2321",
+    "radixark/miles#2128",
+    "radixark/miles#2332",
+    "radixark/miles#2235",
+    "radixark/miles#1040",
+    "THUDM/slime#1953",
+    "radixark/miles#2288",
+    "radixark/miles#2245",
+    "THUDM/slime#1781",
+    "radixark/miles#1728",
+    "radixark/miles#2013",
+    "radixark/miles#1228",
+    "THUDM/slime#2262",
+    "radixark/miles#1036",
+    "radixark/miles#1711",
+    "radixark/miles#2293",
+    "radixark/miles#1882",
+    "radixark/miles#2185",
+    "THUDM/slime#1930",
+    "radixark/miles#2263",
+    "THUDM/slime#2166",
+    "radixark/miles#1790",
+    "radixark/miles#1727",
+    "THUDM/slime#2196",
+    "radixark/miles#937",
+    "radixark/miles#1815",
+    "THUDM/slime#1935",
+    "radixark/miles#2050",
+    "THUDM/slime#1856",
+    "radixark/miles#2129",
+    "radixark/miles#1710",
+    "radixark/miles#2267",
+    "radixark/miles#2281",
+    "THUDM/slime#2204",
+    "radixark/miles#1193",
+    "radixark/miles#2470",
+    "radixark/miles#2484",
+    "THUDM/slime#1942",
+    "radixark/miles#1022",
+    "radixark/miles#2247",
+    "radixark/miles#1039",
+    "radixark/miles#966",
+    "radixark/miles#2497",
+    "radixark/miles#1732",
+    "radixark/miles#1997",
+    "radixark/miles#1894",
+    "THUDM/slime#2266",
+    "radixark/miles#2389",
+    "radixark/miles#2266",
+    "radixark/miles#1721",
+    "radixark/miles#2064",
+    "radixark/miles#1782",
+    "THUDM/slime#1947",
+    "radixark/miles#1185",
+    "THUDM/slime#1962",
+    "radixark/miles#2322",
+    "radixark/miles#1933",
+    "radixark/miles#1694",
+    "radixark/miles#1774",
+    "radixark/miles#2173",
+    "radixark/miles#1719",
+    "radixark/miles#996",
+    "radixark/miles#1748",
+    "radixark/miles#965",
+    "radixark/miles#967",
+    "THUDM/slime#2250",
+    "radixark/miles#2052",
+    "THUDM/slime#1828",
+    "radixark/miles#1990",
+    "radixark/miles#1738",
+    "radixark/miles#2214",
+    "radixark/miles#1042",
+    "radixark/miles#1804",
+    "radixark/miles#1769",
+    "radixark/miles#2006",
+    "radixark/miles#2452",
+    "radixark/miles#1949",
+    "radixark/miles#973",
+    "radixark/miles#1918",
+    "radixark/miles#1802",
+    "radixark/miles#2385",
+    "radixark/miles#1189",
+    "radixark/miles#2215",
+    "THUDM/slime#2210",
+    "radixark/miles#1016",
+    "radixark/miles#1897",
+    "THUDM/slime#2206",
+    "THUDM/slime#2164",
+    "THUDM/slime#1858",
+    "radixark/miles#2495",
+    "radixark/miles#1917",
+    "radixark/miles#1830",
+    "radixark/miles#1961",
+    "THUDM/slime#1933",
+    "radixark/miles#2160",
+    "radixark/miles#2054",
+    "THUDM/slime#2238",
+    "radixark/miles#2489",
+    "THUDM/slime#1813",
+    "radixark/miles#1974",
+    "radixark/miles#1043",
+    "radixark/miles#2347",
+    "THUDM/slime#1834",
+    "THUDM/slime#2192",
+    "radixark/miles#1699",
+    "radixark/miles#1725",
+    "radixark/miles#1006",
+    "radixark/miles#2498",
+    "THUDM/slime#2256",
+    "radixark/miles#1196",
+    "radixark/miles#1692",
+    "radixark/miles#1995",
+    "radixark/miles#1223",
+    "radixark/miles#1215",
+    "radixark/miles#2030",
+    "radixark/miles#2318",
+    "radixark/miles#2333",
+    "radixark/miles#1983",
+    "radixark/miles#1229",
+    "radixark/miles#2376",
+    "THUDM/slime#2224",
+    "radixark/miles#975",
+    "THUDM/slime#1822",
+    "radixark/miles#2168",
+    "THUDM/slime#1809",
+    "THUDM/slime#2185",
+    "radixark/miles#2016",
+    "radixark/miles#1985",
+    "THUDM/slime#1949",
+    "THUDM/slime#1934",
+    "radixark/miles#2219",
+    "radixark/miles#2014",
+    "radixark/miles#2221",
+    "radixark/miles#2342",
+    "THUDM/slime#2257",
+    "radixark/miles#2029",
+    "THUDM/slime#2177",
+    "radixark/miles#1827",
+    "radixark/miles#1801",
+    "radixark/miles#2068",
+    "radixark/miles#2115",
+    "radixark/miles#2094",
+    "THUDM/slime#2217",
+    "radixark/miles#2193",
+    "radixark/miles#1820",
+    "THUDM/slime#2180",
+    "radixark/miles#2000",
+    "radixark/miles#1739",
+    "radixark/miles#2099",
+    "radixark/miles#2323",
+    "radixark/miles#2133",
+    "radixark/miles#1950",
+    "THUDM/slime#1963",
+    "radixark/miles#1818",
+    "radixark/miles#1921",
+    "radixark/miles#971",
+    "radixark/miles#953",
+    "THUDM/slime#1844",
+    "radixark/miles#1010",
+    "radixark/miles#2465",
+    "radixark/miles#2090",
+    "radixark/miles#2343",
+    "radixark/miles#1757",
+    "radixark/miles#1987",
+    "radixark/miles#2468",
+    "radixark/miles#2357",
+    "THUDM/slime#1798",
+    "radixark/miles#1026",
+    "radixark/miles#2365",
     "THUDM/slime#1924",
-    "radixark/miles#1203",
-    "radixark/miles#945",
-    "radixark/miles#1750",
+    "radixark/miles#2011",
+    "radixark/miles#2024",
+    "radixark/miles#1018",
+    "radixark/miles#2222",
+    "radixark/miles#2346",
+    "radixark/miles#1030",
+    "radixark/miles#1996",
+    "radixark/miles#2234",
+    "radixark/miles#1924",
+    "radixark/miles#2324",
+    "radixark/miles#2272",
+    "radixark/miles#1794",
+    "radixark/miles#1998",
+    "THUDM/slime#1915",
+    "THUDM/slime#1842",
+    "radixark/miles#2246",
+    "radixark/miles#998",
+    "radixark/miles#987",
+    "THUDM/slime#2173",
+    "radixark/miles#2059",
+    "radixark/miles#1000",
+    "THUDM/slime#2205",
+    "radixark/miles#2285",
+    "radixark/miles#2270",
+    "radixark/miles#1928",
+    "radixark/miles#2287",
+    "radixark/miles#2002",
+    "radixark/miles#2130",
+    "radixark/miles#1713",
+    "THUDM/slime#2247",
+    "radixark/miles#1195",
+    "radixark/miles#2034",
+    "radixark/miles#2251",
+    "radixark/miles#2123",
+    "radixark/miles#1005",
+    "radixark/miles#938",
+    "radixark/miles#1806",
+    "radixark/miles#997",
+    "radixark/miles#1991",
+    "radixark/miles#2175",
+    "THUDM/slime#2170",
+    "radixark/miles#2188",
+    "radixark/miles#2176",
+    "radixark/miles#1940",
+    "radixark/miles#2170",
+    "radixark/miles#2250",
+    "THUDM/slime#1770",
+    "radixark/miles#2106",
+    "THUDM/slime#2227",
+    "radixark/miles#2104",
+    "radixark/miles#2460",
+    "radixark/miles#1734",
+    "radixark/miles#2487",
+    "radixark/miles#1828",
+    "radixark/miles#1706",
+    "radixark/miles#2454",
+    "radixark/miles#1776",
+    "radixark/miles#1180",
+    "radixark/miles#2132",
+    "radixark/miles#2117",
+    "radixark/miles#2045",
+    "radixark/miles#1981",
+    "radixark/miles#2010",
+    "radixark/miles#2401",
+    "radixark/miles#963",
+    "radixark/miles#1937",
+    "radixark/miles#2171",
+    "radixark/miles#2058",
+    "radixark/miles#2449",
+    "radixark/miles#1771",
+    "THUDM/slime#2178",
+    "radixark/miles#1015",
+    "radixark/miles#2455",
+    "radixark/miles#1966",
+    "THUDM/slime#1944",
+    "radixark/miles#1893",
+    "radixark/miles#2496",
+    "radixark/miles#2383",
+    "radixark/miles#2279",
+    "radixark/miles#1747",
+    "radixark/miles#2398",
+    "radixark/miles#2372",
+    "radixark/miles#2394",
+    "radixark/miles#2220",
+    "radixark/miles#1829",
+    "radixark/miles#2157",
+    "radixark/miles#2125",
+    "radixark/miles#2198",
+    "radixark/miles#1812",
+    "radixark/miles#2178",
+    "radixark/miles#1211",
+    "radixark/miles#1898",
+    "radixark/miles#1977",
+    "radixark/miles#2037",
+    "radixark/miles#1954",
+    "radixark/miles#1784",
     "radixark/miles#1892",
-    "radixark/miles#1910"
+    "radixark/miles#1192",
+    "radixark/miles#1690",
+    "radixark/miles#2101",
+    "radixark/miles#1783",
+    "radixark/miles#2273",
+    "radixark/miles#1967",
+    "THUDM/slime#1773",
+    "THUDM/slime#1776",
+    "THUDM/slime#1808",
+    "radixark/miles#2172",
+    "radixark/miles#2041",
+    "THUDM/slime#2198",
+    "radixark/miles#1982",
+    "radixark/miles#1027",
+    "radixark/miles#2264",
+    "radixark/miles#1968",
+    "radixark/miles#2369",
+    "radixark/miles#2482",
+    "radixark/miles#2165",
+    "THUDM/slime#1806",
+    "radixark/miles#1194",
+    "THUDM/slime#1849",
+    "radixark/miles#2040",
+    "radixark/miles#1041",
+    "THUDM/slime#1772",
+    "radixark/miles#1935",
+    "radixark/miles#2485",
+    "radixark/miles#1881",
+    "radixark/miles#2004",
+    "radixark/miles#1023",
+    "THUDM/slime#1945",
+    "radixark/miles#939",
+    "radixark/miles#968",
+    "THUDM/slime#2243",
+    "radixark/miles#2381",
+    "radixark/miles#2181",
+    "radixark/miles#2009",
+    "THUDM/slime#1918",
+    "radixark/miles#1946",
+    "radixark/miles#2116",
+    "radixark/miles#2396",
+    "radixark/miles#1214",
+    "radixark/miles#1758",
+    "radixark/miles#1201",
+    "radixark/miles#1908",
+    "THUDM/slime#2216",
+    "radixark/miles#2114",
+    "radixark/miles#2135",
+    "radixark/miles#2119",
+    "radixark/miles#2074",
+    "radixark/miles#1948",
+    "radixark/miles#2003",
+    "radixark/miles#2374",
+    "THUDM/slime#1857",
+    "radixark/miles#2458",
+    "radixark/miles#1902",
+    "radixark/miles#2356",
+    "radixark/miles#2087",
+    "radixark/miles#2255",
+    "THUDM/slime#2184",
+    "radixark/miles#2450",
+    "radixark/miles#1775",
+    "radixark/miles#1765",
+    "radixark/miles#952",
+    "THUDM/slime#1938",
+    "radixark/miles#2360",
+    "radixark/miles#2386",
+    "radixark/miles#2162",
+    "radixark/miles#1045",
+    "radixark/miles#1944",
+    "radixark/miles#1212",
+    "radixark/miles#2001",
+    "radixark/miles#2456",
+    "radixark/miles#2070",
+    "THUDM/slime#2218",
+    "radixark/miles#2451",
+    "radixark/miles#2182",
+    "radixark/miles#2268",
+    "radixark/miles#1927",
+    "radixark/miles#994",
+    "THUDM/slime#1768",
+    "radixark/miles#2033",
+    "radixark/miles#1715",
+    "radixark/miles#1204",
+    "THUDM/slime#1827",
+    "radixark/miles#1959",
+    "radixark/miles#1720",
+    "THUDM/slime#1926",
+    "THUDM/slime#2207",
+    "radixark/miles#941",
+    "radixark/miles#1901",
+    "radixark/miles#940",
+    "THUDM/slime#2226",
+    "radixark/miles#2490",
+    "THUDM/slime#1832",
+    "radixark/miles#2230",
+    "radixark/miles#1970",
+    "radixark/miles#957",
+    "radixark/miles#2464",
+    "radixark/miles#2021",
+    "radixark/miles#1029",
+    "THUDM/slime#2200",
+    "radixark/miles#1768",
+    "radixark/miles#2071",
+    "radixark/miles#2227",
+    "radixark/miles#2124",
+    "radixark/miles#992",
+    "THUDM/slime#1927",
+    "radixark/miles#2249",
+    "radixark/miles#2113",
+    "radixark/miles#1912",
+    "radixark/miles#1900",
+    "THUDM/slime#1825",
+    "radixark/miles#1885",
+    "radixark/miles#2341",
+    "radixark/miles#1772",
+    "radixark/miles#2364",
+    "radixark/miles#1221",
+    "radixark/miles#945",
+    "THUDM/slime#2199",
+    "radixark/miles#1809",
+    "radixark/miles#1874",
+    "radixark/miles#1726",
+    "radixark/miles#2042",
+    "radixark/miles#1947",
+    "radixark/miles#2194",
+    "radixark/miles#2326",
+    "radixark/miles#1785",
+    "radixark/miles#2313",
+    "radixark/miles#1931",
+    "radixark/miles#1923",
+    "radixark/miles#948",
+    "radixark/miles#2349",
+    "radixark/miles#1936",
+    "THUDM/slime#1777",
+    "radixark/miles#2102",
+    "radixark/miles#1217",
+    "radixark/miles#1759",
+    "radixark/miles#942",
+    "radixark/miles#2314",
+    "radixark/miles#2366",
+    "THUDM/slime#2258",
+    "radixark/miles#1953",
+    "radixark/miles#2199",
+    "radixark/miles#1922",
+    "THUDM/slime#2187",
+    "radixark/miles#2491",
+    "radixark/miles#2226",
+    "radixark/miles#2358",
+    "radixark/miles#1718",
+    "radixark/miles#1880",
+    "radixark/miles#2075",
+    "radixark/miles#986",
+    "radixark/miles#2174",
+    "radixark/miles#2208",
+    "THUDM/slime#1954",
+    "radixark/miles#1906",
+    "THUDM/slime#2246",
+    "THUDM/slime#1788",
+    "radixark/miles#1988",
+    "radixark/miles#2488",
+    "radixark/miles#1943",
+    "THUDM/slime#1943",
+    "radixark/miles#2271",
+    "radixark/miles#1014",
+    "radixark/miles#1926",
+    "radixark/miles#1960",
+    "THUDM/slime#2241",
+    "radixark/miles#2240",
+    "radixark/miles#961",
+    "radixark/miles#947",
+    "radixark/miles#2161",
+    "THUDM/slime#1801",
+    "THUDM/slime#2233",
+    "radixark/miles#2348",
+    "radixark/miles#1781",
+    "radixark/miles#2384",
+    "radixark/miles#1008",
+    "radixark/miles#959",
+    "radixark/miles#1751",
+    "radixark/miles#2187",
+    "THUDM/slime#2221",
+    "THUDM/slime#2182",
+    "radixark/miles#2269",
+    "THUDM/slime#2259",
+    "radixark/miles#2259",
+    "radixark/miles#1755",
+    "THUDM/slime#1923",
+    "radixark/miles#1764",
+    "radixark/miles#2373",
+    "radixark/miles#2340",
+    "radixark/miles#2120",
+    "radixark/miles#1199",
+    "radixark/miles#1891",
+    "radixark/miles#1971",
+    "THUDM/slime#2208",
+    "radixark/miles#1875",
+    "THUDM/slime#1948",
+    "radixark/miles#2088",
+    "radixark/miles#2350",
+    "radixark/miles#1930",
+    "THUDM/slime#1917",
+    "radixark/miles#2387",
+    "radixark/miles#2053",
+    "radixark/miles#1207",
+    "radixark/miles#2377",
+    "radixark/miles#2158",
+    "radixark/miles#1945",
+    "THUDM/slime#1921",
+    "THUDM/slime#2265",
+    "THUDM/slime#1919",
+    "radixark/miles#1224",
+    "radixark/miles#1767",
+    "radixark/miles#1191",
+    "radixark/miles#2382",
+    "radixark/miles#2286",
+    "radixark/miles#2183",
+    "radixark/miles#2248",
+    "radixark/miles#2469",
+    "radixark/miles#1203",
+    "radixark/miles#1890",
+    "radixark/miles#1811",
+    "radixark/miles#1206",
+    "radixark/miles#2190",
+    "radixark/miles#943",
+    "THUDM/slime#1795",
+    "radixark/miles#1800",
+    "THUDM/slime#1814",
+    "THUDM/slime#1922",
+    "radixark/miles#2461",
+    "THUDM/slime#1824",
+    "THUDM/slime#1848",
+    "radixark/miles#1741",
+    "radixark/miles#1824",
+    "radixark/miles#2345",
+    "radixark/miles#1916",
+    "radixark/miles#2216",
+    "radixark/miles#2167",
+    "radixark/miles#2290",
+    "radixark/miles#2472",
+    "radixark/miles#1708",
+    "radixark/miles#2481",
+    "radixark/miles#1907",
+    "radixark/miles#2390",
+    "radixark/miles#2355",
+    "radixark/miles#1793",
+    "radixark/miles#2237",
+    "radixark/miles#950",
+    "THUDM/slime#1819",
+    "radixark/miles#2046",
+    "radixark/miles#2134",
+    "radixark/miles#1737",
+    "radixark/miles#2338",
+    "radixark/miles#1799",
+    "radixark/miles#1009",
+    "THUDM/slime#1774",
+    "radixark/miles#995",
+    "radixark/miles#1222",
+    "radixark/miles#960",
+    "radixark/miles#2325",
+    "radixark/miles#982",
+    "radixark/miles#1183",
+    "radixark/miles#2477",
+    "radixark/miles#1696",
+    "radixark/miles#2320",
+    "THUDM/slime#2252",
+    "radixark/miles#2353",
+    "THUDM/slime#2193",
+    "radixark/miles#1919",
+    "radixark/miles#2492",
+    "radixark/miles#1019",
+    "THUDM/slime#1952",
+    "radixark/miles#2480",
+    "THUDM/slime#2169",
+    "radixark/miles#2233",
+    "radixark/miles#1701",
+    "radixark/miles#1978",
+    "THUDM/slime#2172",
+    "radixark/miles#2097",
+    "radixark/miles#1024",
+    "radixark/miles#1179",
+    "radixark/miles#1035",
+    "radixark/miles#2260",
+    "radixark/miles#2344",
+    "radixark/miles#980",
+    "radixark/miles#2204",
+    "radixark/miles#1200",
+    "radixark/miles#1754",
+    "radixark/miles#1886",
+    "radixark/miles#2159",
+    "radixark/miles#2243",
+    "radixark/miles#1028",
+    "THUDM/slime#1940",
+    "THUDM/slime#2181",
+    "THUDM/slime#1812",
+    "radixark/miles#1951",
+    "radixark/miles#2136",
+    "radixark/miles#2453",
+    "radixark/miles#2196",
+    "radixark/miles#1883",
+    "THUDM/slime#2249",
+    "THUDM/slime#2189",
+    "radixark/miles#1736",
+    "radixark/miles#1012",
+    "radixark/miles#2110",
+    "radixark/miles#1825",
+    "THUDM/slime#2254",
+    "radixark/miles#2238",
+    "THUDM/slime#2190",
+    "radixark/miles#2118",
+    "radixark/miles#1773",
+    "radixark/miles#1911",
+    "radixark/miles#2179",
+    "radixark/miles#2370",
+    "radixark/miles#1695",
+    "THUDM/slime#2162",
+    "THUDM/slime#2239",
+    "radixark/miles#2121",
+    "radixark/miles#976",
+    "radixark/miles#1973",
+    "radixark/miles#2197",
+    "THUDM/slime#2251",
+    "THUDM/slime#1775",
+    "radixark/miles#2224",
+    "radixark/miles#1999",
+    "radixark/miles#1889",
+    "radixark/miles#2048",
+    "radixark/miles#1717",
+    "radixark/miles#2403",
+    "radixark/miles#1969",
+    "radixark/miles#1021",
+    "radixark/miles#1786",
+    "radixark/miles#2017",
+    "radixark/miles#2276",
+    "radixark/miles#1932",
+    "radixark/miles#2257",
+    "radixark/miles#2402",
+    "radixark/miles#2055",
+    "THUDM/slime#2234",
+    "radixark/miles#2317",
+    "radixark/miles#1208",
+    "radixark/miles#2202",
+    "radixark/miles#2100",
+    "radixark/miles#2339",
+    "radixark/miles#1817",
+    "THUDM/slime#2235",
+    "radixark/miles#1003",
+    "radixark/miles#1766",
+    "radixark/miles#1729",
+    "radixark/miles#1730",
+    "radixark/miles#1182",
+    "radixark/miles#2253",
+    "radixark/miles#1879",
+    "radixark/miles#2475",
+    "radixark/miles#2184",
+    "radixark/miles#2327",
+    "radixark/miles#1723",
+    "THUDM/slime#1916",
+    "radixark/miles#1761",
+    "radixark/miles#2368",
+    "THUDM/slime#1960",
+    "THUDM/slime#2261",
+    "radixark/miles#2164",
+    "radixark/miles#1823",
+    "radixark/miles#2057",
+    "radixark/miles#2062",
+    "radixark/miles#2212",
+    "THUDM/slime#2255",
+    "radixark/miles#1181",
+    "radixark/miles#944",
+    "radixark/miles#2466",
+    "radixark/miles#954",
+    "radixark/miles#2319",
+    "THUDM/slime#2220",
+    "radixark/miles#2026",
+    "THUDM/slime#1928",
+    "radixark/miles#1691",
+    "radixark/miles#2189",
+    "radixark/miles#2478",
+    "radixark/miles#1722",
+    "radixark/miles#2284",
+    "radixark/miles#1816",
+    "radixark/miles#2061",
+    "radixark/miles#2044",
+    "radixark/miles#1814",
+    "radixark/miles#1803",
+    "radixark/miles#1792",
+    "radixark/miles#1693",
+    "THUDM/slime#1957",
+    "radixark/miles#1227",
+    "radixark/miles#2211",
+    "radixark/miles#1184",
+    "radixark/miles#1962",
+    "radixark/miles#2091",
+    "radixark/miles#1760",
+    "radixark/miles#2093",
+    "radixark/miles#2462",
+    "radixark/miles#2379",
+    "THUDM/slime#1914",
+    "radixark/miles#2400",
+    "radixark/miles#2294",
+    "radixark/miles#951",
+    "radixark/miles#1779",
+    "radixark/miles#1810",
+    "radixark/miles#1688",
+    "radixark/miles#1929",
+    "radixark/miles#1752",
+    "THUDM/slime#2242",
+    "THUDM/slime#2167",
+    "radixark/miles#2225",
+    "radixark/miles#1993",
+    "radixark/miles#2012",
+    "radixark/miles#2112",
+    "radixark/miles#1992",
+    "radixark/miles#2242",
+    "THUDM/slime#2228",
+    "radixark/miles#2035",
+    "radixark/miles#1895",
+    "radixark/miles#2380",
+    "radixark/miles#1972",
+    "radixark/miles#985",
+    "THUDM/slime#1846",
+    "radixark/miles#1750",
+    "radixark/miles#1791",
+    "radixark/miles#2066",
+    "radixark/miles#1788",
+    "THUDM/slime#1939",
+    "radixark/miles#2228",
+    "THUDM/slime#2223",
+    "radixark/miles#2131",
+    "THUDM/slime#1807",
+    "THUDM/slime#1950",
+    "radixark/miles#2043",
+    "radixark/miles#946",
+    "radixark/miles#2126",
+    "radixark/miles#2359",
+    "radixark/miles#1219",
+    "radixark/miles#2252",
+    "radixark/miles#2375",
+    "radixark/miles#1007",
+    "radixark/miles#1740",
+    "radixark/miles#1702",
+    "radixark/miles#2169",
+    "radixark/miles#935",
+    "radixark/miles#1975",
+    "radixark/miles#2316",
+    "radixark/miles#1914",
+    "THUDM/slime#2171",
+    "THUDM/slime#1913",
+    "radixark/miles#2023",
+    "radixark/miles#1826",
+    "radixark/miles#1188",
+    "THUDM/slime#1805",
+    "radixark/miles#2065",
+    "THUDM/slime#2240",
+    "radixark/miles#1202",
+    "THUDM/slime#1937",
+    "THUDM/slime#2237",
+    "radixark/miles#2049",
+    "radixark/miles#1965",
+    "radixark/miles#2027",
+    "THUDM/slime#1959",
+    "radixark/miles#1822",
+    "radixark/miles#1705",
+    "radixark/miles#2107",
+    "radixark/miles#974",
+    "THUDM/slime#2174",
+    "radixark/miles#1942",
+    "radixark/miles#999",
+    "radixark/miles#1013",
+    "radixark/miles#984",
+    "radixark/miles#1038",
+    "radixark/miles#2328",
+    "radixark/miles#1011",
+    "THUDM/slime#1946",
+    "radixark/miles#2089",
+    "radixark/miles#1213",
+    "radixark/miles#2200",
+    "radixark/miles#1763",
+    "radixark/miles#2028",
+    "radixark/miles#2278",
+    "radixark/miles#1939",
+    "radixark/miles#1017",
+    "radixark/miles#1821",
+    "radixark/miles#1020",
+    "radixark/miles#1909",
+    "radixark/miles#2060",
+    "radixark/miles#1756",
+    "radixark/miles#2354",
+    "radixark/miles#1225",
+    "radixark/miles#2399",
+    "radixark/miles#2486",
+    "radixark/miles#1808",
+    "radixark/miles#2180",
+    "THUDM/slime#1797",
+    "radixark/miles#2261",
+    "radixark/miles#964",
+    "radixark/miles#1210",
+    "radixark/miles#2191",
+    "radixark/miles#2111",
+    "radixark/miles#1920",
+    "radixark/miles#2095",
+    "radixark/miles#2280",
+    "radixark/miles#2397",
+    "radixark/miles#972",
+    "radixark/miles#1704",
+    "radixark/miles#2217",
+    "radixark/miles#2265",
+    "radixark/miles#2367",
+    "THUDM/slime#2183",
+    "THUDM/slime#1841",
+    "radixark/miles#2007",
+    "THUDM/slime#1817",
+    "radixark/miles#977",
+    "radixark/miles#2457",
+    "radixark/miles#1831",
+    "radixark/miles#1209",
+    "THUDM/slime#1956",
+    "radixark/miles#1888",
+    "radixark/miles#1787",
+    "radixark/miles#1795",
+    "radixark/miles#1226"
   ],
   "weekly_note": "<em>本周焦点</em>：<b>#radixark/miles#2200</b> 精确 <em>top-p 回放</em> 对齐采样分布；<b>#radixark/miles#2294</b> 异步重计算解除事件循环阻塞；<b>#THUDM/slime#2258</b> 跳过零系数 <em>KL 图</em> 防 NaN 扩散；ROCm 平台多项兼容性阻断亦全面修复。",
   "weekly_note_week": "2026-W33",
-  "last_updated": "2026-08-12T01:07:03.985353+00:00"
+  "last_updated": "2026-08-13T01:15:20.089169+00:00"
 }
