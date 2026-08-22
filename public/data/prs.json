@@ -1,6 +1,2822 @@
 {
   "prs": [
     {
+      "id": "radixark/miles#2685",
+      "repo": "radixark/miles",
+      "pr_number": 2685,
+      "title": "fix(train): skip optimizer and scheduler for eval-only",
+      "state": "open",
+      "author": "EazyReal",
+      "created_at": "2026-08-21T03:06:04Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2685",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 eval-only 模式（num_rollout=0）下 optimizer 和 LR scheduler 被错误构建导致 lr_decay_steps=0 断言失败的问题，跳过二者的初始化",
+      "reason": "Megatron 和 FSDP 的 LR scheduler 断言 lr_decay_steps>0 是框架层面的通用问题，任何使用这两种并行后端并支持 eval-only 模式的 RL 训练框架都会遇到完全相同的 bug",
+      "value": 4,
+      "subsystems": [
+        "trainer",
+        "parallel",
+        "infra"
+      ],
+      "rl_concepts": [
+        "FSDP",
+        "Megatron",
+        "LR scheduler",
+        "eval-only"
+      ],
+      "files": [
+        "miles/backends/fsdp_utils/actor.py",
+        "miles/backends/fsdp_utils/checkpoint.py",
+        "miles/backends/megatron_utils/model.py",
+        "miles/ray/placement_group.py"
+      ],
+      "diff_preview": {
+        "additions": 22,
+        "deletions": 13,
+        "hunks": [
+          {
+            "file": "miles/backends/fsdp_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -174,20 +174,22 @@ def init("
+              ],
+              [
+                " ",
+                "        if args.gradient_checkpointing:"
+              ],
+              [
+                " ",
+                "            self.model.gradient_checkpointing_enable()"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "        if args.optimizer == \"adam\":"
+              ],
+              [
+                "+",
+                "        if args.num_rollout == 0:"
+              ],
+              [
+                "+",
+                "            args.no_load_optim = True"
+              ],
+              [
+                "+",
+                "            self.optimizer = None"
+              ],
+              [
+                "+",
+                "            self.lr_scheduler = None"
+              ],
+              [
+                "+",
+                "        elif args.optimizer == \"adam\":"
+              ],
+              [
+                " ",
+                "            self.optimizer = torch.optim.AdamW("
+              ],
+              [
+                " ",
+                "                self.model.parameters(),"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:08:13.886869+00:00"
+    },
+    {
+      "id": "radixark/miles#2686",
+      "repo": "radixark/miles",
+      "pr_number": 2686,
+      "title": "fix: treat temperature=0 as greedy selection, untempered logprobs",
+      "state": "closed",
+      "author": "EazyReal",
+      "created_at": "2026-08-21T03:06:06Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2686",
+      "category": "unknown",
+      "scope": "unknown",
+      "summary": "fix: treat temperature=0 as greedy selection, untempered logprobs",
+      "reason": "解析失败",
+      "value": 3,
+      "subsystems": [],
+      "rl_concepts": [],
+      "files": [
+        "miles/backends/training_utils/loss_hub/logit_processors.py",
+        "miles/utils/arguments.py"
+      ],
+      "diff_preview": {
+        "additions": 9,
+        "deletions": 3,
+        "hunks": [
+          {
+            "file": "miles/backends/training_utils/loss_hub/logit_processors.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -8,6 +8,12 @@"
+              ],
+              [
+                " ",
+                "from miles.backends.training_utils.parallel import get_parallel_state"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "def apply_rollout_temperature(logits: torch.Tensor, temperature: float) -> torch.Tensor:"
+              ],
+              [
+                "+",
+                "    if temperature == 0.0 or temperature == 1.0:"
+              ],
+              [
+                "+",
+                "        return logits"
+              ],
+              [
+                "+",
+                "    return logits.div(temperature)"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                "def get_responses("
+              ],
+              [
+                " ",
+                "    logits: torch.Tensor,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:08:08.075982+00:00"
+    },
+    {
+      "id": "radixark/miles#2687",
+      "repo": "radixark/miles",
+      "pr_number": 2687,
+      "title": "docs(diffusion): latest doc ported from miles diffusion 20260820-14:55",
+      "state": "open",
+      "author": "Rockdu",
+      "created_at": "2026-08-21T04:08:27Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2687",
+      "category": "doc",
+      "scope": "repo-specific",
+      "summary": "将 miles_diffusion 仓库的最新文档同步移植到 miles 主仓库的 docs/diffusion/ 目录，并将链接重写为 Mintlify 格式",
+      "reason": "纯文档同步操作，内容针对该仓库特有的 diffusion 模型文档结构和 Mintlify 站点配置，与 RL 训练框架的通用组件无关",
+      "value": 1,
+      "subsystems": [
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docs/diffusion/getting-started/installation.md",
+        "docs/diffusion/index.md",
+        "docs/diffusion/models/cosmos/cosmos3.md",
+        "docs/diffusion/models/h3/h3.md",
+        "docs/diffusion/user-guide/recipe-verification.md"
+      ],
+      "diff_preview": {
+        "additions": 51,
+        "deletions": 68,
+        "hunks": [
+          {
+            "file": "docs/diffusion/getting-started/installation.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -34,7 +34,7 @@ Useful build args:"
+              ],
+              [
+                " ",
+                "| Arg | Default | What it does |"
+              ],
+              [
+                " ",
+                "|---|---|---|"
+              ],
+              [
+                " ",
+                "| `SGLANG_IMAGE_TAG` | `v0.5.12-cu129` | Base `lmsysorg/sglang` image. |"
+              ],
+              [
+                "-",
+                "| `SGLANG_DIFFUSION_BRANCH` | `main` | sglang branch the rollout engine is built from. |"
+              ],
+              [
+                "+",
+                "| `SGLANG_DIFFUSION_BRANCH` | `sglang-miles-h3` | sglang branch the rollout engine is built from; carries upstream `main` plus the diffusion rollouts this repo needs ahead of it. |"
+              ],
+              [
+                " ",
+                "| `SGLANG_DIFFUSION_COMMIT` | `none` | Pin a sglang sha; `none` follows the branch tip. |"
+              ],
+              [
+                " ",
+                "| `FA3_WHEELS_TAG` | `cu129-x86_64` | Which prebuilt FlashAttention-3 wheel to pull. |"
+              ],
+              [
+                " ",
+                "| `MILES_DIFFUSION_COMMIT` | `main` | Ref of miles_diffusion baked into the image. |"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:08:01.174466+00:00"
+    },
+    {
+      "id": "radixark/miles#2688",
+      "repo": "radixark/miles",
+      "pr_number": 2688,
+      "title": "fix(checkpoint): preserve resume checkpoint selection",
+      "state": "open",
+      "author": "nanjiangwill",
+      "created_at": "2026-08-21T05:28:29Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2688",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复checkpoint恢复逻辑：保留显式指定的resume checkpoint选择，避免被reference/HF初始化静默覆盖，并隔离reference与actor的恢复步骤",
+      "reason": "checkpoint恢复逻辑（--ckpt-step、tracker file缺失时的行为、reference与actor checkpoint的隔离）是所有基于Megatron的RL训练框架都会遇到的通用问题，不依赖该仓库特有结构",
+      "value": 4,
+      "subsystems": [
+        "checkpoint",
+        "trainer",
+        "infra"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "checkpoint",
+        "resume"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/actor.py",
+        "miles/utils/arguments.py",
+        "tests/fast/utils/test_arguments.py"
+      ],
+      "diff_preview": {
+        "additions": 107,
+        "deletions": 54,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -812,36 +812,27 @@ def update_weights(self, info: \"EnginesAndLock\") -> None:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    @with_logs"
+              ],
+              [
+                " ",
+                "    def load_other_checkpoint(self, model_tag: str, path: str) -> None:"
+              ],
+              [
+                "-",
+                "        old_args = self.args.load, self.args.no_load_optim, self.args.no_load_rng, self.args.finetune"
+              ],
+              [
+                "-",
+                "        self.args.load = path"
+              ],
+              [
+                "-",
+                "        self.args.no_load_optim = True"
+              ],
+              [
+                "-",
+                "        self.args.no_load_rng = True"
+              ],
+              [
+                "-",
+                "        self.args.finetune = True"
+              ],
+              [
+                "-",
+                ""
+              ],
+              [
+                "-",
+                "        # load_checkpoint reads self.args.ckpt_step to pick which iteration to load."
+              ],
+              [
+                "-",
+                "        # Temporarily override it for ref/teacher loads, then restore after the load below."
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:07:56.052092+00:00"
+    },
+    {
+      "id": "radixark/miles#2690",
+      "repo": "radixark/miles",
+      "pr_number": 2690,
+      "title": "Fix distributed HTTP poster actor lifetime",
+      "state": "open",
+      "author": "EazyReal",
+      "created_at": "2026-08-21T06:24:18Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2690",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "将分布式 HTTP poster actor 从 detached 模式改为非 detached 模式，使其随创建者进程退出而自动销毁，避免在持久 Ray 集群上累积僵尸 actor 和资源泄漏",
+      "reason": "Ray actor lifetime 管理（detached vs non-detached 的 owner fate-sharing）是使用 Ray 的 RL 训练框架普遍会遇到的问题，任何在持久 Ray 集群上多次运行 job 并使用匿名 actor 的框架都可能踩到相同的坑",
+      "value": 3,
+      "subsystems": [
+        "rollout",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "miles/utils/http_utils.py",
+        "tests/fast/utils/test_http_utils.py"
+      ],
+      "diff_preview": {
+        "additions": 32,
+        "deletions": 2,
+        "hunks": [
+          {
+            "file": "miles/utils/http_utils.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -334,7 +334,7 @@ async def do_post(self, url, payload, max_retries=60, action=\"post\", headers=Non"
+              ],
+              [
+                " ",
+                "        for _ in range(args.num_gpus_per_node):"
+              ],
+              [
+                " ",
+                "            actor = _HttpPosterActor.options("
+              ],
+              [
+                " ",
+                "                name=None,"
+              ],
+              [
+                "-",
+                "                lifetime=\"detached\","
+              ],
+              [
+                "+",
+                "                lifetime=\"non_detached\","
+              ],
+              [
+                " ",
+                "                scheduling_strategy=scheduling,"
+              ],
+              [
+                " ",
+                "                max_concurrency=per_actor_conc,"
+              ],
+              [
+                " ",
+                "                # Use tiny CPU to schedule"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:07:50.375006+00:00"
+    },
+    {
+      "id": "radixark/miles#2691",
+      "repo": "radixark/miles",
+      "pr_number": 2691,
+      "title": "fix(deepseekv3): match router dtype for disk-delta export",
+      "state": "closed",
+      "author": "nanjiangwill",
+      "created_at": "2026-08-21T07:19:56Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2691",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 DeepSeek/GLM MoE 路由器权重在磁盘增量导出时未转换为模型 dtype（BF16/FP16）的问题，确保导出张量与 HF checkpoint 布局一致",
+      "reason": "Megatron 将 MoE router 保持 FP32、而 HF checkpoint 存储模型 dtype 这一不一致问题，在所有使用 Megatron 训练 MoE 模型并做 disk-delta 权重同步的框架中普遍存在，不限于该仓库",
+      "value": 4,
+      "subsystems": [
+        "weight-sync",
+        "checkpoint",
+        "parallel"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "MoE",
+        "checkpoint",
+        "weight-sync"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/megatron_to_hf/deepseekv3.py",
+        "tests/fast/backends/megatron_utils/test_deepseekv3_to_hf.py"
+      ],
+      "diff_preview": {
+        "additions": 83,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/megatron_to_hf/deepseekv3.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -3,6 +3,16 @@"
+              ],
+              [
+                " ",
+                "import torch"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "def _convert_router_weight(args, param):"
+              ],
+              [
+                "+",
+                "    if getattr(args, \"update_weight_transfer_mode\", None) != \"disk-delta\":"
+              ],
+              [
+                "+",
+                "        return param"
+              ],
+              [
+                "+",
+                "    if getattr(args, \"bf16\", False):"
+              ],
+              [
+                "+",
+                "        return param.to(torch.bfloat16)"
+              ],
+              [
+                "+",
+                "    if getattr(args, \"fp16\", False):"
+              ],
+              [
+                "+",
+                "        return param.to(torch.float16)"
+              ],
+              [
+                "+",
+                "    return param"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:07:44.245289+00:00"
+    },
+    {
+      "id": "radixark/miles#2692",
+      "repo": "radixark/miles",
+      "pr_number": 2692,
+      "title": "fix(disk-delta): reject noncanonical tensor layouts",
+      "state": "open",
+      "author": "nanjiangwill",
+      "created_at": "2026-08-21T07:20:06Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2692",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "disk-delta 增量更新时强制校验张量的 dtype、shape 及字节数与 canonical checkpoint 一致，拒绝非规范布局，防止发布损坏的增量流",
+      "reason": "checkpoint 增量编码（XOR/byte-delta）是跨框架通用的权重持久化与分发机制，张量布局不匹配导致 checkpoint 损坏的问题在任何使用类似 disk-delta 方案的 RL 训练框架中都会遇到，不依赖 miles 特有逻辑",
+      "value": 3,
+      "subsystems": [
+        "checkpoint",
+        "weight-sync",
+        "infra"
+      ],
+      "rl_concepts": [
+        "checkpoint"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/update_weight/update_weight_from_distributed/delta.py",
+        "miles/utils/disk_delta.py",
+        "tests/fast/utils/test_disk_delta.py"
+      ],
+      "diff_preview": {
+        "additions": 133,
+        "deletions": 19,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/update_weight/update_weight_from_distributed/delta.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -28,6 +28,43 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "logger = logging.getLogger(__name__)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "# Safetensors stores its own dtype codes in the file header but does not expose a"
+              ],
+              [
+                "+",
+                "# public torch-dtype encoder. Disk-delta needs the exact code because it patches"
+              ],
+              [
+                "+",
+                "# raw bytes without rewriting that header."
+              ],
+              [
+                "+",
+                "_SAFETENSORS_DTYPE_BY_TORCH_DTYPE = {"
+              ],
+              [
+                "+",
+                "    torch.float64: \"F64\","
+              ],
+              [
+                "+",
+                "    torch.float32: \"F32\","
+              ],
+              [
+                "+",
+                "    torch.float16: \"F16\","
+              ],
+              [
+                "+",
+                "    torch.bfloat16: \"BF16\","
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:07:38.320697+00:00"
+    },
+    {
+      "id": "radixark/miles#2693",
+      "repo": "radixark/miles",
+      "pr_number": 2693,
+      "title": "feat(megatron): report peak memory for log_probs and actor_train",
+      "state": "open",
+      "author": "EazyReal",
+      "created_at": "2026-08-21T07:21:05Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2693",
+      "category": "infra",
+      "scope": "universal",
+      "summary": "为 Megatron actor 的 log_probs 前向和 actor_train 阶段添加峰值显存监控，避免 OOM 前无法感知高水位线",
+      "reason": "峰值显存追踪（reset_peak_memory_stats + max_memory_allocated）是通用的 GPU 训练调试手段，任何使用 Megatron 或 FSDP 的 RL 训练框架都会面临同样的 OOM 定位难题，该模式可直接复用",
+      "value": 3,
+      "subsystems": [
+        "memory",
+        "logging",
+        "parallel"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "rollout",
+        "actor"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/actor.py",
+        "miles/utils/memory_utils.py",
+        "tests/fast/utils/test_memory_utils.py"
+      ],
+      "diff_preview": {
+        "additions": 63,
+        "deletions": 3,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -23,7 +23,7 @@"
+              ],
+              [
+                " ",
+                "from miles.utils.distributed_utils import get_gloo_group"
+              ],
+              [
+                " ",
+                "from miles.utils.ft_utils.indep_dp import IndepDPInfo"
+              ],
+              [
+                " ",
+                "from miles.utils.hf_config import load_hf_config"
+              ],
+              [
+                "-",
+                "from miles.utils.memory_utils import clear_memory, print_memory"
+              ],
+              [
+                "+",
+                "from miles.utils.memory_utils import clear_memory, print_memory, report_peak_memory"
+              ],
+              [
+                " ",
+                "from miles.utils.multi_lora import is_multi_lora_enabled"
+              ],
+              [
+                " ",
+                "from miles.utils.processing_utils import load_tokenizer"
+              ],
+              [
+                " ",
+                "from miles.utils.ray_utils import Box"
+              ],
+              [
+                "h",
+                "@@ -366,7 +366,7 @@ def compute_log_prob("
+              ],
+              [
+                " ",
+                "        store_prefix: str = \"\","
+              ],
+              [
+                " ",
+                "    ) -> dict[str, list[torch.Tensor]]:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:07:31.684242+00:00"
+    },
+    {
+      "id": "radixark/miles#2694",
+      "repo": "radixark/miles",
+      "pr_number": 2694,
+      "title": "[rollout] Add typed DP-padding postprocess policy",
+      "state": "open",
+      "author": "yushengsu-thu",
+      "created_at": "2026-08-21T07:34:33Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2694",
+      "category": "feature",
+      "scope": "universal",
+      "summary": "为 rollout 输出引入类型化的 DP-padding 后处理策略，允许 rollout 生产者请求零损失哨兵填充以对齐数据并行网格",
+      "reason": "DP（数据并行）对齐填充是所有使用数据并行训练的 RL 框架都会遇到的问题，将其抽象为可插拔的后处理策略接口（postprocess policy）具有通用参考价值，不依赖该仓库特有实现",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "parallel",
+        "infra"
+      ],
+      "rl_concepts": [
+        "data-parallel",
+        "rollout",
+        "DP-alignment",
+        "padding"
+      ],
+      "files": [
+        "miles/ray/rollout/rollout_data_conversion.py",
+        "miles/ray/rollout/rollout_manager.py",
+        "miles/rollout/base_types.py",
+        "tests/fast/ray/rollout/real_ray/test_rollout_manager.py",
+        "tests/fast/ray/rollout/test_rollout_data_conversion.py"
+      ],
+      "diff_preview": {
+        "additions": 94,
+        "deletions": 4,
+        "hunks": [
+          {
+            "file": "miles/ray/rollout/rollout_data_conversion.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -1,3 +1,4 @@"
+              ],
+              [
+                "+",
+                "import copy"
+              ],
+              [
+                " ",
+                "import itertools"
+              ],
+              [
+                " ",
+                "import logging"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -7,7 +8,7 @@"
+              ],
+              [
+                " ",
+                "logger = logging.getLogger(__name__)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "def postprocess_rollout_data(args, data, train_parallel_config):"
+              ],
+              [
+                "+",
+                "def postprocess_rollout_data(args, data, train_parallel_config, pad_to_dp: bool = False):"
+              ],
+              [
+                " ",
+                "    metadata = {}"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:07:25.956813+00:00"
+    },
+    {
+      "id": "radixark/miles#2695",
+      "repo": "radixark/miles",
+      "pr_number": 2695,
+      "title": "test(verifiers): cover default rollout path",
+      "state": "open",
+      "author": "santho090",
+      "created_at": "2026-08-21T16:18:32Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2695",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "将 E2E 测试从遗留 rollout 路径切换到默认的 VerifiersRolloutFn，并移除 MILES_USE_LEGACY_ROLLOUT_V1 环境变量覆盖",
+      "reason": "该改动涉及 miles 仓库特有的 VerifiersRolloutFn 接口、MILES_USE_LEGACY_ROLLOUT_V1 内部标志以及 verifiers 集成路径，是仓库私有的测试覆盖调整，不涉及通用算法或跨框架可复用的架构变更",
+      "value": 2,
+      "subsystems": [
+        "rollout",
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "tests/e2e/long/test_qwen3_0.6B_verifiers.py"
+      ],
+      "diff_preview": {
+        "additions": 1,
+        "deletions": 2,
+        "hunks": [
+          {
+            "file": "tests/e2e/long/test_qwen3_0.6B_verifiers.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -68,7 +68,7 @@ def execute():"
+              ],
+              [
+                " ",
+                "            f\"--hf-checkpoint {MODEL_DIR}/{MODEL_NAME}\","
+              ],
+              [
+                " ",
+                "            \"--sglang-tokenizer-path Qwen/Qwen3-0.6B\","
+              ],
+              [
+                " ",
+                "            f\"--ref-load {MODEL_DIR}/{MODEL_NAME}_torch_dist\","
+              ],
+              [
+                "-",
+                "            \"--rollout-function-path verifiers_rollout.generate_rollout\","
+              ],
+              [
+                "+",
+                "            \"--rollout-function-path verifiers_rollout.VerifiersRolloutFn\","
+              ],
+              [
+                " ",
+                "            \"--disable-rollout-global-dataset\","
+              ],
+              [
+                " ",
+                "            \"--num-rollout 1\","
+              ],
+              [
+                " ",
+                "            \"--rollout-batch-size 3\","
+              ],
+              [
+                "h",
+                "@@ -112,7 +112,6 @@ def execute():"
+              ],
+              [
+                " ",
+                "        num_gpus_per_node=NUM_GPUS,"
+              ],
+              [
+                " ",
+                "        megatron_model_type=MODEL_TYPE,"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:07:19.689720+00:00"
+    },
+    {
+      "id": "radixark/miles#2696",
+      "repo": "radixark/miles",
+      "pr_number": 2696,
+      "title": "[dashboard for amd gpu]: add AMD SMI GPU telemetry",
+      "state": "open",
+      "author": "yushengsu-thu",
+      "created_at": "2026-08-21T17:59:55Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2696",
+      "category": "feature",
+      "scope": "repo-specific",
+      "summary": "为 Dashboard 添加 AMD SMI GPU 遥测支持，在 ROCm 节点上回退使用 AMD SMI 采集 GPU 活动、显存、功耗等指标",
+      "reason": "这是针对 miles 仓库自有 Dashboard 监控组件的硬件适配，属于特定硬件（AMD ROCm/MI350X）的构建与监控扩展，不涉及 RL 训练核心算法或通用训练基础设施，其他框架无需复用此逻辑",
+      "value": 2,
+      "subsystems": [
+        "logging",
+        "infra"
+      ],
+      "rl_concepts": [
+        "Megatron"
+      ],
+      "files": [
+        "miles/dashboard/gpu_sampler.py",
+        "tests/fast-gpu/test_gpu_sampler_hw.py",
+        "tests/fast/dashboard/test_gpu_sampler.py"
+      ],
+      "diff_preview": {
+        "additions": 440,
+        "deletions": 53,
+        "hunks": [
+          {
+            "file": "miles/dashboard/gpu_sampler.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -2,21 +2,23 @@"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "One instance runs per GPU node (the collector spawns it as a Ray actor with"
+              ],
+              [
+                " ",
+                "``NodeAffinitySchedulingStrategy``; the class itself is plain Python and"
+              ],
+              [
+                "-",
+                "unit-testable). A daemon thread samples every NVML device on the node at"
+              ],
+              [
+                "-",
+                "``interval`` seconds — physical device order, independent of"
+              ],
+              [
+                "-",
+                "``CUDA_VISIBLE_DEVICES`` — buffers locally, and hands batches to the injected"
+              ],
+              [
+                "+",
+                "unit-testable). A daemon thread samples every SMI-visible device on the node at"
+              ],
+              [
+                "+",
+                "``interval`` seconds — physical device order, independent of CUDA/HIP process"
+              ],
+              [
+                "+",
+                "visibility variables — buffers locally, and hands batches to the injected"
+              ],
+              [
+                " ",
+                "``push(node, batch)`` callable (the collector wraps its own Ray handle) every"
+              ],
+              [
+                " ",
+                "``FLUSH_INTERVAL_SECONDS``, so there is roughly one RPC per node per flush"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:07:13.947069+00:00"
+    },
+    {
+      "id": "radixark/miles#2697",
+      "repo": "radixark/miles",
+      "pr_number": 2697,
+      "title": "fix: stride the pad-token replay fill across experts",
+      "state": "open",
+      "author": "EazyReal",
+      "created_at": "2026-08-21T18:46:53Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2697",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 MoE routing replay 填充 pad token 时索引集中在少数 expert 导致 EP rank 0 OOM 的问题，改为将 pad token 的 expert 分配均匀分散到所有 expert",
+      "reason": "MoE routing replay 中 pad token 的 expert 分配不均问题本质上是 expert parallel 负载均衡 bug，任何使用 top-k routing replay 与 EP 并行的框架（如含 MoE 的 DeepSeek 系列训练）都可能遇到相同问题，与仓库特有实现无关",
+      "value": 4,
+      "subsystems": [
+        "parallel",
+        "memory",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "MoE",
+        "expert-parallelism",
+        "rollout"
+      ],
+      "files": [
+        "miles/utils/replay_base.py",
+        "tests/fast/utils/test_replay_base.py"
+      ],
+      "diff_preview": {
+        "additions": 27,
+        "deletions": 13,
+        "hunks": [
+          {
+            "file": "miles/utils/replay_base.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -99,14 +99,20 @@ def _get_replay_result(top_indices, scores, topk, *args, **kwargs):"
+              ],
+              [
+                " ",
+                "            if self.enable_check_replay_result:"
+              ],
+              [
+                " ",
+                "                self.check_replay_result(old_topk_fn, scores, topk, top_indices, *args, **kwargs)"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "            # fill padding tokens with arange to avoid invalid reading"
+              ],
+              [
+                "+",
+                "            # Fill all-(-1) pad rows with in-range indices, striding across pad"
+              ],
+              [
+                "+",
+                "            # rows so repeated per-sample padding does not pile onto the same columns."
+              ],
+              [
+                "+",
+                "            # Pads are loss-masked, so any in-range index is valid."
+              ],
+              [
+                " ",
+                "            all_invalid = (top_indices == -1).all(dim=-1)"
+              ],
+              [
+                "-",
+                "            if all_invalid.any():"
+              ],
+              [
+                "-",
+                "                ar = ("
+              ],
+              [
+                "-",
+                "                    torch.arange(top_indices.shape[1], device=top_indices.device, dtype=top_indices.dtype)"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:07:07.598305+00:00"
+    },
+    {
+      "id": "radixark/miles#2698",
+      "repo": "radixark/miles",
+      "pr_number": 2698,
+      "title": "fix: pad bshd samples to their own length, not the rollout-global max",
+      "state": "open",
+      "author": "EazyReal",
+      "created_at": "2026-08-21T18:47:01Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2698",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 bshd 格式下序列维度使用全局最大长度导致 OOM 的问题，改为每个样本使用自身对齐后的填充长度",
+      "reason": "MoE 模型中 pad token 仍会参与 expert dispatch，用全局最大序列长度填充所有样本导致显存爆炸，这是所有使用 bshd 张量格式 + MoE 架构的框架都会面临的通用问题，与仓库特有实现无关",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "memory",
+        "parallel"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "MoE",
+        "rollout"
+      ],
+      "files": [
+        "miles/backends/training_utils/data.py",
+        "miles/backends/training_utils/replay_data.py",
+        "miles/utils/arguments.py",
+        "tests/fast/backends/training_utils/test_bshd_per_sample_pad.py",
+        "tests/fast/utils/test_arguments.py"
+      ],
+      "diff_preview": {
+        "additions": 157,
+        "deletions": 6,
+        "hunks": [
+          {
+            "file": "miles/backends/training_utils/data.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -76,18 +76,21 @@ def get_rollout_data("
+              ],
+              [
+                " ",
+                "        ]"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    if args.qkv_format == \"bshd\":"
+              ],
+              [
+                "-",
+                "        # TODO: micro-batch wise dynamic, possibly move to @data.py:get_data_iterator"
+              ],
+              [
+                "-",
+                "        max_seq_len = max(rollout_data[\"total_lengths\"])"
+              ],
+              [
+                "-",
+                ""
+              ],
+              [
+                " ",
+                "        # pad to reduce memory fragmentation and maybe make the computation faster"
+              ],
+              [
+                " ",
+                "        pad_size = parallel_state.tp.size * args.data_pad_size_multiplier"
+              ],
+              [
+                " ",
+                "        max_compress_ratio = max(args.compress_ratios) if args.compress_ratios else 0"
+              ],
+              [
+                " ",
+                "        if max_compress_ratio:"
+              ],
+              [
+                " ",
+                "            local_seqlen_multiple = max_compress_ratio * (2 if parallel_state.cp.size > 1 else 1)"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:07:00.793388+00:00"
+    },
+    {
+      "id": "radixark/miles#2699",
+      "repo": "radixark/miles",
+      "pr_number": 2699,
+      "title": "fix(ci): unbreak the documented runner setup on a new host",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-08-21T19:04:09Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2699",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复 CI 新主机搭建时 GitHub Actions runner 版本已退役及相关配置问题，使文档步骤可正常执行",
+      "reason": "该 PR 仅涉及该仓库自身的 CI 配置文件（docker-compose.yml 和 README.md），属于仓库特有的运维脚本和版本号修复，与 RL 训练框架的核心组件无关",
+      "value": 1,
+      "subsystems": [
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "tests/ci/README.md",
+        "tests/ci/github_runner/docker-compose.yml"
+      ],
+      "diff_preview": {
+        "additions": 6,
+        "deletions": 4,
+        "hunks": [
+          {
+            "file": "tests/ci/README.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -39,7 +39,7 @@ WARN: The `GITHUB_RUNNER_TOKEN` changes after a while."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "```shell"
+              ],
+              [
+                " ",
+                "docker run --rm -it --privileged --pid=host -v /:/host_root ubuntu /bin/bash -c 'rm -rf /host_root/home/runner/externals && mkdir -p /host_root/home/runner/externals && chmod -R 777 /host_root/home/runner/externals'"
+              ],
+              [
+                "-",
+                "docker run -d --name temp-runner ghcr.io/actions/actions-runner:2.334.0 tail -f /dev/null"
+              ],
+              [
+                "+",
+                "docker run -d --name temp-runner ghcr.io/actions/actions-runner:2.336.0 tail -f /dev/null"
+              ],
+              [
+                " ",
+                "docker cp temp-runner:/home/runner/externals/. /home/runner/externals"
+              ],
+              [
+                " ",
+                "docker rm -f temp-runner"
+              ],
+              [
+                " ",
+                "ls -alh /home/runner/externals"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:06:54.288721+00:00"
+    },
+    {
+      "id": "radixark/miles#2700",
+      "repo": "radixark/miles",
+      "pr_number": 2700,
+      "title": "feat(ci): add stage-c-8-gpu-b200 for the Blackwell runner",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-08-21T19:15:05Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2700",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为 Blackwell B200 8-GPU 节点注册新的 CI stage，并在 PR 测试工作流中添加对应的单分片任务",
+      "reason": "纯 CI 配置变更，涉及该仓库特定的 stage 注册、runner 标签和工作流文件，对其他 RL 训练框架没有参考价值",
+      "value": 1,
+      "subsystems": [
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".github/workflows/pr-test.yml",
+        "docs/ci/00-stage.md",
+        "docs/ci/contributor-guide.md",
+        "tests/ci/README.md",
+        "tests/ci/file_run.py",
+        "tests/ci/run_suite.py",
+        "tests/ci/stage_selection.py",
+        "tests/ci/test/test_run_suite.py"
+      ],
+      "diff_preview": {
+        "additions": 53,
+        "deletions": 11,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -320,3 +320,29 @@ jobs:"
+              ],
+              [
+                " ",
+                "        --labels ${{ needs.resolve-ci-policy.outputs.raw_labels }}"
+              ],
+              [
+                " ",
+                "        ${{ github.event_name == 'workflow_dispatch' && '--match-all-labels' || '' }}"
+              ],
+              [
+                " ",
+                "    secrets: inherit"
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "  # The Blackwell fleet is one unpartitioned 8-GPU host: an 8-GPU runner cannot"
+              ],
+              [
+                "+",
+                "  # coexist with 2/4-GPU runners on the same node, since GitHub would dispatch"
+              ],
+              [
+                "+",
+                "  # jobs onto overlapping devices. Tests needing fewer than 8 GPUs therefore"
+              ],
+              [
+                "+",
+                "  # register against this suite too. No partition matrix: one runner serialises"
+              ],
+              [
+                "+",
+                "  # shards anyway, and the suite's current budget is far inside the job timeout."
+              ],
+              [
+                "+",
+                "  stage-c-8-gpu-b200:"
+              ],
+              [
+                "+",
+                "    needs: [resolve-ci-policy, resolve-ci-image, stage-a-cpu]"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:06:49.122529+00:00"
+    },
+    {
+      "id": "radixark/miles#2701",
+      "repo": "radixark/miles",
+      "pr_number": 2701,
+      "title": "feat(ci): declare supported GPU generations on every CUDA test",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-08-21T19:15:07Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2701",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为每个 CUDA 测试注册项新增必填的 hardware 字段，明确声明该测试支持的 GPU 架构（hopper/blackwell），并对全部 99 个注册项完成分类标注",
+      "reason": "这是该仓库 CI 基础设施的内部改动，涉及 miles 特有的 register_cuda_ci 注册机制和 CI runner 配置，其他框架不共享这套测试注册体系",
+      "value": 1,
+      "subsystems": [
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "tests/ci/ci_register.py",
+        "tests/ci/hardware.py",
+        "tests/ci/test/test_ci_register.py",
+        "tests/ci/test/test_gate_integration.py",
+        "tests/ci/test/test_hardware.py",
+        "tests/ci/test/test_history_gate.py",
+        "tests/ci/test/test_metric_selection.py",
+        "tests/e2e/ckpt/test_glm47_flash_ckpt.py",
+        "tests/e2e/ckpt/test_qwen3_4B_ckpt.py",
+        "tests/e2e/fsdp/r3/test_glm47_flash_r3.py",
+        "tests/e2e/fsdp/r3/test_qwen3_30b_a3b_r3.py",
+        "tests/e2e/fsdp/r3/test_qwen3_5_35b_a3b_r3.py",
+        "tests/e2e/fsdp/test_qwen3_0.6B_fsdp_distributed.py",
+        "tests/e2e/fsdp/test_qwen3_0.6B_megatron_fsdp_align.py",
+        "tests/e2e/fsdp/test_qwen3_4B_fsdp_hybrid_shard_r2s2.py",
+        "tests/e2e/fsdp/test_qwen3_4B_fsdp_hybrid_shard_r2s4.py",
+        "tests/e2e/fsdp/test_qwen3_4B_fsdp_true_on_policy.py",
+        "tests/e2e/fsdp/test_qwen3_vl_4B_fsdp.py",
+        "tests/e2e/ft/test_trainer_ft_deterministic_dp2_cp2_pp2.py",
+        "tests/e2e/ft/test_trainer_ft_deterministic_dp2_cp2_real_rollout.py"
+      ],
+      "diff_preview": {
+        "additions": 285,
+        "deletions": 24,
+        "hunks": [
+          {
+            "file": "tests/ci/ci_register.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -4,6 +4,7 @@"
+              ],
+              [
+                " ",
+                "from dataclasses import dataclass, field"
+              ],
+              [
+                " ",
+                "from enum import Enum, auto"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "from tests.ci.hardware import CUDA_STAGE_ARCH, KNOWN_ARCHES, auto_arch"
+              ],
+              [
+                " ",
+                "from tests.ci.labels import KNOWN_LABELS"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "__all__ = ["
+              ],
+              [
+                "h",
+                "@@ -22,7 +23,9 @@"
+              ],
+              [
+                " ",
+                "_POSITIONAL_PARAMS = (\"est_time\", \"suite\")"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# All accepted keyword arguments (in addition to the positional pair above)."
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:06:43.892339+00:00"
+    },
+    {
+      "id": "radixark/miles#2702",
+      "repo": "radixark/miles",
+      "pr_number": 2702,
+      "title": "fix(ci): key the metric-history baseline on the executing stage",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-08-21T19:15:30Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2702",
+      "category": "bugfix",
+      "scope": "repo-specific",
+      "summary": "修复 CI 指标历史基线中 RunIdentity 使用测试声明的 suite 而非实际执行阶段的问题，避免跨 GPU 代际数据混淆导致回归检测失效",
+      "reason": "该修复针对 miles 仓库自身的 CI 流水线中的 metric-history gate 机制，涉及的是仓库特有的测试调度与硬件轴（H200/B200）分发逻辑，与 RL 训练框架的核心算法或通用基础设施无关",
+      "value": 1,
+      "subsystems": [
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "docs/ci/03-metric-history-gate.md",
+        "tests/ci/ci_utils.py",
+        "tests/ci/metric_history/gate.py",
+        "tests/ci/run_suite.py",
+        "tests/ci/test/test_gate_integration.py",
+        "tests/ci/test/test_history_gate.py"
+      ],
+      "diff_preview": {
+        "additions": 133,
+        "deletions": 33,
+        "hunks": [
+          {
+            "file": "docs/ci/03-metric-history-gate.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -10,7 +10,7 @@ CI keeps each test's per-metric numbers from every run in our own store and runs"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "The gate compares a number only against earlier numbers of the same kind, from the same test. Two keys decide that:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                "- **Run series** (the \"same test\"): `(test_path, backend, suite)`. Runs differing on any field never share a baseline. A test-file edit does not reset the series (see Notes)."
+              ],
+              [
+                "+",
+                "- **Run series** (the \"same test\"): `(test_path, backend, suite)`, where `suite` is the stage the run **executed on**, not the one `register_*_ci(suite=...)` declares. The two coincide whenever a test runs at its home stage; they differ once a test is dispatched to another GPU generation, and its numbers then belong to that generation's series. Runs differing on any field never share a baseline. A test-file edit does not reset the series (see Notes)."
+              ],
+              [
+                " ",
+                "- **Value within a run**: `(metric_key, steps_key, constraint_key, step)` — the declaring gate's literal content plus which point. `steps_key` and `step` are not redundant: a fanned-out declaration (`steps=[0, 1]` / `steps=\"all\"`) produces several values in one run — one per selected step — and each must be judged only against its own step's history, so the literals identify the spec while `step` identifies the point:"
+              ],
+              [
+                " ",
+                "  - Session TITO metrics put `/v1/` or `/v2/` directly after `tito_session_mismatch_rate` at the producer, so wandb and both runs' history coordinates stay distinct."
+              ],
+              [
+                " ",
+                "  - `steps_key` / `constraint_key` are canonical JSON of the declaration's raw `steps` / `constraint` literals: no whitespace, dict keys sorted, list order kept as written, a string keyword stored with its JSON quotes — `steps=[0, 1]` → `[0,1]`, `steps=\"last\"` → `\"last\"` (quotes included). Built from the raw literal, never the normalized form, so a code-side default change can never silently re-key a series; editing the declaration's literals changes these keys, so a declaration edit starts a fresh coordinate history by construction."
+              ],
+              [
+                "h",
+                "@@ -59,7 +59,7 @@ register_ci_gate(metric_key=\"rollout/raw_reward\")  # standard metric: steps + co"
+              ],
+              [
+                " ",
+                "Three roles, connected only by JSONL files and one DB — there is no long-lived \"metrics manager\"; the pipeline is per-test, driven by the harness:"
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:06:37.596198+00:00"
+    },
+    {
+      "id": "radixark/miles#2703",
+      "repo": "radixark/miles",
+      "pr_number": 2703,
+      "title": "feat(ci): dispatch a CI run to a GPU generation",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-08-21T19:15:32Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2703",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "新增CI标签机制，允许PR通过`run-on-hopper`/`run-on-blackwell`等标签将测试分发到指定GPU架构上运行",
+      "reason": "这是该仓库CI系统特有的硬件路由逻辑，涉及仓库内部的stage选择、标签策略和测试注册机制，与RL训练框架的算法或通用训练基础设施无关，其他框架不会直接复用此CI设计",
+      "value": 1,
+      "subsystems": [
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".github/workflows/policies/comment-command-access.json",
+        ".github/workflows/scripts/comment_ci_command.py",
+        "docs/ci/00-stage.md",
+        "docs/ci/01-label.md",
+        "tests/ci/README.md",
+        "tests/ci/ci_policy.py",
+        "tests/ci/ci_register.py",
+        "tests/ci/hardware.py",
+        "tests/ci/run_suite.py",
+        "tests/ci/stage_selection.py",
+        "tests/ci/test/test_comment_ci_command.py",
+        "tests/ci/test/test_hardware.py",
+        "tests/ci/test/test_run_suite.py",
+        "tests/ci/test/test_stage_selection.py"
+      ],
+      "diff_preview": {
+        "additions": 386,
+        "deletions": 62,
+        "hunks": [
+          {
+            "file": ".github/workflows/policies/comment-command-access.json",
+            "lang": "json",
+            "lines": [
+              [
+                "h",
+                "@@ -2,11 +2,17 @@"
+              ],
+              [
+                " ",
+                "  \"version\": 2,"
+              ],
+              [
+                " ",
+                "  \"groups\": {"
+              ],
+              [
+                " ",
+                "    \"add_label_access\": {"
+              ],
+              [
+                "-",
+                "      \"repository_permissions\": [\"write\", \"admin\"],"
+              ],
+              [
+                "+",
+                "      \"repository_permissions\": ["
+              ],
+              [
+                "+",
+                "        \"write\","
+              ],
+              [
+                "+",
+                "        \"admin\""
+              ],
+              [
+                "+",
+                "      ],"
+              ],
+              [
+                " ",
+                "      \"user_ids\": []"
+              ],
+              [
+                " ",
+                "    },"
+              ],
+              [
+                " ",
+                "    \"repo_write_access\": {"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:06:31.733623+00:00"
+    },
+    {
+      "id": "radixark/miles#2704",
+      "repo": "radixark/miles",
+      "pr_number": 2704,
+      "title": "feat(ci): turn on the Blackwell-only tests",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-08-21T19:15:45Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2704",
+      "category": "infra",
+      "scope": "repo-specific",
+      "summary": "为 Blackwell（B200/sm100）硬件上线后启用三个此前因缺少硬件而跳过的 CI 测试",
+      "reason": "纯粹是该仓库的 CI 配置调整，涉及的测试（GLM-5、JoyAI、nvfp4 量化器）均为仓库特有模型/硬件适配，对其他 RL 框架无参考价值",
+      "value": 1,
+      "subsystems": [
+        "ci"
+      ],
+      "rl_concepts": [],
+      "files": [
+        "tests/e2e/megatron/test_glm5_2_744b_a40b_5layer_nvfp4.py",
+        "tests/e2e/megatron/test_joyai_llm_flash_mxfp8.py",
+        "tests/fast-gpu/test_nvfp4_quantizer.py"
+      ],
+      "diff_preview": {
+        "additions": 1,
+        "deletions": 3,
+        "hunks": [
+          {
+            "file": "tests/e2e/megatron/test_glm5_2_744b_a40b_5layer_nvfp4.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -11,7 +11,6 @@"
+              ],
+              [
+                " ",
+                "    suite=\"stage-c-8-gpu-b200\","
+              ],
+              [
+                " ",
+                "    labels=[\"model-scripts\"],"
+              ],
+              [
+                " ",
+                "    hardware=[\"blackwell\"],"
+              ],
+              [
+                "-",
+                "    disabled=\"Requires Blackwell/B200 CI runner for NVFP4.\","
+              ],
+              [
+                " ",
+                ")"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "MODEL_ORG = \"Pinaster\""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:06:25.974051+00:00"
+    },
+    {
+      "id": "radixark/miles#2706",
+      "repo": "radixark/miles",
+      "pr_number": 2706,
+      "title": "DeepSeek-V4 on the bumped Megatron, with a selectable training implementation",
+      "state": "open",
+      "author": "yueming-yuan",
+      "created_at": "2026-08-21T22:47:41Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2706",
+      "category": "feature",
+      "scope": "repo-specific",
+      "summary": "为 DeepSeek-V4 引入可选训练后端（miles/megatron），在升级后的 Megatron 上重新启用 DSv4 支持，并明确区分两条实现路径的注意力、超连接、核函数和张量并行配置",
+      "reason": "该 PR 涉及 DeepSeek-V4 这一特定模型在 miles 仓库私有 Megatron 分支上的专属适配，包括仓库自有的 tilelang 核函数、miles 超连接实现、内部 mbridge 插件等，其设计与实现高度依赖 miles/radixark 的私有代码路径，其他框架无法直接复用",
+      "value": 2,
+      "subsystems": [
+        "parallel",
+        "infra",
+        "checkpoint"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "tensor-parallelism",
+        "checkpoint"
+      ],
+      "files": [
+        ".rxignore",
+        "miles/backends/megatron_utils/arguments.py",
+        "miles/backends/megatron_utils/checkpoint.py",
+        "miles/backends/megatron_utils/megatron_to_hf/__init__.py",
+        "miles/backends/megatron_utils/megatron_to_hf/deepseekv4.py",
+        "miles/backends/megatron_utils/megatron_to_hf/processors/quantizer_fp8.py",
+        "miles/backends/megatron_utils/megatron_to_hf/processors/quantizer_mxfp8.py",
+        "miles/backends/megatron_utils/update_weight/hf_weight_iterator_direct.py",
+        "miles/utils/arguments.py",
+        "miles/utils/debug_utils/run_megatron/worker/main.py",
+        "miles_plugins/mbridge/deepseekv4.py",
+        "miles_plugins/models/deepseek_v4/arguments.py",
+        "miles_plugins/models/deepseek_v4/deepseek_v4.py",
+        "miles_plugins/models/deepseek_v4/ops/compressor.py",
+        "miles_plugins/models/deepseek_v4/ops/hyper_connection.py",
+        "miles_plugins/models/deepseek_v4/ops/v4_indexer.py",
+        "scripts/models/deepseek-v4-flash.py",
+        "scripts/models/deepseek-v4-pro.py",
+        "scripts/run_deepseek_v4.py",
+        "tests/e2e/megatron/model_scripts/test_deepseek_v4_flash_4layer_ci.py"
+      ],
+      "diff_preview": {
+        "additions": 543,
+        "deletions": 393,
+        "hunks": [
+          {
+            "file": ".rxignore",
+            "lang": "",
+            "lines": [
+              [
+                "h",
+                "@@ -0,0 +1,46 @@"
+              ],
+              [
+                "+",
+                "# .rxignore — patterns mutagen will SKIP when bidirectionally syncing"
+              ],
+              [
+                "+",
+                "# this folder to your devbox. Same syntax as .gitignore (glob patterns)."
+              ],
+              [
+                "+",
+                "#"
+              ],
+              [
+                "+",
+                "# Auto-generated by `rx devbox sync start`. Edit freely — `rx` honors"
+              ],
+              [
+                "+",
+                "# the file as-is on subsequent `sync start` invocations. A small set"
+              ],
+              [
+                "+",
+                "# of patterns (.git, .mutagen, node_modules, __pycache__, .DS_Store)"
+              ],
+              [
+                "+",
+                "# is ALWAYS skipped regardless of this file to protect your devbox"
+              ],
+              [
+                "+",
+                "# from accidentally pulling in repo internals."
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                "+",
+                "# Build outputs"
+              ],
+              [
+                "+",
+                "target/"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:06:20.399443+00:00"
+    },
+    {
+      "id": "radixark/miles#2707",
+      "repo": "radixark/miles",
+      "pr_number": 2707,
+      "title": "fix: retain colocated LoRA CUDA-IPC exporter storage",
+      "state": "open",
+      "author": "zhoutong-hai",
+      "created_at": "2026-08-21T23:46:05Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2707",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 colocated LoRA CUDA-IPC 导出器的生命周期管理，避免消费方释放 IPC 句柄时与分配器重用产生竞态条件",
+      "reason": "CUDA-IPC 句柄的生命周期竞态问题是所有使用 colocated 部署 + LoRA 权重同步的框架都会遇到的通用 bug，与 miles 仓库特有逻辑无关",
+      "value": 4,
+      "subsystems": [
+        "weight-sync",
+        "memory",
+        "parallel"
+      ],
+      "rl_concepts": [
+        "LoRA",
+        "Megatron",
+        "权重同步",
+        "CUDA-IPC",
+        "PP并行"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/update_weight/update_weight_from_tensor.py",
+        "tests/fast/backends/megatron_utils/test_lora_weight_sync_validation.py"
+      ],
+      "diff_preview": {
+        "additions": 330,
+        "deletions": 16,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/update_weight/update_weight_from_tensor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -113,6 +113,10 @@ def __init__("
+              ],
+              [
+                " ",
+                "            self._lora_config = build_lora_sync_config(args)"
+              ],
+              [
+                " ",
+                "            self._lora_loaded = False"
+              ],
+              [
+                " ",
+                "            self._lora_base_synced = False"
+              ],
+              [
+                "+",
+                "            # CUDA-IPC consumers may keep exporter handles alive after the load"
+              ],
+              [
+                "+",
+                "            # request returns. Keep the payload owned by this updater and reuse"
+              ],
+              [
+                "+",
+                "            # its storage instead of reclaiming it between publications."
+              ],
+              [
+                "+",
+                "            self._lora_ipc_live_tensors: list[dict[str, torch.Tensor]] | None = None"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "        self._mm_tower_cache: list[tuple[str, torch.Tensor]] | None = None"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "h",
+                "@@ -233,6 +237,38 @@ def pop_metrics(self) -> dict[str, float]:"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:06:12.500389+00:00"
+    },
+    {
+      "id": "radixark/miles#2708",
+      "repo": "radixark/miles",
+      "pr_number": 2708,
+      "title": "fix(lora): let a resumed disaggregated run reach the rollout engine",
+      "state": "open",
+      "author": "Arist12",
+      "created_at": "2026-08-22T00:15:52Z",
+      "merged_at": null,
+      "url": "https://github.com/radixark/miles/pull/2708",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 disaggregated 模式下携带 LoRA adapter 路径恢复训练时，rollout 引擎启动报错及权重同步校验失败的两处 bug",
+      "reason": "LoRA checkpoint 恢复与 disaggregated rollout 引擎的兼容问题（adapter_config.json 缺失导致预加载失败、权重同步校验逻辑未考虑 resume 场景）是所有基于 SGLang+Megatron 的 RL 框架都可能遇到的通用问题，不依赖该仓库特有逻辑",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "weight-sync",
+        "checkpoint"
+      ],
+      "rl_concepts": [
+        "LoRA",
+        "checkpoint",
+        "Megatron",
+        "disaggregated rollout",
+        "权重同步"
+      ],
+      "files": [
+        "miles/backends/megatron_utils/update_weight/update_weight_from_distributed/mixin.py",
+        "miles/backends/sglang_utils/sglang_engine.py",
+        "tests/fast/backends/megatron_utils/test_lora_weight_sync_validation.py",
+        "tests/fast/backends/sglang_utils/test_compute_server_args.py"
+      ],
+      "diff_preview": {
+        "additions": 53,
+        "deletions": 23,
+        "hunks": [
+          {
+            "file": "miles/backends/megatron_utils/update_weight/update_weight_from_distributed/mixin.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -86,7 +86,6 @@ def _init_lora("
+              ],
+              [
+                " ",
+                "                f\"--pipeline-model-parallel-size 1 (got {args.pipeline_model_parallel_size}).\""
+              ],
+              [
+                " ",
+                "            )"
+              ],
+              [
+                " ",
+                "            self._lora_config = build_lora_sync_config(args)"
+              ],
+              [
+                "-",
+                "            self._lora_loaded = False"
+              ],
+              [
+                " ",
+                "            self._hf_weight_iterator = HfWeightIteratorBase.create("
+              ],
+              [
+                " ",
+                "                args=args,"
+              ],
+              [
+                " ",
+                "                model=model,"
+              ],
+              [
+                "h",
+                "@@ -258,12 +257,16 @@ def _update_lora_weights(self) -> None:"
+              ],
+              [
+                " ",
+                "                \"(no lora_A/lora_B names found). Check weight iterator.\""
+              ],
+              [
+                " ",
+                "            )"
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:06:06.488711+00:00"
+    },
+    {
+      "id": "THUDM/slime#2296",
+      "repo": "THUDM/slime",
+      "pr_number": 2296,
+      "title": "fix(train): skip optimizer and scheduler for eval-only",
+      "state": "closed",
+      "author": "EazyReal",
+      "created_at": "2026-08-21T01:35:03Z",
+      "merged_at": "2026-08-21T02:50:24Z",
+      "url": "https://github.com/THUDM/slime/pull/2296",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 eval-only 模式下 Megatron optimizer 和 scheduler 的初始化流程，当 num_rollout=0 时跳过 optimizer/scheduler 构建以避免 lr_decay_steps=0 断言失败",
+      "reason": "Megatron optimizer 在 train_iters=0 时断言 lr_decay_steps>0 是 Megatron 框架本身的约束，任何使用 Megatron 后端且支持 eval-only 模式的 RL 训练框架都会遇到同样问题",
+      "value": 3,
+      "subsystems": [
+        "trainer",
+        "parallel",
+        "infra"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "eval-only",
+        "optimizer",
+        "lr-scheduler"
+      ],
+      "files": [
+        "slime/backends/megatron_utils/model.py",
+        "slime/ray/placement_group.py"
+      ],
+      "diff_preview": {
+        "additions": 10,
+        "deletions": 6,
+        "hunks": [
+          {
+            "file": "slime/backends/megatron_utils/model.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -270,7 +270,7 @@ def _patch_megatron_adam(adam_cls):"
+              ],
+              [
+                " ",
+                "def setup_model_and_optimizer("
+              ],
+              [
+                " ",
+                "    args: Namespace,"
+              ],
+              [
+                " ",
+                "    role: str = \"actor\","
+              ],
+              [
+                "-",
+                ") -> tuple[list[DDP], MegatronOptimizer, OptimizerParamScheduler]:"
+              ],
+              [
+                "+",
+                ") -> tuple[list[DDP], MegatronOptimizer | None, OptimizerParamScheduler | None]:"
+              ],
+              [
+                " ",
+                "    \"\"\"Build model(s), wrap with DDP, and construct optimizer and scheduler."
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "    Args:"
+              ],
+              [
+                "h",
+                "@@ -283,7 +283,7 @@ def setup_model_and_optimizer("
+              ],
+              [
+                " ",
+                "        lr_mult (float): Global learning-rate multiplier for the optimizer."
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:05:59.784518+00:00"
+    },
+    {
+      "id": "THUDM/slime#2297",
+      "repo": "THUDM/slime",
+      "pr_number": 2297,
+      "title": "fix: reject non-positive rollout temperature at parse time",
+      "state": "closed",
+      "author": "EazyReal",
+      "created_at": "2026-08-21T03:02:11Z",
+      "merged_at": "2026-08-21T03:11:54Z",
+      "url": "https://github.com/THUDM/slime/pull/2297",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "在参数解析阶段拒绝非正数的 rollout temperature，防止贪心解码被错误用于在线 RL 采样",
+      "reason": "rollout temperature <= 0 导致采样分布退化为 delta 分布而 log-prob 仍来自 softmax 的问题是所有基于 PPO/GRPO 的 RL 训练框架都会遇到的算法正确性问题，与具体仓库实现无关",
+      "value": 3,
+      "subsystems": [
+        "rollout",
+        "algo",
+        "infra"
+      ],
+      "rl_concepts": [
+        "PPO",
+        "on-policy",
+        "rollout",
+        "log-prob",
+        "importance-sampling"
+      ],
+      "files": [
+        "slime/utils/arguments.py",
+        "tests/test_megatron_argument_validation.py"
+      ],
+      "diff_preview": {
+        "additions": 17,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "slime/utils/arguments.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -343,7 +343,7 @@ def add_rollout_arguments(parser):"
+              ],
+              [
+                " ",
+                "                \"--rollout-temperature\","
+              ],
+              [
+                " ",
+                "                type=float,"
+              ],
+              [
+                " ",
+                "                default=1.0,"
+              ],
+              [
+                "-",
+                "                help=\"the temperature for the inference engine during rollout.\","
+              ],
+              [
+                "+",
+                "                help=\"the temperature for the inference engine during rollout. Must be > 0.\","
+              ],
+              [
+                " ",
+                "            )"
+              ],
+              [
+                " ",
+                "            parser.add_argument("
+              ],
+              [
+                " ",
+                "                \"--rollout-top-p\", type=float, default=1.0, help=\"the top-p for the inference engine during rollout.\""
+              ],
+              [
+                "h",
+                "@@ -1767,6 +1767,11 @@ def _resolve_eval_datasets(args) -> list[EvalDatasetConfig]:"
+              ],
+              [
+                " ",
+                "def slime_validate_args(args):"
+              ],
+              [
+                " ",
+                "    args.eval_datasets = _resolve_eval_datasets(args)"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:05:53.882862+00:00"
+    },
+    {
+      "id": "THUDM/slime#2298",
+      "repo": "THUDM/slime",
+      "pr_number": 2298,
+      "title": "[NFC] Add observability subfolder",
+      "state": "closed",
+      "author": "zhuzilin",
+      "created_at": "2026-08-21T03:08:13Z",
+      "merged_at": "2026-08-21T09:14:19Z",
+      "url": "https://github.com/THUDM/slime/pull/2298",
+      "category": "refactor",
+      "scope": "repo-specific",
+      "summary": "将日志、调试、追踪相关的工具函数从通用 utils 文件夹迁移到新建的 observability 子文件夹，使 utils 目录更精简。",
+      "reason": "这是对该仓库内部目录结构的重组，涉及 slime 特有的模块路径和命名规范，其他框架不会直接受益于此次文件搬迁。",
+      "value": 1,
+      "subsystems": [
+        "logging",
+        "infra"
+      ],
+      "rl_concepts": [],
+      "files": [
+        ".github/workflows/pr-test.yml",
+        ".github/workflows/pr-test.yml.j2",
+        "docker/NOTES_GB10.md",
+        "docker/npu_patch/slime.patch",
+        "docs/en/developer_guide/trace.md",
+        "docs/en/get_started/customization.md",
+        "docs/zh/developer_guide/trace.md",
+        "docs/zh/get_started/customization.md",
+        "slime/backends/megatron_utils/actor.py",
+        "slime/backends/megatron_utils/cp_utils.py",
+        "slime/backends/megatron_utils/data.py",
+        "slime/backends/megatron_utils/model.py",
+        "slime/observability/__init__.py",
+        "slime/observability/logging_utils.py",
+        "slime/observability/metric_utils.py",
+        "slime/observability/profile_utils.py",
+        "slime/observability/rollout_data_utils.py",
+        "slime/observability/rollout_metrics.py",
+        "slime/observability/tensorboard_utils.py",
+        "slime/observability/timer.py"
+      ],
+      "diff_preview": {
+        "additions": 922,
+        "deletions": 880,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -595,7 +595,15 @@ jobs:"
+              ],
+              [
+                " ",
+                "            },"
+              ],
+              [
+                " ",
+                "            {"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "-",
+                "              \"test_file\": \"test_train_dump.py\""
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_train_data_utils.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_rollout_data_utils.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:05:48.197479+00:00"
+    },
+    {
+      "id": "THUDM/slime#2300",
+      "repo": "THUDM/slime",
+      "pr_number": 2300,
+      "title": "fix(rollout): normalize fan-out rewards by trajectory",
+      "state": "closed",
+      "author": "sxl1993",
+      "created_at": "2026-08-21T08:24:49Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2300",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 fan-out rollout 场景下奖励归一化逻辑，改为以轨迹（trajectory）为单位计算基线并广播归一化奖励，而非以样本为单位分组",
+      "reason": "fan-out rollout 中轨迹级奖励归一化是 GRPO/PPO 类算法的通用问题：任何支持一条 rollout 展开为多个样本的框架都会面临相同的基线计算偏差，与 slime 特有实现无关",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "algo",
+        "objective"
+      ],
+      "rl_concepts": [
+        "GRPO",
+        "reward-normalization",
+        "advantage",
+        "rollout",
+        "baseline"
+      ],
+      "files": [
+        "slime/rollout/_fanout_test_helpers.py",
+        "tests/test_sample.py"
+      ],
+      "diff_preview": {
+        "additions": 45,
+        "deletions": 16,
+        "hunks": [
+          {
+            "file": "slime/rollout/_fanout_test_helpers.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -30,7 +30,6 @@"
+              ],
+              [
+                " ",
+                "import os"
+              ],
+              [
+                " ",
+                "from collections import defaultdict"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                ""
+              ],
+              [
+                " ",
+                "MAX_FANOUT = 3"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# Each invocation appends one line. The test file reads this after train"
+              ],
+              [
+                "h",
+                "@@ -84,10 +83,9 @@ def grpo_normalize_by_group_index(args, samples):"
+              ],
+              [
+                " ",
+                "    centering is computed across ALL samples in the batch instead of"
+              ],
+              [
+                " ",
+                "    per-prompt — that's silently wrong for GRPO."
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:05:43.003128+00:00"
+    },
+    {
+      "id": "THUDM/slime#2301",
+      "repo": "THUDM/slime",
+      "pr_number": 2301,
+      "title": "fix(rollout): normalize fan-out rewards by trajectory",
+      "state": "closed",
+      "author": "sxl1993",
+      "created_at": "2026-08-21T08:26:03Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2301",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 fan-out rollout 场景下的奖励归一化逻辑，改为以轨迹为单位计算基线并广播，避免样本数量不均导致的偏差",
+      "reason": "Fan-out rollout 的奖励归一化偏差（按 group_index 分组而非按轨迹分组）是 GRPO/PPO 类框架在处理一条 prompt 产出多条轨迹、每条轨迹又展开多个样本时普遍会遇到的问题，与具体仓库无关，其他使用相同采样策略的框架同样会踩到这个坑",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "algo",
+        "objective"
+      ],
+      "rl_concepts": [
+        "GRPO",
+        "advantage",
+        "reward normalization",
+        "group baseline",
+        "trajectory"
+      ],
+      "files": [
+        "slime/rollout/_fanout_test_helpers.py",
+        "tests/test_sample.py"
+      ],
+      "diff_preview": {
+        "additions": 45,
+        "deletions": 16,
+        "hunks": [
+          {
+            "file": "slime/rollout/_fanout_test_helpers.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -30,7 +30,6 @@"
+              ],
+              [
+                " ",
+                "import os"
+              ],
+              [
+                " ",
+                "from collections import defaultdict"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                ""
+              ],
+              [
+                " ",
+                "MAX_FANOUT = 3"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# Each invocation appends one line. The test file reads this after train"
+              ],
+              [
+                "h",
+                "@@ -84,10 +83,9 @@ def grpo_normalize_by_group_index(args, samples):"
+              ],
+              [
+                " ",
+                "    centering is computed across ALL samples in the batch instead of"
+              ],
+              [
+                " ",
+                "    per-prompt — that's silently wrong for GRPO."
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:05:36.712343+00:00"
+    },
+    {
+      "id": "THUDM/slime#2302",
+      "repo": "THUDM/slime",
+      "pr_number": 2302,
+      "title": "fix(rollout): normalize fan-out rewards by trajectory",
+      "state": "open",
+      "author": "sxl1993",
+      "created_at": "2026-08-21T08:31:39Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2302",
+      "category": "bugfix",
+      "scope": "universal",
+      "summary": "修复 fan-out GRPO 中奖励归一化逻辑，改为按轨迹（trajectory）而非按样本计算 baseline，并将归一化后的奖励广播到同一轨迹的所有样本",
+      "reason": "GRPO 中 advantage/reward baseline 的计算粒度（sample-level vs trajectory-level）是通用算法问题，任何实现 fan-out 或 group rollout 的 RL 训练框架都会遇到相同的 baseline 偏差 bug，与仓库特有实现无关",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "algo",
+        "objective"
+      ],
+      "rl_concepts": [
+        "GRPO",
+        "reward-normalization",
+        "advantage",
+        "baseline",
+        "group-rollout"
+      ],
+      "files": [
+        "slime/rollout/_fanout_test_helpers.py",
+        "tests/test_sample.py"
+      ],
+      "diff_preview": {
+        "additions": 45,
+        "deletions": 16,
+        "hunks": [
+          {
+            "file": "slime/rollout/_fanout_test_helpers.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -30,7 +30,6 @@"
+              ],
+              [
+                " ",
+                "import os"
+              ],
+              [
+                " ",
+                "from collections import defaultdict"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "-",
+                ""
+              ],
+              [
+                " ",
+                "MAX_FANOUT = 3"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "# Each invocation appends one line. The test file reads this after train"
+              ],
+              [
+                "h",
+                "@@ -84,10 +83,9 @@ def grpo_normalize_by_group_index(args, samples):"
+              ],
+              [
+                " ",
+                "    centering is computed across ALL samples in the batch instead of"
+              ],
+              [
+                " ",
+                "    per-prompt — that's silently wrong for GRPO."
+              ],
+              [
+                " ",
+                ""
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:05:29.691079+00:00"
+    },
+    {
+      "id": "THUDM/slime#2303",
+      "repo": "THUDM/slime",
+      "pr_number": 2303,
+      "title": "docs: add SkyPilot launch tutorial under platform_support",
+      "state": "open",
+      "author": "ishankaul1",
+      "created_at": "2026-08-21T18:04:57Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2303",
+      "category": "doc",
+      "scope": "repo-specific",
+      "summary": "新增 SkyPilot 在 Kubernetes 和云实例上多节点启动 slime 的平台支持教程，涵盖标准多节点和 disaggregated 两种部署方式",
+      "reason": "该 PR 仅为 slime 仓库添加特定平台（SkyPilot）的部署文档，属于仓库特有的运维/部署指南，不涉及通用 RL 算法、训练循环或基础设施代码改动",
+      "value": 1,
+      "subsystems": [
+        "infra",
+        "rollout"
+      ],
+      "rl_concepts": [
+        "GRPO"
+      ],
+      "files": [
+        "docs/en/get_started/quick_start.md",
+        "docs/en/index.rst",
+        "docs/en/platform_support/skypilot_tutorial.md"
+      ],
+      "diff_preview": {
+        "additions": 323,
+        "deletions": 1,
+        "hunks": [
+          {
+            "file": "docs/en/get_started/quick_start.md",
+            "lang": "md",
+            "lines": [
+              [
+                "h",
+                "@@ -584,6 +584,8 @@ export NCCL_SOCKET_IFNAME=$(ip -o -4 addr show | awk '$4 ~ /^10\\\\./ {print $2}')"
+              ],
+              [
+                " ",
+                "export NVSHMEM_BOOTSTRAP_UID_SOCK_IFNAME=$(ip -o -4 addr show | awk '$4 ~ /^10\\./ {print $2}')"
+              ],
+              [
+                " ",
+                "```"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                "+",
+                "For launching the same multi-node setup on Kubernetes or cloud instances with one command, see the [SkyPilot tutorial](../platform_support/skypilot_tutorial.md)."
+              ],
+              [
+                "+",
+                ""
+              ],
+              [
+                " ",
+                "slime has been deeply optimized for distributed training of large-scale Mixture of Experts (MoE) models. We provide some end-to-end training cases for reference:"
+              ],
+              [
+                " ",
+                ""
+              ],
+              [
+                " ",
+                "- [Example: 8xH100 Training GLM-4.7-Flash](../examples/glm4.7-30B-A3B.md)"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:05:23.219503+00:00"
+    },
+    {
+      "id": "THUDM/slime#2304",
+      "repo": "THUDM/slime",
+      "pr_number": 2304,
+      "title": "feat(megatron): report peak memory for log_probs and actor_train",
+      "state": "open",
+      "author": "EazyReal",
+      "created_at": "2026-08-21T19:19:16Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2304",
+      "category": "feature",
+      "scope": "universal",
+      "summary": "为 Megatron 后端的 log_probs 前向和 actor_train 阶段添加峰值显存报告，确保 OOM 前也能记录到高水位显存占用",
+      "reason": "峰值显存追踪是所有使用 Megatron/CUDA 的 RL 训练框架都面临的通用问题，reset peak stats + finally 块上报的模式可直接迁移到 verl、OpenRLHF 等框架",
+      "value": 3,
+      "subsystems": [
+        "memory",
+        "logging",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "Megatron",
+        "actor",
+        "log_probs"
+      ],
+      "files": [
+        "slime/backends/megatron_utils/actor.py",
+        "slime/utils/accelerator/torch_accelerator.py",
+        "slime/utils/memory_utils.py",
+        "tests/test_accelerator.py"
+      ],
+      "diff_preview": {
+        "additions": 93,
+        "deletions": 5,
+        "hunks": [
+          {
+            "file": "slime/backends/megatron_utils/actor.py",
+            "lang": "py",
+            "lines": [
+              [
+                "h",
+                "@@ -20,7 +20,7 @@"
+              ],
+              [
+                " ",
+                "from slime.utils import accelerator"
+              ],
+              [
+                " ",
+                "from slime.utils.data import process_rollout_data"
+              ],
+              [
+                " ",
+                "from slime.utils.distributed_utils import get_gloo_group"
+              ],
+              [
+                "-",
+                "from slime.utils.memory_utils import clear_memory, print_memory"
+              ],
+              [
+                "+",
+                "from slime.utils.memory_utils import clear_memory, print_memory, report_peak_memory"
+              ],
+              [
+                " ",
+                "from slime.utils.misc import Box"
+              ],
+              [
+                " ",
+                "from slime.utils.reloadable_process_group import ("
+              ],
+              [
+                " ",
+                "    destroy_process_groups,"
+              ],
+              [
+                "h",
+                "@@ -360,7 +360,7 @@ def compute_log_prob("
+              ],
+              [
+                " ",
+                "        num_microbatches: list[int],"
+              ],
+              [
+                " ",
+                "        store_prefix: str = \"\","
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:05:17.641474+00:00"
+    },
+    {
+      "id": "THUDM/slime#2305",
+      "repo": "THUDM/slime",
+      "pr_number": 2305,
+      "title": "feat(rollout): 为异步 RS 精确补齐 prompt-group batch",
+      "state": "open",
+      "author": "inmnin",
+      "created_at": "2026-08-21T21:32:44Z",
+      "merged_at": null,
+      "url": "https://github.com/THUDM/slime/pull/2305",
+      "category": "feature",
+      "scope": "universal",
+      "summary": "为异步 RS 训练路径增加 prompt-group 级别的精确 batch 补齐机制，确保每个 optimizer step 使用完整且通过 rejection sampling 的 prompt group，而非静默使用 underfilled batch",
+      "reason": "Rejection sampling 后 effective batch 不足导致静默 underfill 是所有使用 sequence-level RS 的异步 RL 训练框架（如 verl、openrlhf 等）都会面临的问题；group-atomic batch 语义与 RS admission gate 的结合属于通用训练循环正确性问题，不依赖 slime 特有组件",
+      "value": 4,
+      "subsystems": [
+        "rollout",
+        "algo",
+        "trainer"
+      ],
+      "rl_concepts": [
+        "rejection-sampling",
+        "GRPO",
+        "importance-sampling",
+        "on-policy",
+        "advantage"
+      ],
+      "files": [
+        ".github/workflows/pr-test.yml",
+        ".github/workflows/pr-test.yml.j2",
+        "docs/en/get_started/usage.md",
+        "docs/zh/get_started/usage.md",
+        "examples/train_infer_mismatch_helper/README.md",
+        "examples/train_infer_mismatch_helper/mis_refill.yaml",
+        "slime/backends/megatron_utils/actor.py",
+        "slime/backends/megatron_utils/loss.py",
+        "slime/observability/rollout_data_utils.py",
+        "slime/ray/actor_group.py",
+        "slime/ray/rollout.py",
+        "slime/rollout/data_source.py",
+        "slime/rollout/sglang_rollout.py",
+        "slime/utils/arguments.py",
+        "slime/utils/rs_refill.py",
+        "tests/test_data_source_epoch_wrap.py",
+        "tests/test_megatron_argument_validation.py",
+        "tests/test_rollout_data_utils.py",
+        "tests/test_rs_exact_refill_actor.py",
+        "tests/test_rs_exact_refill_rollout_manager.py"
+      ],
+      "diff_preview": {
+        "additions": 4596,
+        "deletions": 24,
+        "hunks": [
+          {
+            "file": ".github/workflows/pr-test.yml",
+            "lang": "yaml",
+            "lines": [
+              [
+                "h",
+                "@@ -573,6 +573,30 @@ jobs:"
+              ],
+              [
+                " ",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                " ",
+                "              \"test_file\": \"test_megatron_argument_validation.py\""
+              ],
+              [
+                " ",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_rs_exact_refill_utils.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ],
+              [
+                "+",
+                "            {"
+              ],
+              [
+                "+",
+                "              \"num_gpus\": 0,"
+              ],
+              [
+                "+",
+                "              \"test_file\": \"test_rs_exact_refill_actor.py\""
+              ],
+              [
+                "+",
+                "            },"
+              ]
+            ]
+          }
+        ]
+      },
+      "analyzed_at": "2026-08-22T01:05:11.582387+00:00"
+    },
+    {
       "id": "radixark/miles#2671",
       "repo": "radixark/miles",
       "pr_number": 2671,
@@ -99562,1143 +102378,1174 @@
     }
   ],
   "analyzed_ids": [
-    "radixark/miles#2091",
-    "radixark/miles#2213",
-    "THUDM/slime#2224",
-    "radixark/miles#2394",
-    "THUDM/slime#1808",
-    "THUDM/slime#2272",
-    "radixark/miles#2222",
-    "radixark/miles#2116",
-    "radixark/miles#1930",
-    "radixark/miles#997",
-    "radixark/miles#945",
-    "radixark/miles#2023",
-    "radixark/miles#1009",
-    "radixark/miles#2173",
-    "radixark/miles#2627",
-    "radixark/miles#1719",
-    "radixark/miles#2106",
-    "radixark/miles#1953",
-    "THUDM/slime#1776",
-    "radixark/miles#2188",
-    "radixark/miles#2171",
-    "radixark/miles#2064",
-    "THUDM/slime#1777",
-    "radixark/miles#2456",
-    "radixark/miles#2653",
-    "radixark/miles#2319",
-    "radixark/miles#2335",
-    "radixark/miles#2314",
-    "radixark/miles#1764",
-    "radixark/miles#2646",
-    "radixark/miles#1809",
-    "THUDM/slime#2190",
-    "radixark/miles#2556",
-    "radixark/miles#2555",
-    "radixark/miles#2499",
-    "radixark/miles#2111",
-    "radixark/miles#1957",
-    "radixark/miles#949",
-    "radixark/miles#2259",
-    "radixark/miles#2216",
-    "THUDM/slime#2195",
-    "radixark/miles#1180",
-    "radixark/miles#2470",
-    "radixark/miles#2460",
-    "THUDM/slime#2236",
-    "radixark/miles#1902",
-    "radixark/miles#2103",
-    "radixark/miles#2199",
-    "radixark/miles#2195",
-    "radixark/miles#1892",
-    "radixark/miles#1789",
-    "radixark/miles#1217",
-    "radixark/miles#941",
-    "radixark/miles#952",
-    "radixark/miles#2224",
-    "radixark/miles#2344",
-    "radixark/miles#1014",
-    "radixark/miles#1898",
-    "radixark/miles#1980",
-    "THUDM/slime#1795",
-    "radixark/miles#2283",
-    "radixark/miles#1876",
-    "THUDM/slime#1825",
-    "THUDM/slime#1848",
-    "radixark/miles#2096",
-    "radixark/miles#2280",
-    "radixark/miles#2347",
-    "radixark/miles#1937",
-    "radixark/miles#1802",
     "radixark/miles#2189",
-    "THUDM/slime#1914",
-    "radixark/miles#2187",
-    "radixark/miles#2484",
-    "THUDM/slime#2273",
-    "radixark/miles#935",
-    "radixark/miles#2494",
-    "radixark/miles#1969",
-    "THUDM/slime#1844",
-    "THUDM/slime#2282",
-    "THUDM/slime#1773",
-    "THUDM/slime#1916",
-    "radixark/miles#2013",
-    "radixark/miles#2390",
-    "THUDM/slime#2255",
-    "THUDM/slime#1842",
-    "radixark/miles#2093",
-    "radixark/miles#2498",
-    "radixark/miles#957",
-    "radixark/miles#2047",
-    "THUDM/slime#2217",
-    "radixark/miles#1931",
-    "THUDM/slime#2238",
-    "radixark/miles#2066",
-    "THUDM/slime#2164",
-    "radixark/miles#2574",
     "radixark/miles#2363",
-    "radixark/miles#1735",
-    "radixark/miles#985",
-    "THUDM/slime#1954",
-    "radixark/miles#2553",
-    "radixark/miles#2272",
-    "radixark/miles#2015",
-    "radixark/miles#2643",
-    "radixark/miles#1891",
-    "radixark/miles#1011",
-    "radixark/miles#2662",
-    "radixark/miles#1987",
-    "radixark/miles#2181",
-    "radixark/miles#2624",
-    "radixark/miles#998",
-    "THUDM/slime#1955",
-    "radixark/miles#2162",
-    "THUDM/slime#2228",
-    "radixark/miles#2320",
-    "THUDM/slime#2248",
-    "radixark/miles#2487",
-    "radixark/miles#2133",
-    "radixark/miles#2544",
-    "radixark/miles#1041",
     "radixark/miles#2057",
-    "radixark/miles#2045",
-    "radixark/miles#2656",
-    "radixark/miles#2130",
-    "radixark/miles#1936",
-    "THUDM/slime#1806",
-    "radixark/miles#2032",
-    "radixark/miles#965",
-    "radixark/miles#2515",
-    "radixark/miles#1909",
-    "radixark/miles#2403",
-    "radixark/miles#2554",
-    "radixark/miles#2240",
-    "radixark/miles#968",
-    "radixark/miles#2226",
-    "radixark/miles#2099",
-    "THUDM/slime#1933",
-    "radixark/miles#1986",
-    "radixark/miles#2561",
-    "radixark/miles#2169",
-    "radixark/miles#960",
-    "radixark/miles#2191",
-    "radixark/miles#1927",
-    "radixark/miles#2623",
-    "THUDM/slime#2187",
-    "radixark/miles#2550",
-    "THUDM/slime#2184",
-    "radixark/miles#2204",
-    "radixark/miles#2048",
-    "radixark/miles#2538",
-    "radixark/miles#942",
-    "radixark/miles#953",
-    "radixark/miles#2453",
-    "radixark/miles#1808",
-    "radixark/miles#2245",
-    "THUDM/slime#1814",
-    "radixark/miles#2475",
-    "radixark/miles#1976",
-    "radixark/miles#2481",
-    "radixark/miles#1703",
-    "radixark/miles#1915",
-    "radixark/miles#1216",
-    "radixark/miles#2167",
-    "radixark/miles#1693",
-    "THUDM/slime#2251",
-    "radixark/miles#2270",
-    "radixark/miles#2495",
-    "radixark/miles#1916",
-    "radixark/miles#1929",
-    "radixark/miles#993",
-    "THUDM/slime#2204",
-    "radixark/miles#1979",
-    "radixark/miles#1738",
-    "radixark/miles#2630",
-    "radixark/miles#2006",
-    "radixark/miles#2577",
-    "radixark/miles#1730",
-    "radixark/miles#1005",
-    "radixark/miles#958",
-    "radixark/miles#2246",
-    "radixark/miles#2001",
-    "radixark/miles#1903",
-    "THUDM/slime#1962",
-    "radixark/miles#1894",
-    "radixark/miles#2626",
-    "radixark/miles#1799",
-    "THUDM/slime#1923",
-    "radixark/miles#1007",
-    "radixark/miles#1895",
-    "radixark/miles#2322",
-    "radixark/miles#2534",
-    "radixark/miles#2540",
-    "radixark/miles#1033",
-    "radixark/miles#1010",
-    "THUDM/slime#1805",
-    "radixark/miles#2639",
-    "radixark/miles#1932",
-    "radixark/miles#2666",
-    "radixark/miles#2323",
-    "radixark/miles#2389",
-    "radixark/miles#2178",
-    "radixark/miles#1196",
-    "radixark/miles#1712",
-    "radixark/miles#2220",
-    "radixark/miles#1820",
-    "THUDM/slime#1769",
-    "radixark/miles#2234",
-    "radixark/miles#2027",
-    "radixark/miles#2400",
-    "radixark/miles#2476",
-    "radixark/miles#2136",
-    "THUDM/slime#1958",
-    "THUDM/slime#2210",
-    "radixark/miles#1940",
-    "THUDM/slime#2270",
-    "radixark/miles#1827",
-    "radixark/miles#2243",
-    "THUDM/slime#2277",
-    "radixark/miles#2237",
-    "radixark/miles#996",
-    "radixark/miles#1959",
-    "radixark/miles#2471",
-    "radixark/miles#2614",
-    "radixark/miles#2458",
-    "radixark/miles#2058",
-    "THUDM/slime#1856",
-    "radixark/miles#2373",
-    "radixark/miles#1220",
-    "radixark/miles#1221",
-    "radixark/miles#943",
-    "THUDM/slime#1917",
-    "THUDM/slime#2239",
-    "radixark/miles#1795",
-    "radixark/miles#976",
-    "radixark/miles#1830",
-    "radixark/miles#2677",
-    "radixark/miles#2657",
-    "radixark/miles#2177",
-    "radixark/miles#2571",
-    "radixark/miles#2366",
-    "radixark/miles#1949",
-    "radixark/miles#2524",
-    "radixark/miles#2451",
-    "radixark/miles#2328",
-    "THUDM/slime#1927",
-    "radixark/miles#2364",
-    "radixark/miles#2229",
-    "radixark/miles#2294",
-    "radixark/miles#986",
-    "radixark/miles#2518",
-    "THUDM/slime#2269",
-    "radixark/miles#1943",
-    "radixark/miles#1030",
-    "radixark/miles#2214",
-    "radixark/miles#1755",
-    "radixark/miles#1947",
-    "radixark/miles#1704",
-    "radixark/miles#2056",
-    "THUDM/slime#2226",
-    "radixark/miles#1954",
-    "radixark/miles#2469",
-    "radixark/miles#1991",
-    "THUDM/slime#1937",
-    "radixark/miles#2491",
-    "radixark/miles#1896",
-    "radixark/miles#946",
-    "radixark/miles#2564",
-    "radixark/miles#2003",
-    "radixark/miles#2541",
-    "radixark/miles#1921",
-    "THUDM/slime#2234",
-    "radixark/miles#2388",
-    "THUDM/slime#1941",
-    "radixark/miles#2634",
-    "radixark/miles#1008",
-    "radixark/miles#1926",
-    "radixark/miles#2284",
-    "radixark/miles#2391",
-    "radixark/miles#2462",
-    "radixark/miles#2112",
-    "radixark/miles#2129",
-    "radixark/miles#1188",
-    "radixark/miles#1225",
-    "radixark/miles#2480",
-    "radixark/miles#2516",
-    "THUDM/slime#1928",
-    "radixark/miles#2267",
-    "radixark/miles#2067",
-    "radixark/miles#2676",
-    "radixark/miles#1910",
-    "THUDM/slime#1855",
-    "radixark/miles#1906",
-    "radixark/miles#1818",
-    "radixark/miles#2684",
-    "radixark/miles#2357",
-    "radixark/miles#1826",
-    "radixark/miles#2616",
-    "radixark/miles#1226",
-    "THUDM/slime#1953",
-    "THUDM/slime#2199",
-    "THUDM/slime#1925",
-    "radixark/miles#1904",
-    "radixark/miles#2485",
-    "radixark/miles#2026",
-    "radixark/miles#1728",
-    "THUDM/slime#1781",
-    "radixark/miles#1786",
-    "radixark/miles#2052",
-    "THUDM/slime#2240",
-    "radixark/miles#2196",
-    "radixark/miles#2642",
-    "radixark/miles#2551",
-    "radixark/miles#1938",
-    "THUDM/slime#2171",
-    "radixark/miles#2329",
-    "radixark/miles#2663",
-    "THUDM/slime#1919",
-    "radixark/miles#2482",
-    "radixark/miles#2383",
-    "radixark/miles#2071",
-    "radixark/miles#1922",
-    "radixark/miles#2360",
-    "radixark/miles#2287",
-    "radixark/miles#2223",
-    "radixark/miles#2159",
-    "radixark/miles#1012",
-    "radixark/miles#2115",
-    "radixark/miles#2338",
-    "THUDM/slime#1950",
-    "THUDM/slime#2178",
-    "radixark/miles#2000",
-    "radixark/miles#2208",
-    "radixark/miles#1934",
-    "radixark/miles#1992",
-    "radixark/miles#2356",
-    "radixark/miles#2269",
-    "radixark/miles#2293",
-    "radixark/miles#1200",
-    "radixark/miles#1708",
-    "THUDM/slime#2181",
-    "radixark/miles#2046",
-    "radixark/miles#2385",
-    "radixark/miles#1772",
-    "radixark/miles#1948",
-    "radixark/miles#1819",
-    "radixark/miles#938",
-    "radixark/miles#2618",
-    "radixark/miles#1806",
-    "radixark/miles#1042",
-    "radixark/miles#1195",
-    "radixark/miles#1982",
-    "radixark/miles#1230",
-    "radixark/miles#1690",
-    "THUDM/slime#1952",
-    "THUDM/slime#1924",
-    "radixark/miles#1797",
-    "radixark/miles#1015",
-    "radixark/miles#1824",
-    "radixark/miles#2041",
-    "radixark/miles#2463",
-    "radixark/miles#2126",
-    "radixark/miles#2377",
-    "radixark/miles#2617",
-    "radixark/miles#1207",
-    "radixark/miles#1813",
-    "radixark/miles#2477",
-    "radixark/miles#2011",
-    "radixark/miles#1796",
-    "radixark/miles#2530",
-    "THUDM/slime#1799",
-    "radixark/miles#2528",
-    "radixark/miles#2053",
-    "radixark/miles#2661",
-    "radixark/miles#2255",
-    "THUDM/slime#1946",
-    "radixark/miles#2131",
-    "radixark/miles#939",
-    "radixark/miles#990",
-    "radixark/miles#1736",
-    "radixark/miles#1805",
-    "THUDM/slime#1948",
-    "radixark/miles#2448",
-    "radixark/miles#2043",
-    "radixark/miles#2022",
-    "radixark/miles#987",
-    "THUDM/slime#1788",
-    "radixark/miles#1889",
-    "radixark/miles#2510",
-    "radixark/miles#1211",
-    "radixark/miles#2264",
-    "radixark/miles#1756",
-    "radixark/miles#1689",
-    "radixark/miles#1003",
-    "radixark/miles#1946",
-    "radixark/miles#2063",
-    "THUDM/slime#2258",
-    "radixark/miles#1699",
-    "radixark/miles#2461",
-    "radixark/miles#2628",
-    "radixark/miles#1993",
-    "radixark/miles#2673",
-    "THUDM/slime#2177",
-    "radixark/miles#2028",
-    "radixark/miles#2368",
-    "radixark/miles#1879",
-    "radixark/miles#1975",
-    "radixark/miles#1901",
-    "radixark/miles#1215",
-    "radixark/miles#2450",
-    "radixark/miles#2241",
-    "radixark/miles#1210",
-    "radixark/miles#2452",
-    "radixark/miles#1040",
-    "radixark/miles#2155",
-    "radixark/miles#2503",
-    "radixark/miles#2509",
-    "radixark/miles#1691",
-    "THUDM/slime#1940",
-    "radixark/miles#2059",
-    "radixark/miles#944",
-    "radixark/miles#1961",
-    "radixark/miles#2020",
-    "radixark/miles#2261",
-    "radixark/miles#2276",
-    "radixark/miles#2536",
-    "radixark/miles#2109",
-    "radixark/miles#2622",
-    "radixark/miles#1024",
-    "THUDM/slime#2197",
-    "radixark/miles#1713",
-    "radixark/miles#2279",
-    "radixark/miles#2100",
-    "radixark/miles#2397",
-    "radixark/miles#988",
-    "radixark/miles#2647",
-    "radixark/miles#1717",
-    "THUDM/slime#2259",
-    "radixark/miles#2108",
-    "radixark/miles#2387",
-    "THUDM/slime#1835",
-    "radixark/miles#1951",
-    "THUDM/slime#1824",
-    "radixark/miles#2289",
-    "radixark/miles#1774",
-    "radixark/miles#2029",
-    "radixark/miles#1698",
-    "radixark/miles#2392",
-    "radixark/miles#1766",
-    "radixark/miles#2244",
-    "radixark/miles#1787",
-    "radixark/miles#1229",
-    "THUDM/slime#2166",
-    "THUDM/slime#1942",
-    "radixark/miles#2449",
-    "THUDM/slime#1828",
-    "radixark/miles#2065",
-    "radixark/miles#1913",
-    "THUDM/slime#1807",
-    "radixark/miles#1886",
-    "THUDM/slime#2192",
-    "radixark/miles#2061",
-    "THUDM/slime#2286",
-    "THUDM/slime#2290",
-    "radixark/miles#2242",
-    "THUDM/slime#1945",
-    "radixark/miles#1917",
-    "radixark/miles#2670",
-    "THUDM/slime#1809",
-    "radixark/miles#1785",
-    "THUDM/slime#1956",
-    "radixark/miles#1189",
-    "THUDM/slime#2267",
-    "radixark/miles#984",
-    "radixark/miles#2682",
-    "radixark/miles#1754",
-    "radixark/miles#2632",
-    "radixark/miles#1013",
-    "radixark/miles#2620",
-    "radixark/miles#1983",
-    "radixark/miles#2250",
-    "radixark/miles#1828",
-    "radixark/miles#2209",
-    "radixark/miles#1747",
-    "THUDM/slime#2243",
-    "radixark/miles#2332",
-    "radixark/miles#2031",
-    "radixark/miles#2034",
-    "radixark/miles#2075",
-    "radixark/miles#1202",
-    "radixark/miles#2326",
-    "radixark/miles#2346",
-    "radixark/miles#1816",
-    "THUDM/slime#1957",
-    "radixark/miles#2358",
-    "radixark/miles#1751",
-    "radixark/miles#2009",
-    "THUDM/slime#2221",
-    "radixark/miles#1192",
-    "radixark/miles#1970",
-    "radixark/miles#2659",
-    "radixark/miles#1739",
-    "radixark/miles#2094",
-    "radixark/miles#1807",
-    "radixark/miles#2370",
-    "radixark/miles#1817",
-    "radixark/miles#2374",
-    "radixark/miles#2321",
-    "radixark/miles#2466",
-    "radixark/miles#1971",
-    "radixark/miles#1004",
-    "radixark/miles#2664",
-    "radixark/miles#2072",
-    "THUDM/slime#2203",
-    "THUDM/slime#2167",
-    "radixark/miles#2134",
-    "radixark/miles#2087",
-    "radixark/miles#2621",
-    "radixark/miles#1981",
-    "THUDM/slime#1929",
-    "radixark/miles#2315",
-    "radixark/miles#2382",
-    "radixark/miles#1777",
-    "THUDM/slime#1934",
-    "radixark/miles#2040",
-    "radixark/miles#1882",
-    "radixark/miles#2566",
-    "radixark/miles#1998",
-    "THUDM/slime#2163",
-    "radixark/miles#1770",
-    "radixark/miles#1036",
-    "radixark/miles#2625",
-    "radixark/miles#974",
-    "radixark/miles#2652",
-    "radixark/miles#1773",
-    "radixark/miles#2120",
-    "radixark/miles#1782",
-    "radixark/miles#1923",
-    "radixark/miles#1875",
-    "radixark/miles#2055",
-    "radixark/miles#2576",
-    "THUDM/slime#1939",
-    "radixark/miles#1800",
-    "radixark/miles#2359",
-    "radixark/miles#2349",
-    "radixark/miles#1812",
-    "radixark/miles#1753",
-    "radixark/miles#2520",
-    "radixark/miles#2275",
-    "radixark/miles#1688",
-    "radixark/miles#1029",
-    "radixark/miles#2105",
-    "radixark/miles#2317",
-    "radixark/miles#2660",
-    "radixark/miles#2500",
-    "radixark/miles#1968",
-    "radixark/miles#2665",
-    "radixark/miles#2218",
-    "radixark/miles#2350",
-    "radixark/miles#2257",
-    "radixark/miles#2367",
-    "THUDM/slime#2216",
-    "radixark/miles#1788",
-    "radixark/miles#1001",
-    "radixark/miles#2395",
-    "radixark/miles#1692",
-    "radixark/miles#1726",
-    "radixark/miles#2680",
-    "radixark/miles#2675",
-    "radixark/miles#2016",
-    "radixark/miles#2645",
-    "radixark/miles#1201",
-    "radixark/miles#1026",
-    "radixark/miles#2154",
-    "radixark/miles#1967",
-    "THUDM/slime#2261",
-    "radixark/miles#2039",
-    "radixark/miles#1989",
-    "radixark/miles#1985",
-    "radixark/miles#1899",
-    "THUDM/slime#1834",
-    "radixark/miles#1039",
-    "radixark/miles#1942",
-    "radixark/miles#2339",
-    "radixark/miles#2263",
-    "radixark/miles#2292",
-    "radixark/miles#2398",
-    "radixark/miles#2118",
-    "radixark/miles#1762",
-    "radixark/miles#1763",
-    "THUDM/slime#1960",
-    "radixark/miles#2163",
-    "radixark/miles#2468",
-    "radixark/miles#2523",
-    "radixark/miles#1696",
-    "radixark/miles#2399",
-    "THUDM/slime#1949",
-    "radixark/miles#2217",
-    "THUDM/slime#2213",
-    "radixark/miles#2060",
-    "radixark/miles#2102",
-    "radixark/miles#2176",
-    "radixark/miles#2381",
-    "radixark/miles#1885",
-    "radixark/miles#2161",
-    "radixark/miles#1919",
-    "radixark/miles#2097",
-    "radixark/miles#1752",
-    "radixark/miles#2376",
-    "radixark/miles#2615",
-    "THUDM/slime#1913",
-    "radixark/miles#1769",
-    "radixark/miles#1887",
-    "radixark/miles#2497",
-    "radixark/miles#1741",
-    "radixark/miles#1771",
-    "radixark/miles#2221",
-    "radixark/miles#2369",
-    "radixark/miles#1733",
-    "radixark/miles#2565",
-    "THUDM/slime#2233",
-    "radixark/miles#948",
-    "radixark/miles#2318",
-    "radixark/miles#1783",
-    "THUDM/slime#2271",
-    "radixark/miles#2193",
-    "radixark/miles#2107",
-    "radixark/miles#1020",
-    "radixark/miles#2247",
-    "radixark/miles#2488",
-    "radixark/miles#2522",
-    "THUDM/slime#2183",
-    "radixark/miles#2492",
-    "radixark/miles#2633",
-    "radixark/miles#1775",
-    "radixark/miles#1781",
-    "THUDM/slime#2173",
-    "radixark/miles#2278",
-    "radixark/miles#1031",
-    "radixark/miles#1966",
-    "radixark/miles#1729",
-    "THUDM/slime#2207",
-    "radixark/miles#1928",
-    "THUDM/slime#2265",
-    "THUDM/slime#2266",
-    "radixark/miles#2262",
-    "radixark/miles#2202",
-    "THUDM/slime#2264",
-    "THUDM/slime#1813",
-    "radixark/miles#1994",
-    "THUDM/slime#1965",
-    "THUDM/slime#1961",
-    "radixark/miles#1191",
-    "radixark/miles#2251",
-    "radixark/miles#1208",
-    "radixark/miles#2113",
-    "radixark/miles#2671",
-    "radixark/miles#2122",
-    "radixark/miles#2248",
-    "radixark/miles#2651",
-    "radixark/miles#1695",
-    "THUDM/slime#2274",
-    "radixark/miles#1022",
-    "radixark/miles#1228",
-    "radixark/miles#2252",
-    "THUDM/slime#2193",
-    "radixark/miles#2454",
-    "radixark/miles#2330",
-    "THUDM/slime#2252",
-    "radixark/miles#982",
-    "radixark/miles#2158",
-    "radixark/miles#1214",
-    "radixark/miles#2636",
-    "radixark/miles#1045",
-    "THUDM/slime#1920",
-    "radixark/miles#1945",
-    "radixark/miles#2486",
-    "radixark/miles#2650",
-    "radixark/miles#2506",
-    "radixark/miles#977",
-    "radixark/miles#2110",
-    "radixark/miles#2125",
-    "radixark/miles#2135",
-    "radixark/miles#2402",
-    "radixark/miles#1190",
-    "radixark/miles#1978",
-    "THUDM/slime#1938",
-    "radixark/miles#1006",
-    "THUDM/slime#2242",
-    "radixark/miles#1821",
-    "radixark/miles#1194",
-    "radixark/miles#1706",
-    "radixark/miles#1884",
-    "radixark/miles#2035",
-    "radixark/miles#2525",
-    "THUDM/slime#2185",
-    "radixark/miles#1962",
-    "radixark/miles#2231",
-    "radixark/miles#2260",
-    "radixark/miles#1960",
-    "radixark/miles#2062",
-    "radixark/miles#1000",
-    "THUDM/slime#2281",
-    "radixark/miles#2121",
-    "radixark/miles#1757",
-    "THUDM/slime#2291",
-    "radixark/miles#1881",
-    "radixark/miles#1027",
-    "radixark/miles#2002",
-    "radixark/miles#1790",
-    "radixark/miles#1890",
-    "radixark/miles#1212",
-    "radixark/miles#1905",
-    "radixark/miles#2170",
-    "radixark/miles#1798",
-    "radixark/miles#2132",
-    "THUDM/slime#2295",
-    "radixark/miles#1897",
-    "radixark/miles#2570",
-    "radixark/miles#2324",
-    "radixark/miles#1725",
-    "THUDM/slime#2219",
-    "radixark/miles#1710",
-    "radixark/miles#2543",
-    "radixark/miles#1995",
-    "THUDM/slime#2293",
-    "radixark/miles#2493",
-    "radixark/miles#2114",
-    "radixark/miles#2655",
-    "radixark/miles#2533",
-    "radixark/miles#950",
-    "THUDM/slime#2227",
-    "radixark/miles#2215",
-    "radixark/miles#1997",
-    "radixark/miles#2051",
-    "radixark/miles#1939",
-    "radixark/miles#2268",
-    "THUDM/slime#2257",
-    "THUDM/slime#2218",
-    "radixark/miles#2192",
-    "THUDM/slime#1817",
-    "radixark/miles#1748",
-    "THUDM/slime#1944",
-    "radixark/miles#1716",
-    "radixark/miles#2004",
-    "THUDM/slime#2180",
-    "radixark/miles#2490",
-    "radixark/miles#2182",
-    "radixark/miles#2619",
-    "radixark/miles#2478",
-    "radixark/miles#2575",
-    "radixark/miles#1016",
-    "radixark/miles#973",
-    "radixark/miles#2517",
-    "radixark/miles#2372",
-    "radixark/miles#2316",
-    "radixark/miles#1829",
-    "radixark/miles#2227",
-    "radixark/miles#2508",
-    "radixark/miles#2572",
-    "radixark/miles#2183",
-    "THUDM/slime#2294",
-    "radixark/miles#1784",
-    "radixark/miles#2074",
-    "radixark/miles#2235",
-    "radixark/miles#994",
-    "radixark/miles#1907",
-    "radixark/miles#2325",
-    "THUDM/slime#1801",
-    "radixark/miles#1893",
-    "radixark/miles#2489",
-    "THUDM/slime#1791",
-    "radixark/miles#2380",
-    "radixark/miles#2568",
-    "radixark/miles#1965",
-    "radixark/miles#2526",
-    "radixark/miles#1209",
-    "radixark/miles#1183",
-    "radixark/miles#2233",
-    "radixark/miles#1973",
-    "radixark/miles#1715",
-    "THUDM/slime#1772",
-    "THUDM/slime#2220",
-    "radixark/miles#947",
-    "radixark/miles#2529",
-    "radixark/miles#2054",
-    "radixark/miles#2157",
-    "THUDM/slime#1858",
-    "radixark/miles#2007",
-    "THUDM/slime#1921",
-    "THUDM/slime#2247",
-    "THUDM/slime#1812",
-    "radixark/miles#2613",
-    "radixark/miles#2098",
-    "THUDM/slime#1797",
-    "radixark/miles#1814",
-    "radixark/miles#2168",
-    "radixark/miles#2282",
     "radixark/miles#999",
-    "THUDM/slime#2241",
-    "radixark/miles#2104",
-    "THUDM/slime#2278",
-    "radixark/miles#2210",
-    "THUDM/slime#2189",
-    "THUDM/slime#2283",
-    "radixark/miles#937",
-    "radixark/miles#1198",
-    "radixark/miles#980",
-    "radixark/miles#2212",
-    "radixark/miles#1933",
-    "THUDM/slime#1823",
-    "radixark/miles#1223",
-    "radixark/miles#2017",
-    "radixark/miles#2030",
-    "radixark/miles#2355",
-    "radixark/miles#2266",
-    "radixark/miles#2386",
-    "THUDM/slime#2170",
-    "radixark/miles#2678",
-    "THUDM/slime#1947",
-    "radixark/miles#1759",
-    "radixark/miles#2519",
-    "radixark/miles#1972",
-    "radixark/miles#972",
-    "radixark/miles#2068",
-    "radixark/miles#1999",
-    "THUDM/slime#1841",
-    "radixark/miles#2095",
-    "radixark/miles#951",
-    "radixark/miles#2288",
-    "THUDM/slime#1932",
-    "radixark/miles#2669",
-    "THUDM/slime#1959",
-    "radixark/miles#1694",
-    "radixark/miles#2012",
-    "radixark/miles#1792",
-    "radixark/miles#1199",
-    "radixark/miles#1815",
-    "radixark/miles#2336",
-    "radixark/miles#1709",
-    "THUDM/slime#1930",
-    "THUDM/slime#1935",
-    "THUDM/slime#1849",
-    "THUDM/slime#2196",
-    "radixark/miles#1977",
-    "radixark/miles#2514",
-    "radixark/miles#2333",
-    "radixark/miles#2667",
-    "radixark/miles#2123",
-    "radixark/miles#2511",
-    "radixark/miles#2286",
-    "THUDM/slime#2289",
-    "radixark/miles#1181",
-    "radixark/miles#2036",
-    "radixark/miles#1779",
-    "radixark/miles#2211",
-    "radixark/miles#2354",
-    "THUDM/slime#2254",
-    "THUDM/slime#1922",
-    "radixark/miles#1908",
-    "radixark/miles#966",
-    "radixark/miles#2165",
-    "radixark/miles#1750",
-    "radixark/miles#1874",
-    "radixark/miles#2331",
-    "radixark/miles#2631",
-    "radixark/miles#2340",
-    "radixark/miles#1035",
-    "radixark/miles#2341",
-    "THUDM/slime#1836",
-    "radixark/miles#2203",
-    "radixark/miles#2552",
-    "THUDM/slime#2262",
-    "radixark/miles#2024",
-    "radixark/miles#1203",
-    "radixark/miles#2334",
-    "radixark/miles#2228",
-    "radixark/miles#1218",
-    "THUDM/slime#1832",
-    "radixark/miles#2197",
-    "radixark/miles#2512",
-    "THUDM/slime#1833",
-    "THUDM/slime#2174",
-    "radixark/miles#2185",
-    "radixark/miles#2479",
-    "radixark/miles#2230",
-    "radixark/miles#1017",
-    "radixark/miles#1018",
-    "radixark/miles#1996",
-    "radixark/miles#2033",
-    "radixark/miles#2174",
-    "THUDM/slime#1846",
-    "radixark/miles#1213",
-    "radixark/miles#2070",
-    "radixark/miles#1880",
-    "radixark/miles#2644",
-    "radixark/miles#2014",
-    "radixark/miles#2348",
-    "THUDM/slime#1963",
-    "radixark/miles#1778",
-    "radixark/miles#989",
-    "radixark/miles#1822",
-    "radixark/miles#2527",
+    "radixark/miles#2394",
+    "radixark/miles#2032",
+    "radixark/miles#2571",
+    "radixark/miles#2561",
+    "radixark/miles#1226",
+    "THUDM/slime#2281",
+    "radixark/miles#2543",
+    "THUDM/slime#2293",
     "radixark/miles#2474",
-    "radixark/miles#1912",
-    "radixark/miles#2117",
-    "radixark/miles#1758",
+    "radixark/miles#2314",
+    "radixark/miles#1695",
+    "radixark/miles#1737",
+    "radixark/miles#1726",
+    "radixark/miles#1899",
+    "radixark/miles#1903",
+    "radixark/miles#2115",
+    "radixark/miles#2191",
+    "radixark/miles#1792",
+    "radixark/miles#2281",
+    "radixark/miles#2016",
+    "radixark/miles#1784",
+    "radixark/miles#1179",
+    "THUDM/slime#1844",
+    "radixark/miles#2615",
+    "radixark/miles#1200",
+    "radixark/miles#1881",
+    "radixark/miles#2009",
+    "radixark/miles#1021",
+    "THUDM/slime#2243",
+    "radixark/miles#2096",
+    "radixark/miles#1953",
+    "THUDM/slime#1833",
+    "THUDM/slime#2235",
+    "radixark/miles#2228",
+    "radixark/miles#2459",
+    "THUDM/slime#2300",
+    "radixark/miles#1908",
+    "THUDM/slime#2257",
+    "THUDM/slime#2192",
+    "radixark/miles#1761",
+    "radixark/miles#2453",
+    "THUDM/slime#1834",
+    "radixark/miles#2333",
+    "radixark/miles#2522",
+    "radixark/miles#1216",
+    "radixark/miles#1007",
+    "radixark/miles#2007",
+    "radixark/miles#1720",
+    "radixark/miles#2698",
+    "radixark/miles#1728",
+    "radixark/miles#2539",
+    "radixark/miles#2514",
+    "radixark/miles#2048",
+    "radixark/miles#2527",
+    "radixark/miles#1795",
+    "radixark/miles#2490",
+    "radixark/miles#975",
+    "radixark/miles#2161",
+    "radixark/miles#1931",
+    "radixark/miles#1808",
+    "radixark/miles#2280",
+    "radixark/miles#2676",
+    "radixark/miles#2677",
+    "radixark/miles#2565",
+    "radixark/miles#1757",
+    "radixark/miles#2332",
+    "radixark/miles#2233",
+    "radixark/miles#2129",
+    "radixark/miles#1230",
+    "THUDM/slime#1917",
+    "radixark/miles#2103",
+    "radixark/miles#2154",
+    "radixark/miles#1821",
+    "radixark/miles#2132",
+    "THUDM/slime#1961",
+    "radixark/miles#1016",
+    "radixark/miles#1035",
+    "THUDM/slime#2267",
+    "radixark/miles#2503",
+    "THUDM/slime#2284",
+    "radixark/miles#2063",
+    "radixark/miles#1747",
+    "radixark/miles#1952",
+    "radixark/miles#2630",
+    "THUDM/slime#2183",
+    "radixark/miles#2174",
+    "radixark/miles#2187",
+    "radixark/miles#2497",
+    "THUDM/slime#2184",
+    "radixark/miles#2269",
+    "radixark/miles#1730",
+    "THUDM/slime#1940",
+    "THUDM/slime#1808",
+    "radixark/miles#944",
+    "radixark/miles#2005",
+    "radixark/miles#1217",
+    "radixark/miles#1711",
+    "radixark/miles#960",
+    "radixark/miles#2534",
+    "radixark/miles#1725",
+    "radixark/miles#1920",
+    "radixark/miles#1961",
+    "radixark/miles#1228",
+    "radixark/miles#1205",
+    "radixark/miles#2487",
+    "radixark/miles#2575",
     "radixark/miles#2049",
-    "radixark/miles#1734",
-    "radixark/miles#1883",
-    "THUDM/slime#2249",
+    "radixark/miles#2270",
+    "radixark/miles#2701",
+    "radixark/miles#2625",
+    "radixark/miles#950",
+    "radixark/miles#2512",
+    "radixark/miles#2485",
+    "radixark/miles#967",
+    "radixark/miles#2030",
+    "radixark/miles#959",
+    "radixark/miles#2114",
+    "radixark/miles#2542",
+    "THUDM/slime#2195",
+    "radixark/miles#2674",
+    "radixark/miles#2654",
+    "radixark/miles#2133",
+    "radixark/miles#949",
+    "radixark/miles#2097",
+    "radixark/miles#1934",
+    "radixark/miles#1945",
+    "radixark/miles#2635",
+    "radixark/miles#2465",
+    "THUDM/slime#1946",
+    "radixark/miles#1222",
+    "radixark/miles#1923",
+    "THUDM/slime#2178",
+    "radixark/miles#2257",
+    "radixark/miles#2344",
+    "radixark/miles#1025",
+    "radixark/miles#2321",
+    "radixark/miles#2130",
+    "radixark/miles#2529",
+    "THUDM/slime#2295",
+    "radixark/miles#2089",
+    "radixark/miles#2244",
+    "THUDM/slime#2272",
+    "THUDM/slime#1817",
+    "radixark/miles#2169",
+    "radixark/miles#2653",
+    "radixark/miles#1959",
+    "THUDM/slime#1934",
+    "radixark/miles#2064",
+    "THUDM/slime#1950",
+    "radixark/miles#1203",
+    "radixark/miles#2226",
+    "radixark/miles#2052",
+    "radixark/miles#2661",
+    "radixark/miles#2675",
+    "radixark/miles#2703",
+    "radixark/miles#2700",
+    "radixark/miles#2448",
+    "radixark/miles#2475",
+    "radixark/miles#2484",
+    "radixark/miles#2002",
+    "radixark/miles#2350",
+    "radixark/miles#2024",
+    "radixark/miles#1037",
+    "radixark/miles#2136",
+    "radixark/miles#1788",
+    "THUDM/slime#1963",
+    "radixark/miles#2452",
+    "radixark/miles#2379",
+    "radixark/miles#2050",
+    "radixark/miles#2567",
+    "radixark/miles#2510",
+    "radixark/miles#1031",
+    "radixark/miles#2504",
+    "radixark/miles#954",
+    "THUDM/slime#1781",
+    "radixark/miles#2197",
+    "radixark/miles#2692",
+    "THUDM/slime#1849",
+    "radixark/miles#1986",
+    "radixark/miles#2276",
+    "radixark/miles#1710",
+    "radixark/miles#2506",
+    "THUDM/slime#1927",
+    "THUDM/slime#2252",
+    "THUDM/slime#2256",
+    "radixark/miles#1939",
+    "radixark/miles#998",
+    "radixark/miles#1983",
+    "THUDM/slime#2171",
+    "radixark/miles#2262",
+    "THUDM/slime#2163",
+    "THUDM/slime#2241",
+    "radixark/miles#2227",
+    "radixark/miles#2666",
+    "radixark/miles#2006",
+    "radixark/miles#1817",
+    "THUDM/slime#1913",
+    "THUDM/slime#2172",
     "radixark/miles#2558",
     "radixark/miles#1990",
-    "radixark/miles#2186",
-    "radixark/miles#2180",
-    "radixark/miles#2005",
-    "radixark/miles#2050",
-    "radixark/miles#2537",
-    "THUDM/slime#1926",
-    "radixark/miles#2504",
-    "radixark/miles#2457",
-    "radixark/miles#2253",
-    "radixark/miles#1811",
-    "radixark/miles#1714",
-    "radixark/miles#2465",
-    "radixark/miles#967",
-    "THUDM/slime#1822",
-    "radixark/miles#1984",
-    "radixark/miles#1740",
-    "THUDM/slime#1915",
-    "radixark/miles#1810",
-    "radixark/miles#2337",
-    "radixark/miles#2401",
-    "radixark/miles#2343",
-    "radixark/miles#2578",
-    "radixark/miles#1920",
-    "radixark/miles#2128",
-    "radixark/miles#1038",
-    "radixark/miles#1025",
-    "radixark/miles#1727",
-    "radixark/miles#2365",
-    "THUDM/slime#2246",
-    "radixark/miles#995",
-    "radixark/miles#2010",
-    "radixark/miles#1179",
-    "radixark/miles#2290",
-    "THUDM/slime#1816",
-    "radixark/miles#1193",
-    "radixark/miles#2648",
-    "THUDM/slime#2211",
-    "radixark/miles#2038",
-    "THUDM/slime#2198",
-    "radixark/miles#2285",
-    "THUDM/slime#2169",
-    "radixark/miles#1988",
-    "radixark/miles#2635",
-    "radixark/miles#1944",
-    "THUDM/slime#1827",
-    "radixark/miles#1974",
-    "radixark/miles#1205",
-    "radixark/miles#1803",
-    "radixark/miles#1935",
-    "radixark/miles#1794",
-    "radixark/miles#2464",
-    "radixark/miles#2674",
-    "radixark/miles#1182",
-    "radixark/miles#1722",
-    "radixark/miles#1023",
-    "radixark/miles#2467",
-    "radixark/miles#2194",
-    "radixark/miles#2271",
-    "radixark/miles#2542",
-    "radixark/miles#2375",
-    "radixark/miles#2641",
-    "radixark/miles#961",
-    "radixark/miles#1888",
-    "radixark/miles#2205",
-    "radixark/miles#2101",
-    "radixark/miles#1914",
-    "THUDM/slime#1770",
-    "radixark/miles#2505",
-    "radixark/miles#2042",
-    "radixark/miles#2455",
-    "radixark/miles#1732",
-    "radixark/miles#2190",
-    "radixark/miles#2273",
-    "radixark/miles#2249",
-    "radixark/miles#2681",
-    "radixark/miles#2638",
-    "radixark/miles#2353",
-    "THUDM/slime#1857",
-    "radixark/miles#1791",
-    "radixark/miles#964",
-    "THUDM/slime#1775",
-    "radixark/miles#1028",
-    "radixark/miles#2472",
-    "radixark/miles#1701",
-    "radixark/miles#1206",
-    "THUDM/slime#2237",
-    "radixark/miles#2658",
-    "radixark/miles#1911",
-    "radixark/miles#2175",
-    "radixark/miles#1707",
-    "radixark/miles#2179",
-    "THUDM/slime#1943",
-    "radixark/miles#2640",
-    "radixark/miles#971",
-    "radixark/miles#1702",
-    "radixark/miles#2265",
-    "radixark/miles#2119",
-    "radixark/miles#1776",
-    "radixark/miles#2021",
-    "THUDM/slime#2223",
-    "radixark/miles#1718",
-    "radixark/miles#2089",
-    "radixark/miles#2200",
-    "THUDM/slime#2292",
-    "radixark/miles#2073",
-    "radixark/miles#2496",
-    "radixark/miles#2198",
-    "radixark/miles#1768",
-    "radixark/miles#2649",
-    "radixark/miles#2172",
-    "radixark/miles#2513",
-    "radixark/miles#2281",
-    "radixark/miles#1197",
     "THUDM/slime#1819",
-    "radixark/miles#2573",
-    "radixark/miles#2037",
-    "radixark/miles#2345",
-    "radixark/miles#954",
-    "THUDM/slime#2182",
-    "radixark/miles#940",
-    "THUDM/slime#2208",
-    "radixark/miles#2539",
-    "radixark/miles#2219",
-    "radixark/miles#1721",
-    "radixark/miles#2184",
-    "radixark/miles#2521",
-    "THUDM/slime#2235",
-    "THUDM/slime#1774",
-    "radixark/miles#2396",
-    "radixark/miles#2238",
     "radixark/miles#1878",
-    "radixark/miles#2535",
-    "radixark/miles#1793",
-    "THUDM/slime#2175",
-    "radixark/miles#2507",
-    "radixark/miles#2531",
-    "radixark/miles#2160",
-    "radixark/miles#959",
-    "radixark/miles#2124",
-    "radixark/miles#2379",
-    "radixark/miles#2164",
-    "radixark/miles#2459",
-    "radixark/miles#1900",
-    "radixark/miles#1043",
+    "radixark/miles#1997",
+    "radixark/miles#1206",
+    "radixark/miles#2290",
+    "radixark/miles#2658",
+    "radixark/miles#2216",
+    "radixark/miles#1790",
+    "radixark/miles#1802",
+    "radixark/miles#1013",
+    "radixark/miles#2520",
+    "radixark/miles#1884",
+    "radixark/miles#1805",
+    "radixark/miles#1779",
+    "radixark/miles#1771",
+    "THUDM/slime#2262",
+    "radixark/miles#2194",
+    "THUDM/slime#1943",
+    "THUDM/slime#2266",
+    "radixark/miles#2238",
     "THUDM/slime#2205",
-    "radixark/miles#2088",
-    "radixark/miles#1219",
-    "radixark/miles#1723",
-    "radixark/miles#1801",
-    "radixark/miles#2502",
-    "radixark/miles#1204",
-    "radixark/miles#1825",
-    "radixark/miles#1831",
-    "radixark/miles#2313",
-    "THUDM/slime#2206",
-    "radixark/miles#2156",
-    "radixark/miles#1877",
-    "radixark/miles#2567",
-    "radixark/miles#1034",
-    "radixark/miles#2654",
+    "radixark/miles#2614",
+    "radixark/miles#2392",
+    "radixark/miles#2536",
+    "radixark/miles#2631",
+    "radixark/miles#2633",
+    "radixark/miles#1893",
+    "radixark/miles#2173",
+    "radixark/miles#1887",
+    "radixark/miles#1045",
+    "radixark/miles#2323",
+    "radixark/miles#2646",
+    "radixark/miles#935",
+    "radixark/miles#1813",
+    "radixark/miles#2255",
+    "radixark/miles#2315",
+    "THUDM/slime#2273",
+    "THUDM/slime#1935",
     "radixark/miles#1019",
-    "radixark/miles#2473",
-    "radixark/miles#1823",
-    "radixark/miles#1918",
-    "radixark/miles#2548",
-    "radixark/miles#2291",
-    "radixark/miles#2371",
-    "radixark/miles#1767",
-    "radixark/miles#1032",
-    "THUDM/slime#1918",
-    "THUDM/slime#1931",
-    "radixark/miles#1227",
-    "THUDM/slime#1768",
-    "radixark/miles#1950",
-    "radixark/miles#2569",
-    "radixark/miles#1804",
-    "radixark/miles#1924",
-    "radixark/miles#2092",
-    "radixark/miles#2501",
-    "THUDM/slime#2256",
-    "THUDM/slime#2172",
-    "radixark/miles#2044",
-    "radixark/miles#975",
-    "radixark/miles#1021",
-    "radixark/miles#2683",
-    "radixark/miles#2559",
-    "radixark/miles#1941",
-    "THUDM/slime#2284",
-    "radixark/miles#2090",
-    "radixark/miles#2384",
-    "radixark/miles#1761",
-    "radixark/miles#1711",
-    "THUDM/slime#2250",
-    "radixark/miles#991",
-    "radixark/miles#2327",
-    "radixark/miles#2629",
-    "THUDM/slime#2279",
-    "radixark/miles#2069",
-    "radixark/miles#1765",
-    "THUDM/slime#2200",
-    "radixark/miles#1952",
-    "radixark/miles#1720",
-    "radixark/miles#2637",
-    "radixark/miles#1705",
-    "radixark/miles#963",
-    "THUDM/slime#2287",
-    "radixark/miles#2545",
-    "radixark/miles#2127",
-    "radixark/miles#1737",
-    "radixark/miles#2342",
-    "radixark/miles#2166",
-    "THUDM/slime#2162",
-    "radixark/miles#1037",
-    "radixark/miles#1222",
-    "radixark/miles#1044",
-    "radixark/miles#2274",
-    "radixark/miles#2225",
-    "radixark/miles#1760",
-    "THUDM/slime#2276",
-    "radixark/miles#1185",
-    "radixark/miles#992",
+    "radixark/miles#2374",
+    "radixark/miles#2157",
+    "THUDM/slime#2217",
+    "radixark/miles#2364",
+    "radixark/miles#1803",
+    "THUDM/slime#1962",
+    "radixark/miles#2399",
+    "radixark/miles#1998",
+    "radixark/miles#2324",
+    "radixark/miles#2472",
+    "radixark/miles#2287",
+    "radixark/miles#2124",
+    "radixark/miles#2034",
+    "radixark/miles#1987",
+    "radixark/miles#1932",
+    "radixark/miles#2707",
+    "radixark/miles#2489",
+    "radixark/miles#2275",
+    "radixark/miles#1042",
+    "radixark/miles#2471",
+    "radixark/miles#2530",
+    "radixark/miles#2650",
+    "radixark/miles#2517",
+    "radixark/miles#1004",
+    "radixark/miles#2061",
+    "radixark/miles#1775",
+    "radixark/miles#2508",
+    "radixark/miles#1181",
+    "radixark/miles#2067",
+    "radixark/miles#1011",
+    "radixark/miles#2553",
+    "radixark/miles#2065",
+    "radixark/miles#2292",
+    "THUDM/slime#2233",
+    "radixark/miles#2326",
+    "radixark/miles#2135",
+    "radixark/miles#2068",
+    "radixark/miles#990",
+    "radixark/miles#2647",
+    "radixark/miles#2511",
+    "radixark/miles#2681",
+    "radixark/miles#2578",
+    "radixark/miles#2397",
+    "radixark/miles#2372",
+    "radixark/miles#2638",
+    "radixark/miles#2060",
+    "radixark/miles#2193",
+    "radixark/miles#1917",
+    "radixark/miles#2349",
     "THUDM/slime#1798",
+    "THUDM/slime#2289",
+    "radixark/miles#1211",
+    "radixark/miles#2263",
+    "radixark/miles#2664",
+    "radixark/miles#2177",
+    "radixark/miles#1875",
+    "radixark/miles#2212",
+    "radixark/miles#1754",
+    "radixark/miles#2012",
+    "radixark/miles#2215",
+    "radixark/miles#2043",
+    "THUDM/slime#2189",
+    "radixark/miles#2179",
+    "radixark/miles#2261",
+    "radixark/miles#2042",
+    "radixark/miles#1692",
+    "radixark/miles#1944",
+    "THUDM/slime#1769",
+    "THUDM/slime#2270",
+    "radixark/miles#2272",
+    "radixark/miles#1778",
+    "radixark/miles#2708",
+    "radixark/miles#1890",
+    "radixark/miles#1225",
+    "radixark/miles#1024",
+    "radixark/miles#2055",
+    "radixark/miles#1017",
+    "radixark/miles#2335",
+    "radixark/miles#1005",
+    "THUDM/slime#1923",
+    "radixark/miles#1786",
+    "radixark/miles#2176",
+    "radixark/miles#2211",
+    "radixark/miles#1819",
+    "radixark/miles#1957",
+    "radixark/miles#2054",
+    "radixark/miles#1194",
+    "THUDM/slime#1932",
+    "radixark/miles#1895",
+    "radixark/miles#2684",
+    "radixark/miles#2196",
+    "radixark/miles#2268",
+    "THUDM/slime#2292",
+    "radixark/miles#2521",
+    "THUDM/slime#1921",
+    "THUDM/slime#1801",
+    "radixark/miles#1015",
+    "radixark/miles#2533",
+    "radixark/miles#1910",
+    "radixark/miles#1797",
+    "THUDM/slime#2181",
+    "radixark/miles#1970",
+    "radixark/miles#2380",
+    "radixark/miles#1909",
+    "radixark/miles#989",
+    "radixark/miles#2110",
+    "THUDM/slime#1814",
+    "radixark/miles#2627",
+    "radixark/miles#2242",
+    "radixark/miles#1809",
+    "radixark/miles#2003",
+    "radixark/miles#1785",
+    "THUDM/slime#1813",
+    "THUDM/slime#1938",
+    "radixark/miles#1694",
+    "radixark/miles#2190",
+    "radixark/miles#964",
+    "radixark/miles#2573",
+    "radixark/miles#997",
+    "THUDM/slime#2164",
+    "radixark/miles#1818",
+    "radixark/miles#2245",
+    "radixark/miles#2294",
+    "THUDM/slime#1812",
+    "radixark/miles#2342",
+    "radixark/miles#1773",
+    "radixark/miles#957",
+    "radixark/miles#2663",
+    "radixark/miles#2456",
+    "radixark/miles#2128",
+    "THUDM/slime#1958",
+    "radixark/miles#2481",
+    "radixark/miles#1023",
+    "radixark/miles#1789",
+    "radixark/miles#2617",
+    "radixark/miles#938",
+    "radixark/miles#2673",
+    "radixark/miles#2671",
+    "radixark/miles#2026",
+    "THUDM/slime#2196",
+    "THUDM/slime#1770",
+    "radixark/miles#2013",
+    "radixark/miles#2062",
+    "radixark/miles#2095",
+    "radixark/miles#1888",
+    "radixark/miles#1902",
+    "THUDM/slime#2258",
+    "radixark/miles#1807",
+    "radixark/miles#2202",
+    "radixark/miles#2039",
+    "THUDM/slime#2182",
+    "radixark/miles#2540",
+    "THUDM/slime#2297",
+    "radixark/miles#1946",
+    "THUDM/slime#2278",
+    "radixark/miles#1816",
+    "radixark/miles#1995",
+    "radixark/miles#2108",
+    "THUDM/slime#2223",
+    "radixark/miles#2544",
+    "radixark/miles#1914",
+    "THUDM/slime#2210",
+    "THUDM/slime#2213",
+    "radixark/miles#2045",
+    "THUDM/slime#2169",
+    "radixark/miles#2331",
+    "radixark/miles#1954",
+    "radixark/miles#2328",
+    "THUDM/slime#1956",
+    "THUDM/slime#2175",
+    "THUDM/slime#2237",
+    "THUDM/slime#1916",
+    "radixark/miles#1820",
+    "THUDM/slime#2239",
+    "radixark/miles#2011",
+    "THUDM/slime#1857",
+    "radixark/miles#2470",
+    "radixark/miles#2390",
+    "radixark/miles#1883",
+    "radixark/miles#2172",
+    "radixark/miles#2491",
+    "radixark/miles#1982",
+    "THUDM/slime#1777",
+    "radixark/miles#2131",
+    "radixark/miles#939",
+    "radixark/miles#2682",
+    "radixark/miles#2680",
+    "radixark/miles#937",
+    "radixark/miles#2505",
+    "radixark/miles#1927",
+    "radixark/miles#953",
+    "radixark/miles#2198",
+    "THUDM/slime#2173",
+    "radixark/miles#1192",
+    "radixark/miles#2251",
+    "radixark/miles#1933",
+    "radixark/miles#2022",
+    "radixark/miles#1738",
+    "radixark/miles#1886",
+    "radixark/miles#2163",
+    "radixark/miles#1916",
+    "radixark/miles#2106",
+    "radixark/miles#946",
+    "radixark/miles#2370",
+    "radixark/miles#2210",
+    "radixark/miles#2126",
+    "radixark/miles#2495",
+    "THUDM/slime#1957",
+    "radixark/miles#2693",
+    "radixark/miles#2053",
+    "radixark/miles#976",
+    "radixark/miles#1691",
+    "radixark/miles#2686",
+    "radixark/miles#1828",
+    "radixark/miles#2158",
+    "THUDM/slime#1955",
+    "radixark/miles#2264",
+    "THUDM/slime#2274",
+    "radixark/miles#1900",
+    "radixark/miles#2531",
+    "radixark/miles#2186",
+    "radixark/miles#1822",
+    "radixark/miles#1029",
+    "radixark/miles#1735",
+    "radixark/miles#2104",
+    "radixark/miles#2699",
+    "radixark/miles#2449",
+    "radixark/miles#2552",
+    "radixark/miles#1043",
+    "radixark/miles#2524",
+    "THUDM/slime#2287",
+    "radixark/miles#1003",
+    "radixark/miles#2182",
+    "radixark/miles#1879",
+    "THUDM/slime#1965",
+    "radixark/miles#2457",
+    "radixark/miles#2641",
+    "radixark/miles#1767",
+    "radixark/miles#2685",
+    "THUDM/slime#2296",
+    "radixark/miles#2616",
+    "THUDM/slime#2248",
+    "radixark/miles#1898",
+    "radixark/miles#2037",
+    "radixark/miles#2056",
+    "radixark/miles#1717",
+    "radixark/miles#2075",
+    "radixark/miles#2396",
+    "THUDM/slime#1930",
+    "radixark/miles#2494",
+    "radixark/miles#1892",
+    "radixark/miles#2111",
+    "radixark/miles#1876",
+    "radixark/miles#2031",
+    "radixark/miles#2566",
+    "radixark/miles#2120",
+    "radixark/miles#2178",
+    "radixark/miles#2634",
+    "radixark/miles#1967",
+    "THUDM/slime#1858",
+    "radixark/miles#1815",
+    "THUDM/slime#2199",
+    "radixark/miles#1213",
+    "radixark/miles#1880",
+    "radixark/miles#2574",
+    "radixark/miles#1223",
+    "radixark/miles#2014",
+    "THUDM/slime#2218",
+    "radixark/miles#2486",
+    "THUDM/slime#2238",
+    "radixark/miles#2498",
+    "THUDM/slime#1806",
+    "THUDM/slime#1925",
+    "radixark/miles#1756",
+    "radixark/miles#1722",
+    "radixark/miles#1885",
+    "radixark/miles#984",
+    "radixark/miles#2360",
+    "radixark/miles#2382",
+    "radixark/miles#2168",
+    "radixark/miles#2223",
+    "radixark/miles#2373",
+    "THUDM/slime#1931",
+    "radixark/miles#1706",
+    "radixark/miles#2322",
+    "radixark/miles#1198",
+    "radixark/miles#1009",
+    "THUDM/slime#1823",
+    "radixark/miles#972",
+    "radixark/miles#2564",
+    "radixark/miles#2402",
+    "radixark/miles#1825",
+    "radixark/miles#952",
+    "radixark/miles#2234",
+    "radixark/miles#1912",
+    "radixark/miles#2164",
+    "THUDM/slime#1924",
+    "THUDM/slime#1920",
+    "radixark/miles#2334",
+    "THUDM/slime#2251",
+    "radixark/miles#2697",
+    "radixark/miles#2259",
+    "radixark/miles#1937",
+    "radixark/miles#1696",
+    "radixark/miles#2087",
+    "radixark/miles#2017",
+    "radixark/miles#2492",
+    "radixark/miles#1688",
+    "radixark/miles#1975",
+    "radixark/miles#2162",
+    "radixark/miles#2391",
+    "radixark/miles#2629",
+    "radixark/miles#2632",
+    "radixark/miles#1829",
+    "radixark/miles#2291",
+    "radixark/miles#2265",
+    "radixark/miles#2467",
+    "radixark/miles#1969",
+    "THUDM/slime#2227",
+    "radixark/miles#1705",
+    "THUDM/slime#1842",
+    "radixark/miles#2015",
+    "THUDM/slime#2242",
+    "THUDM/slime#1959",
+    "THUDM/slime#1809",
+    "radixark/miles#941",
+    "radixark/miles#2170",
+    "radixark/miles#1907",
+    "radixark/miles#2249",
+    "THUDM/slime#1846",
+    "radixark/miles#2341",
+    "THUDM/slime#1918",
+    "radixark/miles#2204",
+    "THUDM/slime#2207",
+    "radixark/miles#2660",
+    "radixark/miles#2319",
+    "radixark/miles#1196",
+    "radixark/miles#2217",
+    "radixark/miles#2462",
+    "radixark/miles#2400",
+    "radixark/miles#1977",
+    "radixark/miles#2175",
+    "radixark/miles#2460",
+    "radixark/miles#1781",
+    "radixark/miles#2667",
+    "radixark/miles#2219",
+    "radixark/miles#2577",
+    "radixark/miles#2167",
+    "radixark/miles#2279",
+    "radixark/miles#1894",
+    "radixark/miles#968",
+    "radixark/miles#1913",
+    "radixark/miles#2683",
+    "radixark/miles#1960",
+    "THUDM/slime#2177",
+    "radixark/miles#2538",
+    "radixark/miles#2551",
+    "radixark/miles#2029",
+    "radixark/miles#1814",
+    "radixark/miles#2623",
+    "radixark/miles#2283",
+    "radixark/miles#2513",
+    "radixark/miles#2240",
+    "radixark/miles#2385",
+    "radixark/miles#2123",
+    "radixark/miles#2353",
+    "radixark/miles#994",
+    "radixark/miles#2282",
+    "THUDM/slime#1855",
+    "radixark/miles#2637",
+    "radixark/miles#2188",
+    "radixark/miles#1716",
+    "radixark/miles#1936",
+    "radixark/miles#963",
+    "radixark/miles#1976",
+    "radixark/miles#945",
+    "radixark/miles#1185",
+    "radixark/miles#1008",
+    "radixark/miles#2365",
+    "THUDM/slime#1835",
+    "radixark/miles#2192",
+    "radixark/miles#2073",
+    "radixark/miles#1999",
+    "radixark/miles#1721",
+    "radixark/miles#1018",
+    "radixark/miles#1770",
+    "radixark/miles#2477",
+    "radixark/miles#2246",
+    "radixark/miles#1030",
+    "radixark/miles#1948",
+    "THUDM/slime#2166",
+    "radixark/miles#2678",
+    "radixark/miles#2662",
+    "radixark/miles#1010",
+    "radixark/miles#2134",
+    "radixark/miles#1698",
+    "THUDM/slime#2250",
+    "radixark/miles#1760",
+    "radixark/miles#1707",
+    "radixark/miles#2347",
+    "radixark/miles#2185",
+    "radixark/miles#1014",
+    "THUDM/slime#2185",
+    "radixark/miles#2184",
+    "radixark/miles#2640",
+    "radixark/miles#2166",
+    "radixark/miles#2619",
+    "radixark/miles#996",
+    "radixark/miles#2624",
+    "radixark/miles#1180",
+    "radixark/miles#2021",
+    "radixark/miles#1831",
+    "radixark/miles#2559",
+    "radixark/miles#2090",
+    "radixark/miles#2499",
+    "radixark/miles#1764",
+    "THUDM/slime#2187",
+    "radixark/miles#2519",
+    "THUDM/slime#2249",
+    "radixark/miles#2010",
+    "radixark/miles#1877",
+    "radixark/miles#1751",
+    "radixark/miles#2325",
+    "radixark/miles#2336",
+    "THUDM/slime#2283",
+    "radixark/miles#1794",
+    "THUDM/slime#1791",
+    "radixark/miles#1227",
+    "radixark/miles#987",
+    "radixark/miles#2020",
+    "radixark/miles#2338",
+    "THUDM/slime#2220",
+    "THUDM/slime#2228",
+    "radixark/miles#1020",
+    "radixark/miles#1190",
+    "THUDM/slime#2211",
+    "radixark/miles#2702",
+    "radixark/miles#2687",
+    "THUDM/slime#2271",
+    "radixark/miles#2000",
+    "THUDM/slime#1841",
+    "radixark/miles#2237",
+    "radixark/miles#958",
+    "THUDM/slime#2286",
+    "radixark/miles#2345",
+    "THUDM/slime#2224",
+    "radixark/miles#1208",
+    "radixark/miles#2643",
+    "THUDM/slime#2277",
+    "radixark/miles#1753",
+    "radixark/miles#1897",
+    "radixark/miles#2313",
+    "radixark/miles#1768",
+    "radixark/miles#1220",
+    "radixark/miles#1715",
+    "radixark/miles#2066",
+    "radixark/miles#1769",
+    "THUDM/slime#2193",
+    "radixark/miles#1823",
+    "THUDM/slime#2236",
+    "radixark/miles#1981",
+    "radixark/miles#2047",
+    "radixark/miles#1740",
+    "radixark/miles#1709",
+    "radixark/miles#2118",
+    "radixark/miles#2209",
+    "THUDM/slime#2240",
+    "radixark/miles#2450",
+    "THUDM/slime#2279",
+    "radixark/miles#1193",
+    "radixark/miles#2160",
+    "radixark/miles#2403",
+    "radixark/miles#1991",
+    "radixark/miles#1965",
+    "radixark/miles#986",
+    "radixark/miles#1723",
+    "radixark/miles#2642",
+    "radixark/miles#1918",
+    "radixark/miles#2033",
+    "radixark/miles#2569",
+    "radixark/miles#2051",
+    "radixark/miles#1994",
+    "radixark/miles#2398",
+    "radixark/miles#2652",
+    "radixark/miles#2072",
+    "radixark/miles#965",
+    "radixark/miles#2121",
+    "radixark/miles#2205",
+    "radixark/miles#2208",
+    "radixark/miles#2241",
+    "radixark/miles#2213",
+    "radixark/miles#1182",
+    "radixark/miles#2284",
+    "radixark/miles#2466",
+    "radixark/miles#2659",
+    "radixark/miles#2367",
+    "radixark/miles#2516",
+    "radixark/miles#2070",
+    "radixark/miles#1712",
+    "radixark/miles#2626",
+    "radixark/miles#1713",
+    "radixark/miles#1972",
+    "radixark/miles#2649",
+    "THUDM/slime#1945",
+    "radixark/miles#1762",
+    "THUDM/slime#1914",
+    "radixark/miles#2343",
+    "radixark/miles#2535",
+    "THUDM/slime#2174",
+    "THUDM/slime#2294",
+    "radixark/miles#2648",
+    "radixark/miles#1207",
+    "radixark/miles#2476",
+    "THUDM/slime#2255",
+    "THUDM/slime#1805",
+    "radixark/miles#2221",
+    "radixark/miles#943",
+    "radixark/miles#1796",
+    "radixark/miles#2651",
+    "radixark/miles#1755",
+    "THUDM/slime#1929",
+    "THUDM/slime#2290",
+    "radixark/miles#1979",
+    "radixark/miles#1214",
+    "radixark/miles#2337",
+    "THUDM/slime#1827",
+    "radixark/miles#971",
+    "radixark/miles#1209",
+    "radixark/miles#993",
+    "radixark/miles#1028",
+    "radixark/miles#2100",
+    "radixark/miles#2381",
+    "THUDM/slime#2216",
+    "radixark/miles#2220",
+    "radixark/miles#966",
+    "THUDM/slime#2180",
+    "radixark/miles#1901",
+    "radixark/miles#1204",
+    "THUDM/slime#2221",
+    "radixark/miles#2225",
+    "radixark/miles#1922",
+    "THUDM/slime#1933",
+    "THUDM/slime#1919",
+    "radixark/miles#2286",
+    "radixark/miles#2102",
+    "radixark/miles#2041",
+    "radixark/miles#2253",
+    "radixark/miles#1714",
+    "radixark/miles#1949",
+    "radixark/miles#1777",
+    "radixark/miles#1733",
+    "THUDM/slime#1825",
+    "radixark/miles#1758",
+    "THUDM/slime#1944",
+    "radixark/miles#1988",
+    "radixark/miles#1938",
+    "radixark/miles#1810",
+    "radixark/miles#1736",
+    "THUDM/slime#1947",
+    "radixark/miles#2200",
+    "THUDM/slime#2261",
+    "radixark/miles#1827",
+    "radixark/miles#2289",
+    "radixark/miles#2113",
+    "radixark/miles#2389",
+    "radixark/miles#1926",
+    "radixark/miles#1752",
+    "radixark/miles#2260",
+    "radixark/miles#1229",
+    "radixark/miles#1189",
+    "radixark/miles#2116",
+    "radixark/miles#1904",
+    "radixark/miles#2386",
+    "radixark/miles#1032",
+    "THUDM/slime#2208",
+    "radixark/miles#2320",
+    "radixark/miles#2461",
+    "radixark/miles#1036",
+    "radixark/miles#2366",
+    "THUDM/slime#1775",
+    "radixark/miles#1701",
+    "radixark/miles#1197",
+    "radixark/miles#1000",
+    "radixark/miles#2117",
+    "radixark/miles#1830",
+    "radixark/miles#2395",
+    "radixark/miles#2088",
+    "radixark/miles#2528",
+    "THUDM/slime#2254",
+    "radixark/miles#2229",
+    "radixark/miles#1033",
+    "THUDM/slime#2301",
+    "radixark/miles#1996",
+    "radixark/miles#1968",
+    "radixark/miles#2058",
+    "THUDM/slime#1960",
+    "radixark/miles#1027",
+    "radixark/miles#2688",
+    "radixark/miles#2243",
+    "radixark/miles#1896",
+    "radixark/miles#1704",
+    "radixark/miles#2107",
+    "radixark/miles#1699",
+    "radixark/miles#2214",
+    "radixark/miles#2038",
+    "radixark/miles#1783",
+    "radixark/miles#1889",
+    "radixark/miles#2696",
+    "radixark/miles#2670",
+    "radixark/miles#2222",
+    "radixark/miles#2181",
+    "radixark/miles#2480",
+    "radixark/miles#2357",
+    "radixark/miles#2004",
+    "radixark/miles#1919",
+    "radixark/miles#2570",
+    "radixark/miles#2230",
+    "radixark/miles#2644",
+    "radixark/miles#1793",
+    "radixark/miles#2507",
+    "radixark/miles#2473",
+    "radixark/miles#1750",
+    "radixark/miles#988",
+    "radixark/miles#2339",
+    "radixark/miles#2044",
+    "radixark/miles#2252",
+    "radixark/miles#1219",
+    "radixark/miles#1966",
+    "radixark/miles#2523",
+    "radixark/miles#1915",
+    "radixark/miles#1183",
+    "radixark/miles#2355",
+    "radixark/miles#1759",
+    "radixark/miles#2098",
+    "THUDM/slime#1832",
+    "THUDM/slime#1915",
+    "radixark/miles#2285",
+    "radixark/miles#2356",
+    "THUDM/slime#1937",
+    "radixark/miles#2203",
+    "radixark/miles#1763",
+    "radixark/miles#1224",
+    "radixark/miles#2093",
+    "radixark/miles#1787",
+    "radixark/miles#977",
+    "radixark/miles#1040",
+    "radixark/miles#2028",
+    "THUDM/slime#2305",
+    "radixark/miles#940",
+    "radixark/miles#2383",
+    "radixark/miles#1210",
+    "radixark/miles#1800",
+    "radixark/miles#2515",
+    "radixark/miles#2159",
+    "THUDM/slime#1836",
+    "radixark/miles#2469",
+    "radixark/miles#2509",
+    "radixark/miles#2059",
+    "radixark/miles#2622",
+    "radixark/miles#1971",
+    "radixark/miles#1812",
+    "radixark/miles#947",
+    "radixark/miles#1993",
+    "THUDM/slime#1788",
+    "THUDM/slime#2247",
+    "radixark/miles#1734",
+    "radixark/miles#2224",
+    "THUDM/slime#1926",
+    "radixark/miles#2293",
+    "THUDM/slime#1949",
+    "radixark/miles#2125",
+    "radixark/miles#2493",
+    "radixark/miles#2112",
+    "radixark/miles#2278",
+    "radixark/miles#2127",
+    "radixark/miles#1942",
+    "radixark/miles#2502",
+    "radixark/miles#2040",
+    "radixark/miles#2482",
+    "radixark/miles#2155",
+    "radixark/miles#2180",
+    "radixark/miles#2618",
+    "THUDM/slime#2206",
+    "radixark/miles#1929",
+    "THUDM/slime#1856",
+    "radixark/miles#1212",
+    "radixark/miles#2368",
+    "THUDM/slime#1776",
+    "radixark/miles#2550",
+    "radixark/miles#1188",
+    "radixark/miles#2359",
+    "radixark/miles#2369",
+    "radixark/miles#2327",
+    "THUDM/slime#1774",
+    "radixark/miles#2387",
+    "radixark/miles#1928",
+    "radixark/miles#2023",
+    "radixark/miles#2572",
+    "radixark/miles#2171",
+    "radixark/miles#1951",
+    "radixark/miles#1947",
+    "radixark/miles#2665",
+    "radixark/miles#1806",
+    "radixark/miles#1940",
+    "radixark/miles#1191",
+    "THUDM/slime#1797",
+    "radixark/miles#2526",
+    "THUDM/slime#1922",
+    "radixark/miles#2340",
+    "radixark/miles#2401",
+    "THUDM/slime#2204",
+    "radixark/miles#1930",
+    "radixark/miles#2247",
+    "radixark/miles#2576",
+    "radixark/miles#2069",
+    "radixark/miles#2541",
+    "radixark/miles#1799",
+    "radixark/miles#2195",
+    "radixark/miles#1943",
+    "radixark/miles#1022",
+    "THUDM/slime#2170",
+    "radixark/miles#942",
+    "radixark/miles#1906",
+    "THUDM/slime#2264",
+    "THUDM/slime#2304",
+    "radixark/miles#1992",
+    "radixark/miles#1693",
+    "radixark/miles#1006",
+    "THUDM/slime#2291",
+    "THUDM/slime#2276",
+    "radixark/miles#2656",
+    "radixark/miles#2027",
+    "radixark/miles#1905",
+    "radixark/miles#1772",
+    "radixark/miles#1874",
+    "radixark/miles#985",
+    "radixark/miles#2199",
+    "THUDM/slime#2203",
+    "THUDM/slime#1807",
+    "radixark/miles#2354",
+    "radixark/miles#2388",
+    "radixark/miles#1826",
+    "radixark/miles#1199",
+    "THUDM/slime#1942",
+    "THUDM/slime#2246",
+    "radixark/miles#1719",
+    "THUDM/slime#2226",
+    "radixark/miles#2274",
+    "radixark/miles#2620",
+    "radixark/miles#1782",
+    "radixark/miles#2636",
+    "radixark/miles#1038",
+    "radixark/miles#2101",
+    "radixark/miles#1741",
+    "radixark/miles#1989",
+    "THUDM/slime#2265",
+    "THUDM/slime#2162",
+    "THUDM/slime#2302",
+    "radixark/miles#1798",
+    "radixark/miles#2518",
+    "radixark/miles#2695",
+    "radixark/miles#991",
+    "radixark/miles#1044",
+    "radixark/miles#2468",
+    "THUDM/slime#2198",
+    "radixark/miles#2464",
+    "radixark/miles#1765",
+    "THUDM/slime#1816",
+    "THUDM/slime#1773",
+    "radixark/miles#2266",
+    "THUDM/slime#2259",
+    "THUDM/slime#2269",
+    "radixark/miles#1766",
+    "radixark/miles#2451",
+    "radixark/miles#2568",
+    "radixark/miles#1026",
+    "radixark/miles#2074",
+    "radixark/miles#1811",
+    "radixark/miles#1791",
+    "radixark/miles#2317",
+    "radixark/miles#2621",
+    "radixark/miles#2613",
+    "radixark/miles#2628",
+    "radixark/miles#2488",
+    "radixark/miles#980",
+    "radixark/miles#2704",
+    "radixark/miles#2690",
+    "radixark/miles#2165",
+    "radixark/miles#1804",
+    "radixark/miles#2548",
     "radixark/miles#1184",
-    "radixark/miles#1224"
+    "THUDM/slime#2298",
+    "THUDM/slime#1941",
+    "radixark/miles#2525",
+    "radixark/miles#1882",
+    "radixark/miles#1973",
+    "radixark/miles#2329",
+    "radixark/miles#1732",
+    "THUDM/slime#2190",
+    "radixark/miles#1221",
+    "radixark/miles#2384",
+    "radixark/miles#2318",
+    "radixark/miles#2555",
+    "radixark/miles#974",
+    "radixark/miles#2556",
+    "radixark/miles#1985",
+    "radixark/miles#2231",
+    "radixark/miles#995",
+    "radixark/miles#2119",
+    "THUDM/slime#2303",
+    "radixark/miles#2478",
+    "radixark/miles#2071",
+    "radixark/miles#2501",
+    "radixark/miles#1774",
+    "radixark/miles#1001",
+    "radixark/miles#1727",
+    "radixark/miles#951",
+    "radixark/miles#2645",
+    "radixark/miles#2691",
+    "radixark/miles#1702",
+    "radixark/miles#2545",
+    "THUDM/slime#2234",
+    "THUDM/slime#2200",
+    "radixark/miles#2358",
+    "radixark/miles#2454",
+    "radixark/miles#2479",
+    "radixark/miles#2694",
+    "radixark/miles#1729",
+    "radixark/miles#2639",
+    "radixark/miles#2537",
+    "THUDM/slime#1953",
+    "radixark/miles#2657",
+    "THUDM/slime#1939",
+    "radixark/miles#982",
+    "radixark/miles#2248",
+    "radixark/miles#2092",
+    "THUDM/slime#1928",
+    "radixark/miles#2463",
+    "radixark/miles#1978",
+    "radixark/miles#961",
+    "radixark/miles#1935",
+    "radixark/miles#1748",
+    "THUDM/slime#1772",
+    "radixark/miles#2458",
+    "radixark/miles#973",
+    "radixark/miles#1984",
+    "radixark/miles#1801",
+    "radixark/miles#2094",
+    "radixark/miles#2655",
+    "radixark/miles#2046",
+    "THUDM/slime#2219",
+    "radixark/miles#2554",
+    "radixark/miles#2122",
+    "radixark/miles#2316",
+    "radixark/miles#2109",
+    "THUDM/slime#1824",
+    "radixark/miles#2669",
+    "radixark/miles#2348",
+    "radixark/miles#2156",
+    "radixark/miles#2250",
+    "radixark/miles#2235",
+    "radixark/miles#1974",
+    "radixark/miles#1218",
+    "THUDM/slime#1799",
+    "radixark/miles#1950",
+    "radixark/miles#2455",
+    "radixark/miles#1941",
+    "THUDM/slime#2197",
+    "radixark/miles#2273",
+    "radixark/miles#1824",
+    "radixark/miles#2036",
+    "radixark/miles#1708",
+    "radixark/miles#1703",
+    "radixark/miles#2371",
+    "radixark/miles#1980",
+    "THUDM/slime#2167",
+    "radixark/miles#2500",
+    "radixark/miles#2218",
+    "radixark/miles#1924",
+    "THUDM/slime#1795",
+    "radixark/miles#1921",
+    "radixark/miles#2377",
+    "radixark/miles#1689",
+    "radixark/miles#1718",
+    "radixark/miles#1690",
+    "radixark/miles#992",
+    "radixark/miles#2288",
+    "THUDM/slime#1952",
+    "THUDM/slime#1768",
+    "radixark/miles#2346",
+    "radixark/miles#2099",
+    "radixark/miles#2105",
+    "radixark/miles#1776",
+    "radixark/miles#2375",
+    "radixark/miles#1039",
+    "radixark/miles#1195",
+    "radixark/miles#1041",
+    "radixark/miles#1739",
+    "radixark/miles#1012",
+    "radixark/miles#1202",
+    "THUDM/slime#1848",
+    "radixark/miles#1891",
+    "radixark/miles#1215",
+    "THUDM/slime#1828",
+    "radixark/miles#2330",
+    "radixark/miles#2035",
+    "THUDM/slime#1948",
+    "radixark/miles#1911",
+    "radixark/miles#2001",
+    "THUDM/slime#1822",
+    "radixark/miles#2183",
+    "radixark/miles#2496",
+    "THUDM/slime#2282",
+    "THUDM/slime#1954",
+    "radixark/miles#2267",
+    "radixark/miles#2271",
+    "radixark/miles#2091",
+    "radixark/miles#1962",
+    "radixark/miles#2376",
+    "radixark/miles#948",
+    "radixark/miles#1034",
+    "radixark/miles#1201",
+    "radixark/miles#2706"
   ],
   "weekly_note": "<em>本周亮点</em>：<b>#2568</b> 接入 <em>Polar 异步 rollout</em> 桥接层，<b>#2569</b> 多模态图像<em>惰性解码</em>节省百GB内存，<b>#2572</b> 修复 <em>LoRA 恢复</em>主参数覆盖，<b>#2534</b> 补全轨迹<em>生命周期</em>状态管理。",
   "weekly_note_week": "2026-W34",
-  "last_updated": "2026-08-21T01:06:56.213807+00:00"
+  "last_updated": "2026-08-22T01:08:13.886994+00:00"
 }
